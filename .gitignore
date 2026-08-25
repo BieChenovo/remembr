@@ -8,6 +8,8 @@ coda_data
 token.json
 eval_outs
 out_old
+artifacts/
+previews/
 
 # milvus-related
 embedEtcd.yaml

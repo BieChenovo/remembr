@@ -1,236 +1,199 @@
-import json
-import pandas as pd
-import glob
-import os
-import time
-import datetime
-from time import strftime, localtime
-import numpy as np
+#!/usr/bin/env python3
+"""Combine NaVQA annotations with timestamped captions.
+
+This version intentionally uses only the Python standard library so question
+files can be prepared on a CPU/login node without the ReMEmbR ML environment.
+"""
+
 import argparse
-
-DATA_CSV = "./data/navqa/data.csv"
-DATA_PATH = "./data"
-
-
-parser = argparse.ArgumentParser(
-                    prog='Long Horizontal Robot QA',
-                    description='Runs various LLMs on the QA dataset',)
-
-# data-specific args
-parser.add_argument("--caption_file", type=str, default="captions_Llama-3-VILA1.5-8b_3_secs")
-args = parser.parse_args()
+import bisect
+import copy
+import csv
+import datetime
+import json
+import time
+from collections import defaultdict
+from pathlib import Path
+from time import localtime, strftime
 
 
-CAPTIONS_PATH = './data/captions/{seq_id}/captions' + f'/{args.caption_file}.json'
+TYPE_COLUMN = "Type \n(binary, position, time, text)"
+TIMESTAMP_COLUMN = "Timestamp \nwith answer"
+CATEGORY_COLUMN = "Question\nCategory"
 
+
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--caption_file", default="captions_Llama-3-VILA1.5-8b_3_secs"
+    )
+    parser.add_argument("--data-dir", type=Path, default=Path("data"))
+    parser.add_argument(
+        "--captions-dir",
+        type=Path,
+        help="Caption root containing <seq_id>/captions/<caption_file>.json",
+    )
+    parser.add_argument(
+        "--questions-dir",
+        type=Path,
+        help="Output root; defaults to <data-dir>/questions",
+    )
+    return parser.parse_args()
+
+
+def rounded_position(position, digits):
+    return [round(float(value), digits) for value in position]
 
 
 def format_docs(docs):
-    out_string = ""
+    output = ""
     for doc in docs:
-        t = localtime(doc['time'])
-        t = strftime('%Y-%m-%d %H:%M:%S', t)
+        timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime(doc["time"]))
+        output += (
+            f"At time={timestamp}, the robot was at an average position of "
+            f"{rounded_position(doc['position'], 3)}."
+            f"The robot saw the following: {doc['caption']}\n\n"
+        )
+    return output
 
-        s = f"At time={t}, the robot was at an average position of {np.array(doc['position']).round(3).tolist()}."
-        s += f"The robot saw the following: {doc['caption']}\n\n"
-        out_string += s
-    return out_string
 
+def parse_answer(annotation, context, qa_pair):
+    question_type = annotation[TYPE_COLUMN].strip()
+    text_answer = annotation["Text answer"].strip()
+    parsable_answer = annotation["Parsable answer"].strip()
 
-def parse_answer(answer, context, qa_pair):
-
-    q_type = answer['Type \n(binary, position, time, text)']
-
-    text_answer = answer['Text answer']
-    parsable_answer = answer['Parsable answer']
-
-    out_dict = None
-
-    # q_type can be binary, position, time, or text
-    if q_type == 'binary':
-        out_dict = {
-            'text': [parsable_answer, parsable_answer]
+    if question_type == "binary":
+        return {"text": [parsable_answer, parsable_answer]}
+    if question_type == "text":
+        return {"text": [text_answer]}
+    if question_type == "position" and len(context) == 1:
+        return {"position": context[0]["position"]}
+    if question_type == "time" and len(context) == 1:
+        minutes_ago = round((qa_pair["end_time"] - context[0]["time"]) / 60, 2)
+        return {"text": [f"{minutes_ago} minutes ago"], "time": minutes_ago}
+    if question_type == "duration":
+        return {
+            "text": [f"{parsable_answer} minutes"],
+            "duration": float(parsable_answer),
         }
 
-    elif q_type == 'text': # these need to be evaluated by a human
-        out_dict = {
-            'text': [text_answer]
-        }
-
-    elif q_type == 'position':
-        if len(context) == 1:
-            out_dict = {
-                'position': context[0]['position']
-            }
-
-    elif q_type == 'time':
-        # we currently only have [minutes] ago template, so just going to ignore it
-        # if parsable_answer.strip() == '[minutes] ago' and len(context) == 1:
-        if len(context) == 1:
-
-            # Then we should answer by by saying "X minutes ago"
-            answer_time = context[0]['time'] 
-            current_time = qa_pair['end_time']
+    print(
+        f"Warning: falling back to the parsable answer for {qa_pair['id']} "
+        f"({question_type})"
+    )
+    return {"text": [text_answer], question_type: parsable_answer}
 
 
-            minutes_ago = np.round((current_time - answer_time)/60, 2)
-
-            out_dict = {
-                'text': [str(minutes_ago) + ' minutes ago'],
-                'time': minutes_ago
-            }
-    elif q_type == 'duration':
-        # we currently only have X [minutes] template.
-        # simply use the float answer in there
-        out_dict = {
-            'text': [str(parsable_answer.strip()) + ' minutes'],
-            'duration': float(parsable_answer.strip())
-        }
-    
-    # just in case things don't parse
-    if out_dict is None:
-        print("NOT EVERYTHING WAS PARSED CORRECTLY POSSIBLY!")
-        print("Filling in un-parsable out_dict")
-        out_dict = {
-            'text': [text_answer],
-            q_type: parsable_answer
-        }
-        
+def previous_caption_index(caption_times, timestamp):
+    return max(
+        0,
+        min(
+            len(caption_times) - 1,
+            bisect.bisect_right(caption_times, timestamp) - 1,
+        ),
+    )
 
 
-    return out_dict
+def main():
+    args = parse_args()
+    navqa_dir = args.data_dir / "navqa"
+    captions_dir = args.captions_dir or args.data_dir / "captions"
+    questions_dir = args.questions_dir or args.data_dir / "questions"
 
-# We read from the data.csv, parse the true info from the human generation, then create a new qa.json file
-# 1 per sequence!
+    annotations_by_sequence_and_id = defaultdict(list)
+    with (navqa_dir / "data.csv").open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            if not row.get("Question", "").strip():
+                continue
+            sequence_id = int(row["Seq ID"])
+            annotations_by_sequence_and_id[(sequence_id, row["UUID"])].append(row)
 
-data = pd.read_csv(DATA_CSV)
+    qa_files = sorted(
+        navqa_dir.glob("*/qa_unfilled.json"), key=lambda path: int(path.parent.name)
+    )
+    total_written = 0
+    for qa_path in qa_files:
+        sequence_id = int(qa_path.parent.name)
+        caption_path = (
+            captions_dir
+            / str(sequence_id)
+            / "captions"
+            / f"{args.caption_file}.json"
+        )
+        if not caption_path.exists():
+            print(f"Skipping sequence {sequence_id}: missing {caption_path}")
+            continue
 
-files = glob.glob(os.path.join('./data', 'navqa', '*', 'qa_unfilled.json'))
-seq_ids = [int(x.split('/')[-2]) for x in files]
+        captions = json.loads(caption_path.read_text(encoding="utf-8"))
+        caption_times = [float(Path(item["id"]).stem) for item in captions]
+        unfilled_questions = json.loads(qa_path.read_text(encoding="utf-8"))["data"]
+        filled_questions = []
 
-for i, seq_id in enumerate(seq_ids):
-    print("On SeqID", seq_id)
-    all_questions = [] # this is similar to how we create the new json
+        for qa_pair in unfilled_questions:
+            annotations = annotations_by_sequence_and_id.get(
+                (sequence_id, qa_pair["id"]), []
+            )
+            for annotation in annotations:
+                filled = copy.deepcopy(qa_pair)
+                context_captions = []
+                context_starts = []
+                context_ends = []
 
-    # Load the json
-    with open(files[i], 'r') as f:
-        unfilled_qa = json.load(f)['data']
+                date = strftime("%m/%d/%Y", localtime(filled["start_time"]))
+                for hms_time in annotation[TIMESTAMP_COLUMN].split(","):
+                    full_time = f"{date} {hms_time.strip()}"
+                    timestamp = time.mktime(
+                        datetime.datetime.strptime(
+                            full_time, "%m/%d/%Y %H:%M:%S"
+                        ).timetuple()
+                    )
+                    caption = captions[previous_caption_index(caption_times, timestamp)]
+                    context_captions.append(caption)
+                    context_starts.append(caption["file_start"])
+                    context_ends.append(caption["file_end"])
 
-    try:
-        with open(CAPTIONS_PATH.format(seq_id = seq_id)) as f:
-            captions = json.load(f)
-    except:
-        print(f"ERROR. Questions for {seq_id} exists, however, captions do not exist. Will skip SeqID {seq_id}")
-        continue
+                context_starts.sort(key=lambda value: float(Path(value).stem))
+                context_ends.sort(key=lambda value: float(Path(value).stem))
+                filled["file_info"]["context_start_filename"] = context_starts[0]
+                filled["file_info"]["context_end_filename"] = context_ends[-1]
 
-    # get the specific subset
-    subset_df = data[(data["Seq ID"] == seq_id) & (data["Question"] != "") & (data['Question'].notna())]
+                current_caption = captions[
+                    previous_caption_index(caption_times, filled["end_time"])
+                ]
+                start_string = strftime(
+                    "%Y-%m-%d %H:%M:%S", localtime(filled["start_time"])
+                )
+                current_string = strftime(
+                    "%Y-%m-%d %H:%M:%S", localtime(filled["end_time"])
+                )
+                current_position = rounded_position(current_caption["position"], 2)
+                filled["question"] = (
+                    f"You started moving at {start_string}. The current time is "
+                    f"{current_string} and you are located at {current_position}. \n "
+                    f"{annotation['Question']}"
+                )
+                filled["type"] = annotation[TYPE_COLUMN].strip()
+                filled["category"] = annotation[CATEGORY_COLUMN].strip()
+                filled["context"] = format_docs(context_captions)
+                filled["answers"] = parse_answer(
+                    annotation, context_captions, filled
+                )
+                filled_questions.append(filled)
 
-    if len(subset_df) == 0:
-        continue
+        output_path = questions_dir / str(sequence_id) / "human_qa.json"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps({"version": 0.1, "data": filled_questions}, indent=4),
+            encoding="utf-8",
+        )
+        print(
+            f"Sequence {sequence_id}: wrote {len(filled_questions)} questions "
+            f"to {output_path}"
+        )
+        total_written += len(filled_questions)
 
-    for qa_pair in unfilled_qa: 
-        # qa_pair has keys: id, length_category, length, start_time, end_time, file_info={qa_start_filename, qa_end_filename}
-
-
-        id = qa_pair['id']
-        answers = subset_df[subset_df['UUID'] == id]
-
-        caption_start_ids = [item['id'] for item in captions]
-        caption_start_ids.sort(key=lambda x: float(x.split('/')[-1][:-4])) # should already be sorted
-        caption_times = np.array([float(file.split('/')[-1][:-4]) for file in caption_start_ids])
-
-
-
-        # note that there *could* be multiple answers per clip
-        for _, answer in answers.iterrows():
-            filled_qa = qa_pair.copy()
-            text_answer_timestamp = answer['Timestamp \nwith answer']
-            question = answer['Question']
-            q_type = answer['Type \n(binary, position, time, text)']
-
-            q_category = answer['Question\nCategory']
-
-
-
-            # 1. Need to parse timestamp into raw time with a 3-sec before and after to get context_start_filename and context_end_filename
-            # 2. Need to parse position answers
-            # 3. Need to parse [minutes] ago into actual answer
-
-
-            # User input H:M:S. First, get the Y/M/d of sequence, then parse Y/M/d H:M:S to timestamp
-            t = localtime(filled_qa['start_time'])
-            mdy_date = strftime('%m/%d/%Y', t)
-            template = "%m/%d/%Y %H:%M:%S"
-
-            context_starts = []
-            context_ends = []
-            context_captions = []
-
-            for hms_time in text_answer_timestamp.split(','):
-                hms_time = hms_time.strip()
-                full_time = mdy_date + ' ' + hms_time
-                timestamp = time.mktime(datetime.datetime.strptime(full_time,template).timetuple())
-
-                diff = caption_times - timestamp
-                caption_idx = np.argmax(diff > 0) - 1
-                context_captions.append(captions[caption_idx])
-
-                context_starts.append(captions[caption_idx]['file_start'])
-                context_ends.append(captions[caption_idx]['file_end'])
-
-            context = format_docs(context_captions)
-            # the start should be the earliest start
-            context_starts.sort(key=lambda x: float(x[:-4]))
-            context_starts = context_starts[0]
-            # the end should be the latest end
-            context_ends.sort(key=lambda x: float(x[:-4]))
-            context_ends = context_ends[-1]
-
-
-            current_time = localtime(filled_qa['end_time'])
-            current_time = strftime('%Y-%m-%d %H:%M:%S', current_time)   
-
-            start_time = localtime(filled_qa['start_time'])
-            start_time = strftime('%Y-%m-%d %H:%M:%S', start_time)   
-
-            diff = caption_times - filled_qa['end_time']
-            caption_idx = np.argmax(diff > 0) - 1
-            current_position = np.round(np.array(captions[caption_idx]['position']), 2).tolist()
-
-            # Let's convert the question to have current information
-            question = f"You started moving at {start_time}. The current time is {current_time} and you are located at {current_position}. \n {question}"
-
-            ### Fill in filled_qa properly
-            filled_qa['question'] = question
-            filled_qa['type'] = q_type
+    print(f"Wrote {total_written} questions total")
 
 
-            filled_qa['context'] = context
-
-            filled_qa['file_info']['context_start_filename'] = context_starts
-            filled_qa['file_info']['context_end_filename'] = context_ends
-
-
-
-            parsed_answer = parse_answer(answer, context_captions, filled_qa)
-
-            filled_qa['answers'] = parsed_answer
-
-            all_questions.append(filled_qa)
-
-
-    # save all_questions into json
-    out_json = {
-        "version": 0.1,
-        "data": all_questions
-    }
-
-    print(f"Saving data for sequence {seq_id} in ./data/questions/{seq_id}/human_qa.json")
-    # make dir if it does not exist
-    
-    os.makedirs(f'./data/questions/{seq_id}', exist_ok=True)
-
-    with open(f'./data/questions/{seq_id}/human_qa.json', 'w') as f:
-        # to_save = json.dumps(out_json, indent=4)
-        json.dump(out_json, f, indent=4)
+if __name__ == "__main__":
+    main()

@@ -1,3 +1,4 @@
+import ast
 import json
 import numpy as np
 
@@ -29,7 +30,7 @@ from agents.non_agent import NonAgent
 from agents.vlm_non_agent import VLMNonAgent
 
 from memory.memory import MemoryItem
-from memory.milvus_memory import MilvusMemory
+from memory.local_vector_memory import LocalVectorMemory
 from memory.text_memory import TextMemory
 from memory.video_memory import VideoMemory, ImageMemoryItem
 
@@ -38,7 +39,7 @@ from tools.tools import format_docs
 
 def parse_json(string):
     parsed = re.search(r"```json(.*?)```", string, re.DOTALL| re.IGNORECASE).group(1).strip()
-    return eval(parsed)
+    return ast.literal_eval(parsed)
 
 # we can have binary, position-based, time-based, or description-based. let's answer accordingly
 def evaluate_output(qa_instance, predicted):
@@ -51,11 +52,13 @@ def evaluate_output(qa_instance, predicted):
         answer = np.array(qa_instance['answers']['position'])
 
         # compute L2 loss between predicted['binary'] and answer
+        if predicted.get('position') is None:
+            raise ValueError('Model did not return a position')
         if type(predicted['position']) == str:
-            predicted['position'] = eval(predicted['position'])
+            predicted['position'] = ast.literal_eval(predicted['position'])
         pred_pos = np.array(predicted['position'])
 
-        dist = np.linalg.norm(answer - pred_pos)
+        dist = float(np.linalg.norm(answer - pred_pos))
 
         out_error['position_error'] = dist
 
@@ -63,25 +66,29 @@ def evaluate_output(qa_instance, predicted):
 
         answer = qa_instance['answers']['text'][1] # we made this assumption in other examples that binary answer is the second one
 
-        if 'binary' in predicted and (predicted['binary'].lower() == "yes" or predicted['binary'].lower() == "no"):
-            # get correct/incorrect label
-            if predicted['binary'].lower() == answer.lower():
-                correct = 1
-            else:
-                correct = 0
+        binary = predicted.get('binary')
+        if not isinstance(binary, str) or binary.lower() not in ('yes', 'no'):
+            raise ValueError('Model did not return a valid yes/no answer')
+        # get correct/incorrect label
+        if binary.lower() == answer.lower():
+            correct = 1
+        else:
+            correct = 0
 
-            out_error['binary_iscorrect'] = correct
+        out_error['binary_iscorrect'] = correct
 
     elif 'time' in q_type:
 
         answer = np.array(qa_instance['answers']['time'])
 
         # compute L2 loss between predicted['binary'] and answer
+        if predicted.get('time') is None:
+            raise ValueError('Model did not return a time')
         if type(predicted['time']) == str:
-            predicted['time'] = eval(predicted['time'])
+            predicted['time'] = ast.literal_eval(predicted['time'])
         pred_time = np.array(predicted['time'])
 
-        dist = abs(answer - pred_time)
+        dist = float(abs(answer - pred_time))
 
         out_error['time_error'] = dist
 
@@ -90,11 +97,13 @@ def evaluate_output(qa_instance, predicted):
         answer = np.array(qa_instance['answers']['duration'])
 
         # compute L2 loss between predicted['binary'] and answer
+        if predicted.get('duration') is None:
+            raise ValueError('Model did not return a duration')
         if type(predicted['duration']) == str:
-            predicted['duration'] = eval(predicted['duration'])
+            predicted['duration'] = ast.literal_eval(predicted['duration'])
         pred_time = np.array(predicted['duration'])
 
-        dist = abs(answer - pred_time)
+        dist = float(abs(answer - pred_time))
 
         out_error['duration_error'] = dist
 
@@ -108,12 +117,14 @@ def evaluate_output(qa_instance, predicted):
     return out_error
 
 
-def answer_squad_question(model, question, qa_instance):
+def answer_squad_question(model, question, qa_instance, max_retries=3):
 
     print(f'Question: {question}')
 
     parsed = None
-    while True:
+    last_error = None
+    elapsed = None
+    for attempt in range(1, max_retries + 1):
         try:
 
             start_time = time.time()
@@ -128,9 +139,11 @@ def answer_squad_question(model, question, qa_instance):
             print("Time elapsed", elapsed)
 
         except Exception as e:
+            last_error = e
             print(parsed)
             print(e)
             traceback.print_exception(*sys.exc_info()) 
+            print(f"Question attempt {attempt}/{max_retries} failed")
             continue
 
         return_dict = {"response": parsed}
@@ -140,6 +153,18 @@ def answer_squad_question(model, question, qa_instance):
 
         return return_dict
 
+    failure = {
+        "response": parsed,
+        "error": {},
+        "elapsed": elapsed,
+        "evaluation_failure": (
+            f"Question failed after {max_retries} attempts: {last_error}"
+        ),
+    }
+    if isinstance(parsed, dict):
+        failure.update(parsed)
+    return failure
+
 
 def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, ip_address='127.0.0.1'):
     # Here we load everything needed to load a MilvusDB instance neatly
@@ -148,8 +173,14 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
 
 
     if use_milvus:
-        # milv = MilvusWrapper(ip_address=ip_address)
-        memory = MilvusMemory(f"eval_memory_{args.sequence_id}", db_ip=ip_address, time_offset=start_time)
+        if args.memory_backend == 'milvus':
+            from memory.milvus_memory import MilvusMemory
+            memory = MilvusMemory(f"eval_memory_{args.sequence_id}", db_ip=ip_address, time_offset=start_time)
+        else:
+            memory = LocalVectorMemory(
+                embedding_model=args.embedding_model,
+                time_offset=start_time,
+            )
     elif 'vlm' in args.model:
         memory = VideoMemory()
     else:
@@ -158,7 +189,8 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
     memory.reset()
 
 
-    captions_path = os.path.join(args.data_dir, 'captions', str(args.sequence_id), 'captions', f'{args.caption_file}.json')
+    captions_root = args.captions_dir or os.path.join(args.data_dir, 'captions')
+    captions_path = os.path.join(captions_root, str(args.sequence_id), 'captions', f'{args.caption_file}.json')
 
     with open(captions_path, 'r') as f:
         out = json.load(f)
@@ -231,7 +263,13 @@ def main(args):
     use_optimal_context = False
     if 'remembr' in args.model:
         base_llm = args.model.split('+')[-1]
-        agent = ReMEmbRAgent(llm_type=base_llm, num_ctx=args.num_ctx, temperature=args.temperature)
+        agent = ReMEmbRAgent(
+            llm_type=base_llm,
+            num_ctx=args.num_ctx,
+            temperature=args.temperature,
+            num_predict=args.num_predict,
+            disable_thinking=args.disable_thinking,
+        )
         use_milvus = True
 
     elif 'optimal' in args.model:
@@ -245,10 +283,24 @@ def main(args):
         agent = NonAgent(llm_type=args.model, num_ctx=args.num_ctx*4, temperature=args.temperature)
 
 
-    data_path = os.path.join(args.data_dir, 'questions', str(args.sequence_id), args.qa_file+'.json')
+    questions_root = args.questions_dir or os.path.join(args.data_dir, 'questions')
+    data_path = os.path.join(questions_root, str(args.sequence_id), args.qa_file+'.json')
 
     data = json.load(open(data_path, 'r'))
     data = data['data']
+    if args.question_indices:
+        if args.max_questions is not None:
+            raise ValueError('--question_indices and --max_questions are mutually exclusive')
+        indices = [int(value.strip()) for value in args.question_indices.split(',')]
+        if not indices or any(index < 0 or index >= len(data) for index in indices):
+            raise ValueError(
+                f'Question indices must be between 0 and {len(data) - 1}: {indices}'
+            )
+        if len(indices) != len(set(indices)):
+            raise ValueError(f'Question indices must be unique: {indices}')
+        data = [data[index] for index in indices]
+    elif args.max_questions is not None:
+        data = data[:args.max_questions]
 
 
     running_successes = 0
@@ -264,7 +316,74 @@ def main(args):
     num_duration = 0
     
     responses = []
-    for i in tqdm.tqdm(range(0, len(data)), total=len(data)):
+
+    out_path = os.path.join(args.out_dir, str(args.sequence_id), args.qa_file)
+    os.makedirs(out_path, exist_ok=True)
+    name = args.model+'__'+args.caption_file+args.postfix
+    output_file = os.path.join(out_path, f'{name}.json')
+
+    if args.resume and os.path.exists(output_file):
+        with open(output_file, 'r') as f:
+            previous_output = json.load(f)
+        previous_responses = previous_output.get('responses', [])
+        if len(previous_responses) > len(data):
+            raise ValueError(
+                f"Cannot resume {output_file}: it contains "
+                f"{len(previous_responses)} responses for {len(data)} questions"
+            )
+        responses = previous_responses
+        for qa_instance, previous_response in zip(data, responses):
+            error_dict = previous_response.get('error', {}) if previous_response else {}
+            if qa_instance['type'] == 'position' and 'position_error' in error_dict:
+                num_position += 1
+                running_pos_error += error_dict['position_error']
+            elif qa_instance['type'] == 'binary' and 'binary_iscorrect' in error_dict:
+                num_binary += 1
+                running_successes += error_dict['binary_iscorrect']
+            elif qa_instance['type'] == 'time' and 'time_error' in error_dict:
+                num_time += 1
+                running_time_error += error_dict['time_error']
+            elif qa_instance['type'] == 'duration' and 'duration_error' in error_dict:
+                num_duration += 1
+                running_duration_error += error_dict['duration_error']
+        print(f"Resuming {output_file} at question {len(responses)}/{len(data)}")
+
+        if len(responses) == len(data) and not previous_output.get('in_progress', True):
+            print("Evaluation is already complete")
+            return
+
+    def save_snapshot(in_progress):
+        metrics = {
+            "questions_total": len(data),
+            "questions_completed": len(responses),
+            "questions_scored": num_binary + num_position + num_time + num_duration,
+            "questions_failed": sum('evaluation_failure' in item for item in responses),
+            "text_questions_skipped": sum(item.get('type') == 'text' for item in data),
+            "binary_count": num_binary,
+            "binary_accuracy": running_successes / num_binary if num_binary else None,
+            "position_count": num_position,
+            "position_mean_l2_error": running_pos_error / num_position if num_position else None,
+            "time_count": num_time,
+            "time_mean_absolute_error": running_time_error / num_time if num_time else None,
+            "duration_count": num_duration,
+            "duration_mean_absolute_error": running_duration_error / num_duration if num_duration else None,
+        }
+        out_json = {
+            "version": 0.1,
+            "in_progress": in_progress,
+            "metrics": metrics,
+            "responses": responses,
+        }
+        temporary_file = output_file + '.tmp'
+        with open(temporary_file, 'w') as f:
+            json.dump(out_json, f, indent=4)
+        os.replace(temporary_file, output_file)
+
+    for i in tqdm.tqdm(
+        range(len(responses), len(data)),
+        total=len(data),
+        initial=len(responses),
+    ):
 
         print(f"Evaluating {i} out of {len(data)}")
 
@@ -278,6 +397,7 @@ def main(args):
         if (qa_instance['type'] == 'text'):
             print("Skipping text questions for now")
             responses.append({}) # this means skipped!
+            save_snapshot(in_progress=True)
             continue
 
         memory, instance_captions = load_memory(args, data[i], use_milvus=use_milvus, use_optimal_context=use_optimal_context, ip_address=args.db_ip)
@@ -291,7 +411,9 @@ def main(args):
         agent.set_memory(memory)
 
 
-        out_dict = answer_squad_question(agent, question, qa_instance)
+        out_dict = answer_squad_question(
+            agent, question, qa_instance, max_retries=args.max_retries
+        )
 
 
         out_dict['question'] = qa_instance['question']
@@ -302,50 +424,37 @@ def main(args):
 
         # keep track of how many of each. usually all CSVs are one type only
         if qa_instance['type'] == 'position':
-            num_position += 1
             if 'position_error' in error_dict:
+                num_position += 1
                 running_pos_error += error_dict['position_error']
         elif qa_instance['type'] == 'binary':
-            num_binary += 1
             if 'binary_iscorrect' in error_dict:
+                num_binary += 1
                 running_successes += error_dict['binary_iscorrect']
         elif qa_instance['type'] == 'time':
-            num_time += 1
             if 'time_error' in error_dict:
+                num_time += 1
                 running_time_error += error_dict['time_error']
         elif qa_instance['type'] == 'duration':
-            num_duration += 1
             if 'duration_error' in error_dict:
+                num_duration += 1
                 running_duration_error += error_dict['duration_error']
 
         print("Question:", question)
         if 'response' in out_dict:
             print("Response:", out_dict['response'])
-        print("Running Binary QA accuracy", running_successes/(num_binary+1))
-        print("Running Spatial Error", running_pos_error/(num_position+1))
-        print("Running Temporal Error", running_time_error/(num_time+1))
-        print("Running Duration Error", running_duration_error/(num_duration+1))
+        print("Running Binary QA accuracy", running_successes/num_binary if num_binary else None)
+        print("Running Spatial Error", running_pos_error/num_position if num_position else None)
+        print("Running Temporal Error", running_time_error/num_time if num_time else None)
+        print("Running Duration Error", running_duration_error/num_duration if num_duration else None)
 
         print()
 
 
         responses.append(out_dict)
+        save_snapshot(in_progress=True)
 
-
-    # save all_questions into json
-    out_json = {
-        "version": 0.1,
-        "responses": responses
-    }
-
-    # save the outputs
-    out_path = os.path.join(args.out_dir, str(args.sequence_id), args.qa_file)
-    os.makedirs(out_path, exist_ok=True)
-
-    name = args.model+'__'+args.caption_file+args.postfix
-    with open(os.path.join(out_path, f'{name}.json'), 'w') as f:
-        # to_save = json.dumps(out_json, indent=4)
-        json.dump(out_json, f, indent=4)
+    save_snapshot(in_progress=False)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -358,6 +467,8 @@ if __name__ == "__main__":
     parser.add_argument("--qa_file", type=str, default="human_qa")
     parser.add_argument("--caption_file", type=str, default="captions_VILA1.5-13b_3_secs")
     parser.add_argument("--data_dir", type=str, default="./data/")
+    parser.add_argument("--captions_dir", type=str, default=None)
+    parser.add_argument("--questions_dir", type=str, default=None)
     parser.add_argument("--coda_dir", type=str, default="./coda_data/")
 
     parser.add_argument("--out_dir", type=str, default="./out/")
@@ -372,11 +483,28 @@ if __name__ == "__main__":
     # llm-specific args
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--num_ctx", type=int, default=8192*8)
+    parser.add_argument("--num_predict", type=int, default=2048)
+    parser.add_argument("--disable_thinking", action="store_true")
 
     # remembr specific args
     parser.add_argument("--window_size", type=int, default=5)
     parser.add_argument("--db_name", type=str, default='test')
     parser.add_argument("--db_ip", type=str, default='127.0.0.1')
+    parser.add_argument("--memory_backend", choices=['local', 'milvus'], default='local')
+    parser.add_argument(
+        "--embedding_model",
+        type=str,
+        default='mixedbread-ai/mxbai-embed-large-v1',
+    )
+    parser.add_argument("--max_questions", type=int, default=None)
+    parser.add_argument(
+        "--question_indices",
+        type=str,
+        default=None,
+        help="Comma-separated zero-based question indices for a stratified benchmark",
+    )
+    parser.add_argument("--max_retries", type=int, default=3)
+    parser.add_argument("--resume", action="store_true")
 
 
     args = parser.parse_args()

@@ -30,8 +30,6 @@ from langchain_core.runnables import Runnable, RunnableLambda
 from langchain_core.runnables.base import RunnableMap
 from langchain_core.runnables.passthrough import RunnablePassthrough
 from langchain_core.tools import BaseTool
-import langchain_openai
-
 # from langchain_core.language_models.llms import LLM
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.language_models import BaseLanguageModel

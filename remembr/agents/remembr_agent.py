@@ -1,12 +1,13 @@
-from typing import Annotated, Literal, Sequence, TypedDict
+from typing import Annotated, Any, Iterator, List, Literal, Optional, Sequence, TypedDict
+import ast
 import traceback
 import sys, re
 
+import requests
+
 # from langchain_openai import OpenAIEmbeddings
-from langchain_huggingface import HuggingFaceEmbeddings
 
 from langchain_community.chat_models import ChatOllama
-from langchain_nvidia_ai_endpoints import ChatNVIDIA
 
 from langchain_core.prompts import PromptTemplate
 from langchain.prompts import (
@@ -36,6 +37,75 @@ from remembr.memory.memory import Memory
 from remembr.agents.agent import Agent, AgentOutput
 
 
+class ThinkAwareChatOllama(ChatOllama):
+    """Backport Ollama's top-level ``think`` option to old LangChain.
+
+    ``langchain-community==0.2`` predates this Ollama request field. Passing it
+    as a normal invocation kwarg incorrectly nests it under ``options``; modern
+    Ollama then keeps Qwen3's reasoning in ``message.thinking`` while LangChain
+    sees an empty ``message.content``. This adapter places the field where the
+    Ollama API expects it.
+    """
+
+    think: Optional[bool] = None
+
+    def _create_stream(
+        self,
+        api_url: str,
+        payload: Any,
+        stop: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        if self.stop is not None and stop is not None:
+            raise ValueError("`stop` found in both the input and default params.")
+        if self.stop is not None:
+            stop = self.stop
+
+        params = self._default_params
+        for key in self._default_params:
+            if key in kwargs:
+                params[key] = kwargs[key]
+
+        if "options" in kwargs:
+            params["options"] = kwargs["options"]
+        else:
+            params["options"] = {
+                **params["options"],
+                "stop": stop,
+                **{key: value for key, value in kwargs.items() if key not in self._default_params},
+            }
+
+        if payload.get("messages"):
+            request_payload = {"messages": payload.get("messages", []), **params}
+        else:
+            request_payload = {
+                "prompt": payload.get("prompt"),
+                "images": payload.get("images", []),
+                **params,
+            }
+        if self.think is not None:
+            request_payload["think"] = self.think
+
+        response = requests.post(
+            url=api_url,
+            headers={
+                "Content-Type": "application/json",
+                **(self.headers if isinstance(self.headers, dict) else {}),
+            },
+            auth=self.auth,
+            json=request_payload,
+            stream=True,
+            timeout=self.timeout,
+        )
+        response.encoding = "utf-8"
+        if response.status_code != 200:
+            raise ValueError(
+                f"Ollama call failed with status code {response.status_code}. "
+                f"Details: {response.text}"
+            )
+        return response.iter_lines(decode_unicode=True)
+
+
 
 ### Print out state of the system
 def inspect(state):
@@ -59,7 +129,7 @@ def inspect(state):
 
 def parse_json(string):
     parsed = re.search(r"```json(.*?)```", string, re.DOTALL| re.IGNORECASE).group(1).strip()
-    return eval(parsed)
+    return ast.literal_eval(parsed)
 
 class AgentState(TypedDict):
     # The add_messages function defines how an update should be processed
@@ -79,34 +149,51 @@ def should_continue(state: AgentState):
         return "continue"
     
 
-def try_except_continue(state, func):
-    while True:
+def try_except_continue(state, func, max_attempts=3):
+    last_error = None
+    for _ in range(max_attempts):
         try:
             ret = func(state)
             return ret
         except Exception as e:
+            last_error = e
             print("I crashed trying to run:", func)
             print("Here is my error")
             print(e)
             traceback.print_exception(*sys.exc_info())
-            continue
+    raise RuntimeError(
+        f"{func} failed after {max_attempts} attempts"
+    ) from last_error
 
 class ReMEmbRAgent(Agent):
 
-    def __init__(self, llm_type='gpt-4o', num_ctx=8192, temperature=0):
+    def __init__(
+        self,
+        llm_type='gpt-4o',
+        num_ctx=8192,
+        temperature=0,
+        num_predict=2048,
+        disable_thinking=False,
+    ):
 
         # Wrapper that handles everything
-        llm = self.llm_selector(llm_type, temperature, num_ctx)
+        llm = self.llm_selector(
+            llm_type,
+            temperature,
+            num_ctx,
+            num_predict,
+            disable_thinking,
+        )
         chat = FunctionsWrapper(llm)
 
         self.num_ctx = num_ctx
         self.temperature = temperature
+        self.num_predict = num_predict
+        self.disable_thinking = disable_thinking
 
         self.chat = chat
         self.llm_type = llm_type
         ### Load vectorstore
-        self.embeddings = HuggingFaceEmbeddings(model_name='mixedbread-ai/mxbai-embed-large-v1')
-
         # self.update_for_instance() # ref_time is None this time
         top_level_path = str(os.path.dirname(__file__)) + '/../'
         self.agent_prompt = file_to_string(top_level_path+'prompts/agent_system_prompt.txt')
@@ -119,7 +206,14 @@ class ReMEmbRAgent(Agent):
         self.chat_history = ChatMessageHistory()
 
 
-    def llm_selector(self, llm_type, temperature, num_ctx):
+    def llm_selector(
+        self,
+        llm_type,
+        temperature,
+        num_ctx,
+        num_predict,
+        disable_thinking,
+    ):
         llm = None
         # Support for LLM Gateway
         if 'gpt-4' in llm_type:
@@ -128,23 +222,61 @@ class ReMEmbRAgent(Agent):
 
         # Support for NIMs
         elif 'nim/' in llm_type:
+            from langchain_nvidia_ai_endpoints import ChatNVIDIA
+
             llm_name = llm_type[4:]
             llm = ChatNVIDIA(model=llm_name)
 
         # Support for Ollama functions
         elif llm_type == 'command-r':
-            llm = ChatOllama(model=llm_type, temperature=temperature, num_ctx=num_ctx)
+            llm = ChatOllama(
+                model=llm_type,
+                temperature=temperature,
+                num_ctx=num_ctx,
+                num_predict=num_predict,
+            )
         else:
-            llm = ChatOllama(model=llm_type, format="json", temperature=temperature, num_ctx=num_ctx)
+            llm_class = (
+                ThinkAwareChatOllama
+                if llm_type.lower().startswith("qwen3")
+                else ChatOllama
+            )
+            llm = llm_class(
+                model=llm_type,
+                format="json",
+                temperature=temperature,
+                num_ctx=num_ctx,
+                num_predict=num_predict,
+                **(
+                    {"think": False}
+                    if disable_thinking and llm_class is ThinkAwareChatOllama
+                    else {}
+                ),
+            )
 
         if llm is None:
             raise Exception("No correct LLM provided")
 
         return llm
 
+    def generation_directive(self, question):
+        """Disable Qwen3 reasoning tokens when requested by the evaluator.
+
+        The installed LangChain Ollama adapter predates Ollama's top-level
+        ``think`` request field. Qwen3 also supports the equivalent per-turn
+        ``/no_think`` directive, which keeps structured JSON in the visible
+        response instead of spending the output budget on hidden reasoning.
+        """
+        if self.disable_thinking and self.llm_type.lower().startswith('qwen3'):
+            return question + "\n/no_think"
+        return question
+
 
     def set_memory(self, memory: Memory):
         self.memory = memory
+        self.previous_tool_requests = "These are the tools I have previously used so far: \n"
+        self.agent_call_count = 0
+        self.chat_history = ChatMessageHistory()
         self.create_tools(memory)
         self.build_graph()
 
@@ -245,7 +377,7 @@ class ReMEmbRAgent(Agent):
 
         model = agent_prompt | model
 
-        question = f"The question is: {messages[0]}"
+        question = self.generation_directive(f"The question is: {messages[0]}")
 
         # Convert all ToolMessages into AI Messages since Ollama cann't handle ToolMessage
         if ('gpt-4' not in self.llm_type) and ('nim' not in self.llm_type):
@@ -279,8 +411,9 @@ class ReMEmbRAgent(Agent):
             dict: The updated state with re-phrased question
         """
         messages = state["messages"]
-        question = messages[0].content \
-                + "\n Please responsed in the desired format."
+        question = self.generation_directive(
+            messages[0].content + "\n Please responsed in the desired format."
+        )
         last_message = messages[-1]
 
 
@@ -314,7 +447,7 @@ class ReMEmbRAgent(Agent):
         try:
             if '```json' not in response:
                 # try parsing on its own since we cannot always trust llms
-                parsed = eval(response) 
+                parsed = ast.literal_eval(response)
             else:
                 parsed = parse_json(response)
 
@@ -326,7 +459,7 @@ class ReMEmbRAgent(Agent):
                     raise ValueError("Missing all the required keys during generate. Retrying...")
                 
             if type(parsed['position']) == str:
-                parsed['position'] = eval(parsed['position'])
+                parsed['position'] = ast.literal_eval(parsed['position'])
             
             if (parsed['position'] is not None) and len(parsed['position']) != 3:
                 raise ValueError(f"Shape of position was incorrect. {parsed['position']}. Retrying...")
@@ -400,7 +533,7 @@ class ReMEmbRAgent(Agent):
 
         if '```json' not in response:
             # try parsing on its own since we cannot always trust llms
-            parsed = eval(response) 
+            parsed = ast.literal_eval(response)
         else:
             parsed = parse_json(response)
 
@@ -424,4 +557,3 @@ if __name__ == "__main__":
 
     response = agent.query("Where can I sit?")
     response = agent.query_position("Where can I sit?")
-

@@ -32,6 +32,14 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+def save_outputs(output_file, outputs):
+    """Atomically checkpoint captions so an interrupted run can be inspected."""
+    temporary_file = f"{output_file}.tmp"
+    with open(temporary_file, 'w') as f:
+        json.dump(outputs, f, cls=NumpyEncoder)
+    os.replace(temporary_file, output_file)
+
+
 def run_video_in_segs(args):
 
     SEQUENCE_ID=args.seq_id
@@ -39,6 +47,11 @@ def run_video_in_segs(args):
     # load folders
     pkl_files = glob.glob(os.path.join(args.data_path, str(SEQUENCE_ID), '*.pkl'))
     pkl_files.sort(key=lambda x: float(x.split('/')[-1][:-4]))
+
+    if not pkl_files:
+        raise FileNotFoundError(
+            f"No PKL frames found for sequence {SEQUENCE_ID} under {args.data_path}"
+        )
 
     times = [float(x.split('/')[-1][:-4]) for x in pkl_files]
 
@@ -55,20 +68,52 @@ def run_video_in_segs(args):
             # Add current file to group
             current_segment.append(file)
 
-    embedder = HuggingFaceEmbeddings(model_name='mixedbread-ai/mxbai-embed-large-v1')
-    vila_model = VILACaptioner(args)
+    # The original script omitted the final partial segment.
+    if current_segment:
+        segments.append(current_segment)
 
-    # if exists, then exit
-    # captions_location = f'./data/{SEQUENCE_ID}/captions'
+    if args.max_segments is not None:
+        if args.max_segments < 1:
+            raise ValueError("--max-segments must be at least 1")
+        segments = segments[:args.max_segments]
+
     captions_location = args.out_path
-    if os.path.exists(captions_location):
-        exit()
-        # shutil.rmtree(captions_location, ignore_errors=True)
+    output_file = os.path.join(
+        captions_location,
+        f'captions_{args.captioner_name}_{args.seconds_per_caption}_secs.json',
+    )
     os.makedirs(captions_location, exist_ok=True)
 
     outputs = []
+    if os.path.exists(output_file) and not args.overwrite:
+        if not args.resume:
+            print(f"Caption file already exists, skipping: {output_file}")
+            return
+        with open(output_file, 'r') as f:
+            outputs = json.load(f)
+        if len(outputs) > len(segments):
+            raise ValueError(
+                f"Caption file contains {len(outputs)} entries, but only "
+                f"{len(segments)} segments were found: {output_file}"
+            )
+        if len(outputs) == len(segments):
+            print(f"Caption file is already complete: {output_file}")
+            return
+        print(
+            f"Resuming sequence {SEQUENCE_ID} at segment {len(outputs)} "
+            f"of {len(segments)}"
+        )
 
-    for i, file_names in tqdm.tqdm(enumerate(segments), total=len(segments)):
+    embedder = HuggingFaceEmbeddings(model_name=args.embedding_model)
+    captioner_model = VILACaptioner(args)
+
+    start_index = len(outputs)
+    segment_iterator = enumerate(segments[start_index:], start=start_index)
+    for i, file_names in tqdm.tqdm(
+        segment_iterator,
+        total=len(segments),
+        initial=start_index,
+    ):
 
         images = []
         # depth = []
@@ -96,14 +141,18 @@ def run_video_in_segs(args):
         rotation = Rotation.from_quat(rotation).as_euler('xyz', degrees=True)
         timestamp = np.array(timestamp)
 
-        # let's sample the images down to args.num_video_frames
-        images = images[::30//args.num_video_frames]
+        # Sample uniformly while retaining both ends of the time segment.
+        if len(images) > args.num_video_frames:
+            sample_indices = np.linspace(
+                0, len(images) - 1, args.num_video_frames, dtype=int
+            )
+            images = [images[index] for index in sample_indices]
 
-        out_text = vila_model.caption(images)
+        out_text = captioner_model.caption(images)
 
         print(out_text)
         filename_start = os.path.basename(file_names[0])
-        filename_end = os.path.basename(file_names[1])
+        filename_end = os.path.basename(file_names[-1])
 
 
         text_embedding = embedder.embed_query(out_text)
@@ -121,22 +170,8 @@ def run_video_in_segs(args):
         }
 
         outputs.append(entity)
-
-
-        entity = {
-            'id': file_names[0],
-            'position': position.mean(axis=0),
-            'theta': 3.14,
-            'time': timestamp.mean(),
-            'caption': out_text,
-            'text_embedding': text_embedding
-        }
-
-
-
-    # now save the outputs into a json
-    with open(os.path.join(captions_location, f'captions_{args.captioner_name}_{args.seconds_per_caption}_secs.json'), 'w') as f:
-        json.dump(outputs, f, cls=NumpyEncoder)
+        if (i + 1) % args.checkpoint_every == 0 or i + 1 == len(segments):
+            save_outputs(output_file, outputs)
 
 
 if __name__ == "__main__":
@@ -166,8 +201,35 @@ if __name__ == "__main__":
     parser.add_argument("--data_path", type=str, default="./coda_data")
     parser.add_argument("--out_path", type=str, default="./data/captions")
     parser.add_argument("--captioner_name", type=str, default="Llama-3-VILA1.5-8b")
+    parser.add_argument(
+        "--embedding-model",
+        type=str,
+        default="mixedbread-ai/mxbai-embed-large-v1",
+    )
 
     parser.add_argument("--seconds_per_caption", type=int, default=3)
+    parser.add_argument(
+        "--max-segments",
+        type=int,
+        default=None,
+        help="Only process the first N segments; useful for smoke tests.",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace an existing caption JSON instead of skipping it.",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Continue an incomplete caption JSON from its last saved segment.",
+    )
+    parser.add_argument(
+        "--checkpoint-every",
+        type=int,
+        default=10,
+        help="Atomically save after this many segments (default: 10).",
+    )
 
     parser.add_argument("--video-file", type=str, default=None)
     parser.add_argument("--num-video-frames", type=int, default=6)
@@ -179,6 +241,11 @@ if __name__ == "__main__":
     parser.add_argument("--num_beams", type=int, default=1)
     parser.add_argument("--max_new_tokens", type=int, default=512)
     args = parser.parse_args()
+
+    if args.overwrite and args.resume:
+        parser.error("--overwrite and --resume cannot be used together")
+    if args.checkpoint_every < 1:
+        parser.error("--checkpoint-every must be at least 1")
 
 
     # add some rules here
