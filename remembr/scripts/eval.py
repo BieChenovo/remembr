@@ -259,6 +259,21 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
 
 def main(args):
 
+    # Questions contain human-readable clock times and the time-search tool
+    # parses clock strings back into Unix timestamps.  Pin both operations to
+    # the timezone used by the NaVQA annotations instead of inheriting the
+    # compute container's timezone.
+    zoneinfo_path = os.path.join('/usr/share/zoneinfo', args.timezone)
+    if args.timezone.startswith('/') or '..' in args.timezone.split('/'):
+        raise ValueError(f"Invalid timezone name: {args.timezone}")
+    if not os.path.isfile(zoneinfo_path):
+        raise ValueError(
+            f"Timezone {args.timezone!r} is not installed at {zoneinfo_path}"
+        )
+    os.environ['TZ'] = args.timezone
+    time.tzset()
+    print(f"Using NaVQA annotation/display timezone: {args.timezone}")
+
     use_milvus = False
     use_optimal_context = False
     if 'remembr' in args.model:
@@ -286,8 +301,16 @@ def main(args):
     questions_root = args.questions_dir or os.path.join(args.data_dir, 'questions')
     data_path = os.path.join(questions_root, str(args.sequence_id), args.qa_file+'.json')
 
-    data = json.load(open(data_path, 'r'))
-    data = data['data']
+    question_payload = json.load(open(data_path, 'r'))
+    question_timezone = question_payload.get('metadata', {}).get(
+        'timestamp_timezone'
+    )
+    if question_timezone and question_timezone != args.timezone:
+        raise ValueError(
+            f"Question file timezone {question_timezone!r} does not match "
+            f"evaluation timezone {args.timezone!r}"
+        )
+    data = question_payload['data']
     if args.question_indices:
         if args.max_questions is not None:
             raise ValueError('--question_indices and --max_questions are mutually exclusive')
@@ -371,6 +394,10 @@ def main(args):
         out_json = {
             "version": 0.1,
             "in_progress": in_progress,
+            "config": {
+                "timezone": args.timezone,
+                "questions_file": data_path,
+            },
             "metrics": metrics,
             "responses": responses,
         }
@@ -470,6 +497,12 @@ if __name__ == "__main__":
     parser.add_argument("--captions_dir", type=str, default=None)
     parser.add_argument("--questions_dir", type=str, default=None)
     parser.add_argument("--coda_dir", type=str, default="./coda_data/")
+    parser.add_argument(
+        "--timezone",
+        type=str,
+        default="America/Los_Angeles",
+        help="IANA timezone used by NaVQA's human-readable timestamps",
+    )
 
     parser.add_argument("--out_dir", type=str, default="./out/")
 

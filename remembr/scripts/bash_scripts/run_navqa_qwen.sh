@@ -24,9 +24,11 @@ EVAL_TAG=${EVAL_TAG:-full}
 NUM_PREDICT=${NUM_PREDICT:-2048}
 DISABLE_THINKING=${DISABLE_THINKING:-0}
 QUESTION_INDICES=${QUESTION_INDICES:-}
+NAVQA_TIMEZONE=${NAVQA_TIMEZONE:-America/Los_Angeles}
 EMBEDDING_MODEL=${EMBEDDING_MODEL:-/hpc2hdd/home/yichenwang/.cache/huggingface/hub/models--mixedbread-ai--mxbai-embed-large-v1/snapshots/b33106f585b9ce46904ad7443a3b52b7a63e231c}
 
 export OLLAMA_MODELS OLLAMA_HOST
+export TZ="$NAVQA_TIMEZONE"
 export TOKENIZERS_PARALLELISM=false
 export PYTHONPATH="$PROJECT_ROOT:$REMEMBR_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 export NO_PROXY="127.0.0.1,localhost${NO_PROXY:+,$NO_PROXY}"
@@ -147,6 +149,7 @@ run_eval() {
         --captions_dir "$INPUT_ARTIFACT_ROOT/captions" \
         --questions_dir "$INPUT_ARTIFACT_ROOT/questions" \
         --coda_dir "$PROJECT_ROOT/CODa" \
+        --timezone "$NAVQA_TIMEZONE" \
         --out_dir "$OUT_DIR" \
         --temperature 0 \
         --num_ctx 32768 \

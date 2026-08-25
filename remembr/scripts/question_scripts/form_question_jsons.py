@@ -11,6 +11,7 @@ import copy
 import csv
 import datetime
 import json
+import os
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -20,6 +21,7 @@ from time import localtime, strftime
 TYPE_COLUMN = "Type \n(binary, position, time, text)"
 TIMESTAMP_COLUMN = "Timestamp \nwith answer"
 CATEGORY_COLUMN = "Question\nCategory"
+DEFAULT_TIMEZONE = "America/Los_Angeles"
 
 
 def parse_args():
@@ -38,7 +40,37 @@ def parse_args():
         type=Path,
         help="Output root; defaults to <data-dir>/questions",
     )
+    parser.add_argument(
+        "--timezone",
+        default=DEFAULT_TIMEZONE,
+        help=(
+            "IANA timezone used by NaVQA's timezone-less HH:MM:SS annotations "
+            f"and human-readable timestamps (default: {DEFAULT_TIMEZONE})"
+        ),
+    )
     return parser.parse_args()
+
+
+def configure_timezone(timezone_name):
+    """Pin localtime()/mktime() to the timezone used during annotation.
+
+    NaVQA stores annotation timestamps as bare HH:MM:SS strings.  Letting
+    Python interpret those strings in the host timezone makes the generated
+    questions and answers depend on whether preprocessing runs in California,
+    UTC, or China.  ``tzset`` is available on the Linux systems supported by
+    this preprocessing script and also works on Python 3.8, where ``zoneinfo``
+    is not part of the standard library yet.
+    """
+
+    zoneinfo_path = Path("/usr/share/zoneinfo") / timezone_name
+    if timezone_name.startswith("/") or ".." in Path(timezone_name).parts:
+        raise ValueError(f"Invalid timezone name: {timezone_name}")
+    if not zoneinfo_path.is_file():
+        raise ValueError(
+            f"Timezone {timezone_name!r} is not installed at {zoneinfo_path}"
+        )
+    os.environ["TZ"] = timezone_name
+    time.tzset()
 
 
 def rounded_position(position, digits):
@@ -96,6 +128,8 @@ def previous_caption_index(caption_times, timestamp):
 
 def main():
     args = parse_args()
+    configure_timezone(args.timezone)
+    print(f"Using NaVQA annotation/display timezone: {args.timezone}")
     navqa_dir = args.data_dir / "navqa"
     captions_dir = args.captions_dir or args.data_dir / "captions"
     questions_dir = args.questions_dir or args.data_dir / "questions"
@@ -183,7 +217,17 @@ def main():
         output_path = questions_dir / str(sequence_id) / "human_qa.json"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
-            json.dumps({"version": 0.1, "data": filled_questions}, indent=4),
+            json.dumps(
+                {
+                    "version": 0.2,
+                    "metadata": {
+                        "timestamp_timezone": args.timezone,
+                        "timestamp_storage": "unix_seconds_utc",
+                    },
+                    "data": filled_questions,
+                },
+                indent=4,
+            ),
             encoding="utf-8",
         )
         print(
