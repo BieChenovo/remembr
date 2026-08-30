@@ -62,6 +62,7 @@
     }
     .report:hover { border-color: var(--cyan); transform: translateY(-1px); }
     .report span { display: block; color: var(--muted); font-size: 13px; }
+    .section-copy { margin: -8px 0 18px; color: var(--muted); }
     .sequences { display: grid; grid-template-columns: 150px 1fr; gap: 14px 20px; align-items: center; }
     .seq-label { font-weight: 750; }
     .seq-links { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -113,6 +114,29 @@
     </section>
 
     <section class="panel">
+      <h2>Sequence 0 完整视频与逐帧审计</h2>
+      <p class="section-copy">每套界面均可查看问题、答案、候选池、retrieval trace、caption contact sheet，并在 13:41 的完整视频时间轴中定位证据。视频与 273 张 contact sheets 由所有方法共享。</p>
+      <div class="report-grid">
+        <a class="report" href="reports/sequence_0_audit_v1/">Caption / video provenance<span>完整视频、caption 生成窗口与六帧采样来源</span></a>
+        <a class="report" href="reports/sequence_0_audit_trace_v1/">B0 · mxbai dense audit<span>正式 baseline 的完整 controller 与 retrieval trace</span></a>
+        <a class="report" href="reports/sequence_0_audit_gte_dense_210_v1/">B1 · GTE dense audit<span>210 题正式运行中的 sequence 0 深度审计</span></a>
+        <a class="report" href="reports/sequence_0_audit_qrag_static_210_v1/">B2 · Q-RAG static audit<span>static top-B 的 scorer、排名与返回证据</span></a>
+        <a class="report" href="reports/sequence_0_audit_qrag_210_v1/">B3 · Q-RAG sequential audit<span>逐步 state update、每步排名与最终答案</span></a>
+        <a class="report" href="reports/sequence_0_audit_gte_dense_v1/">B1 · preliminary trace<span>早期 GTE 运行，保留用于复现实验演进</span></a>
+      </div>
+      <p class="note">网页发布版视频为 720×602、10 FPS、H.264，时长和帧顺序与 154MB 本地原视频一致；压缩后约 68MB，以满足 GitHub 单文件限制。</p>
+    </section>
+
+    <section class="panel">
+      <h2>补充与历史分析</h2>
+      <div class="report-grid">
+        <a class="report" href="reports/sequence_0_trace_analysis_v1/">B0 · sequence 0 trace analysis<span>序列级错误与检索行为诊断</span></a>
+        <a class="report" href="reports/sequence_0_gte_dense_analysis_v1/">B1 · sequence 0 analysis<span>GTE dense 序列级错误分析</span></a>
+        <a class="report" href="reports/navqa_210_retriever_comparison_v1/">Retriever comparison v1<span>保留第一版 B0/B1/B3 对比供结果追溯</span></a>
+      </div>
+    </section>
+
+    <section class="panel">
       <h2>逐序列检索轨迹</h2>
       <div class="sequences">
         <div class="seq-label">B1 · GTE dense</div>
@@ -128,10 +152,10 @@
           <a href="reports/qrag_210_sequential_zero_shot_v1/sequence_0.html">seq 0</a><a href="reports/qrag_210_sequential_zero_shot_v1/sequence_3.html">seq 3</a><a href="reports/qrag_210_sequential_zero_shot_v1/sequence_4.html">seq 4</a><a href="reports/qrag_210_sequential_zero_shot_v1/sequence_6.html">seq 6</a><a href="reports/qrag_210_sequential_zero_shot_v1/sequence_16.html">seq 16</a><a href="reports/qrag_210_sequential_zero_shot_v1/sequence_21.html">seq 21</a><a href="reports/qrag_210_sequential_zero_shot_v1/sequence_22.html">seq 22</a>
         </div>
       </div>
-      <p class="note">说明：本页发布的是可独立打开的轻量 HTML/JSON/CSV 报告。包含原始视频和逐帧图像的详细审计体积超过 200MB，仍保存在本地 artifacts 中。</p>
+      <p class="note">所有当前生成的可视化界面、分析 JSON/CSV、sequence 0 深度审计和网页媒体资源都已列入本入口。</p>
     </section>
 
-    <footer>Generated from the completed B0–B3 NaVQA evaluation · 2026-08-30</footer>
+    <footer>Generated from the completed B0–B3 NaVQA evaluation · synchronized 2026-08-31</footer>
   </main>
 </body>
 </html>
