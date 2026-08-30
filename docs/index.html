@@ -88,7 +88,7 @@
       <p class="lede">在固定 caption memory、ReMEmbR controller、Qwen reader 与 evaluator 下，对比 mxbai dense、GTE dense、Q-RAG static 和 Q-RAG sequential 检索。</p>
     </header>
 
-    <section class="cards" aria-label="总体准确率">
+    <section class="cards" aria-label="原答案准确率">
       <article class="card b0"><div class="label">B0 · baseline</div><div class="method">mxbai dense</div><div class="score">54.8% <small>115 / 210</small></div></article>
       <article class="card b1"><div class="label">B1 · encoder ablation</div><div class="method">GTE dense</div><div class="score">48.6% <small>102 / 210</small></div></article>
       <article class="card b2"><div class="label">B2 · learned scorer</div><div class="method">Q-RAG static</div><div class="score">53.3% <small>112 / 210</small></div></article>
@@ -97,8 +97,16 @@
 
     <section class="panel primary">
       <div>
-        <h2>四组逐题对比</h2>
-        <p>先从这里看整体指标、分组表现、B0–B3 逐题变化和 B2/B3 state-update 差异。</p>
+        <h2>以“检索到正确记忆”为标准的新报告</h2>
+        <p>B1 检索命中率 34.3%，B2/B3 均为 29.5%；同时区分检索命中、Grounded 回答正确、答对但未命中与 reader failure。</p>
+      </div>
+      <a class="button" href="reports/navqa_210_grounded_accuracy_v1/">打开检索命中报告 →</a>
+    </section>
+
+    <section class="panel primary">
+      <div>
+        <h2>原答案准确率四组逐题对比</h2>
+        <p>查看原 NaVQA 判分、分组表现、B0–B3 逐题变化和 B2/B3 state-update 差异。</p>
       </div>
       <a class="button" href="reports/navqa_210_retriever_comparison_v2/">打开主报告 →</a>
     </section>
@@ -118,7 +126,7 @@
       <p class="section-copy">每套界面均可查看问题、答案、候选池、retrieval trace、caption contact sheet，并在 13:41 的完整视频时间轴中定位证据。视频与 273 张 contact sheets 由所有方法共享。</p>
       <div class="report-grid">
         <a class="report" href="reports/sequence_0_audit_v1/">Caption / video provenance<span>完整视频、caption 生成窗口与六帧采样来源</span></a>
-        <a class="report" href="reports/sequence_0_audit_trace_v1/">B0 · mxbai dense audit<span>正式 baseline 的完整 controller 与 retrieval trace</span></a>
+        <a class="report" href="reports/sequence_0_audit_trace_v1/">B0 · mxbai dense trace audit<span>sequence 0 补跑的完整 controller 与 retrieval trace</span></a>
         <a class="report" href="reports/sequence_0_audit_gte_dense_210_v1/">B1 · GTE dense audit<span>210 题正式运行中的 sequence 0 深度审计</span></a>
         <a class="report" href="reports/sequence_0_audit_qrag_static_210_v1/">B2 · Q-RAG static audit<span>static top-B 的 scorer、排名与返回证据</span></a>
         <a class="report" href="reports/sequence_0_audit_qrag_210_v1/">B3 · Q-RAG sequential audit<span>逐步 state update、每步排名与最终答案</span></a>

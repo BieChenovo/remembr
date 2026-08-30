@@ -6,7 +6,7 @@
 >
 > 目标读者：负责数据、模型和实验实现的 Agent
 >
-> 当前状态：**B0–B3 的 210 题 zero-shot 全量实验、retrieval trace、误差分析与可视化均已完成**
+> 当前状态：**B0–B3 的 210 题 zero-shot 全量实验均已完成；B1–B3 保存了 210 题 retrieval trace，B0 原 210 题无 trace，仅有 sequence 0 补跑 trace；误差分析与可视化已完成**
 
 ## 0. 一分钟版本
 
@@ -766,12 +766,40 @@ input 模板、outer controller 最大 tool calls、Qwen 参数和 evaluator。�
 
 **[当前实测]** B2 相比同 encoder 的 B1 提高 10 题，说明 checkpoint scorer
 有正向信号；B3 相比 B2 净少 1 题，其中 21 题改善、22 题退化，因此当前结果
-不支持“sequential state update 带来净收益”。derived-support conditional hit rate
-分别为 B1 50.6%、B2 38.6%、B3 36.3%，检索命中与最终回答准确率并不等价。
+不支持“sequential state update 带来净收益”。
+
+为排除“没有检索到标注记忆，但 reader 猜对或落入数值容差”对答案准确率的干扰，
+另按最终有效 attempt 的 retrieval trace 计算两项指标：成功时只取最后成功 attempt，
+整题失败时只取最后一次失败 attempt，不合并旧重试。
+
+- `RetrievalHit = RetrievedIDs ∩ DerivedReferenceIDs ≠ ∅`；
+- `GroundedCorrect = AnswerCorrect ∧ RetrievalHit`。
+
+`RetrievedIDs` 联合 text、time、position 三类工具。分母固定为全部 210 题：
+
+| 组别 | 检索命中（any-hit） | 完整 reference 检索 | Grounded 回答正确 | 答对但未命中 |
+|---|---:|---:|---:|---:|
+| B0 | 不可验证 | 不可验证 | 不可验证 | 不可验证 |
+| B1 | 72 / 210（34.3%） | 68 / 210（32.4%） | 45 / 210（21.4%） | 57 |
+| B2 | 62 / 210（29.5%） | 58 / 210（27.6%） | 43 / 210（20.5%） | 69 |
+| B3 | 62 / 210（29.5%） | 60 / 210（28.6%） | 48 / 210（22.9%） | 63 |
+
+B0 原 210 题结果未保存 retrieval trace，不能把缺失轨迹伪装成检索未命中。后来单独
+重跑且保存完整 trace 的 B0 sequence 0（30 题）只能作为补充诊断：检索命中
+9 / 30（30.0%），Grounded 回答正确 7 / 30（23.3%）。其中 S0·Q0 的答案按
+NaVQA 容差判为正确，但 derived reference 为 `#183`，最终两次 time retrieval 只返回
+`#115–#118`，所以新指标明确判为未命中，不计 Grounded 正确。
+
+以上 reference 是由 NaVQA `context` 到 caption entry 的确定性映射，不是穷尽式
+gold support；19 题至少一条 reference 位于冻结候选池之外，因此这是一项偏保守的
+证据命中指标。早期 comparison v2 中按 text-tool call 条件化的 hit rate 不应解读为
+210 题检索准确率；本节的新口径取代该解读。
 
 outer controller 实际产生的 text-tool calls 不完全相同（B1 476、B2 517、
 B3 483），所以本轮尚不是严格等总 tool-call budget 的因果隔离实验。完整对比报告
-发布于 `docs/reports/navqa_210_retriever_comparison_v2/index.html`。
+发布于 `docs/reports/navqa_210_retriever_comparison_v2/index.html`；新的检索命中与
+Grounded 回答报告发布于
+`docs/reports/navqa_210_grounded_accuracy_v1/index.html`。
 
 ### 14.11 可直接复制给另一对话的任务
 
