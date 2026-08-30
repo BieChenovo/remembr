@@ -15,11 +15,15 @@ SMOKE_TAG=${SMOKE_TAG:-smoke_nothink_1024}
 NUM_PREDICT=${NUM_PREDICT:-1024}
 DISABLE_THINKING=${DISABLE_THINKING:-1}
 RUN_SMOKE=${RUN_SMOKE:-1}
+TEXT_JUDGE_MODEL=${TEXT_JUDGE_MODEL:-$MODEL}
+TEXT_JUDGE_NUM_PREDICT=${TEXT_JUDGE_NUM_PREDICT:-96}
+NAVQA_TIMEZONE=${NAVQA_TIMEZONE:-America/Los_Angeles}
 
 BATCH_DIR="$RUNTIME_ROOT/batches/$EVAL_TAG"
 SUMMARY_FILE="$BATCH_DIR/summary.tsv"
 RUN_ONE="$REMEMBR_ROOT/scripts/bash_scripts/run_navqa_qwen.sh"
-mkdir -p "$BATCH_DIR"
+REPORT_DIR="$RUNTIME_ROOT/eval_reports/$EVAL_TAG"
+mkdir -p "$BATCH_DIR" "$REPORT_DIR"
 
 timestamp() {
     date '+%Y-%m-%d %H:%M:%S'
@@ -70,7 +74,10 @@ fields = [
     str(metrics.get("questions_completed")),
     str(metrics.get("questions_scored")),
     str(metrics.get("questions_failed")),
+    str(metrics.get("descriptive_count")),
+    str(metrics.get("descriptive_accuracy")),
     str(metrics.get("binary_accuracy")),
+    str(metrics.get("text_accuracy")),
     str(metrics.get("position_mean_l2_error")),
     str(metrics.get("time_mean_absolute_error")),
     str(metrics.get("duration_mean_absolute_error")),
@@ -80,7 +87,16 @@ print("\t".join(fields))
 PY
 }
 
-printf 'sequence\tcompleted\tscored\tfailed\tbinary_accuracy\tposition_l2\ttime_mae\tduration_mae\tresult\n' >"$SUMMARY_FILE"
+write_report() {
+    local sequence_id=$1
+    local result=$2
+    python3 "$REMEMBR_ROOT/scripts/visualize_eval_report.py" \
+        --result "$result" \
+        --questions "$PROJECT_ROOT/artifacts/questions/$sequence_id/human_qa.json" \
+        --output "$REPORT_DIR/sequence_${sequence_id}.html"
+}
+
+printf 'sequence\tcompleted\tscored\tfailed\tdescriptive_count\tdescriptive_accuracy\tbinary_accuracy\ttext_accuracy\tposition_l2\ttime_mae\tduration_mae\tresult\n' >"$SUMMARY_FILE"
 
 smoke_pending=$RUN_SMOKE
 batch_start=$SECONDS
@@ -89,6 +105,7 @@ for sequence_id in $SEQUENCE_IDS; do
     if result_is_complete "$result"; then
         step "Sequence $sequence_id already complete; skipping"
         write_summary "$sequence_id" "$result"
+        write_report "$sequence_id" "$result"
         continue
     fi
 
@@ -107,6 +124,9 @@ for sequence_id in $SEQUENCE_IDS; do
     EVAL_TAG="$EVAL_TAG" \
     NUM_PREDICT="$NUM_PREDICT" \
     DISABLE_THINKING="$DISABLE_THINKING" \
+    TEXT_JUDGE_MODEL="$TEXT_JUDGE_MODEL" \
+    TEXT_JUDGE_NUM_PREDICT="$TEXT_JUDGE_NUM_PREDICT" \
+    NAVQA_TIMEZONE="$NAVQA_TIMEZONE" \
     PROJECT_ROOT="$PROJECT_ROOT" \
     RUNTIME_ROOT="$RUNTIME_ROOT" \
         bash "$RUN_ONE"
@@ -116,6 +136,7 @@ for sequence_id in $SEQUENCE_IDS; do
         exit 1
     fi
     write_summary "$sequence_id" "$result"
+    write_report "$sequence_id" "$result"
     step "Sequence $sequence_id complete"
 done
 

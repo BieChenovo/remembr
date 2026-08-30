@@ -35,7 +35,7 @@ TYPE_LABELS = {
 STATUS_LABELS = {
     "scored": "已计分",
     "failed": "失败",
-    "skipped": "跳过",
+    "skipped": "未计分",
 }
 
 
@@ -95,6 +95,11 @@ def error_value(question: dict[str, Any], response: dict[str, Any]) -> tuple[Any
         if correct is None:
             return None, ""
         return correct, "正确" if bool(correct) else "错误"
+    if question_type == "text":
+        correct = error.get("text_iscorrect")
+        if correct is None:
+            return None, ""
+        return correct, "语义正确" if bool(correct) else "语义错误"
     key_and_unit = {
         "position": ("position_error", "m"),
         "time": ("time_error", "min"),
@@ -199,6 +204,10 @@ def build_report(
     skipped = status_counts["skipped"]
     binary_count = int(metrics.get("binary_count") or 0)
     binary_accuracy = metrics.get("binary_accuracy")
+    text_count = int(metrics.get("text_count") or 0)
+    text_accuracy = metrics.get("text_accuracy")
+    descriptive_count = int(metrics.get("descriptive_count") or 0)
+    descriptive_accuracy = metrics.get("descriptive_accuracy")
 
     status_cursor = 0.0
     conic_parts = []
@@ -246,7 +255,9 @@ def build_report(
         [
             metric_card("完成情况", f"{scored}/{total}", "成功计分题目", "green"),
             metric_card("结构化失败", str(failed), "超过重试上限", "red"),
+            metric_card("描述题准确率", number(descriptive_accuracy * 100 if descriptive_accuracy is not None else None, 1, "%"), f"binary + text, n={descriptive_count}", "blue"),
             metric_card("二元准确率", number(binary_accuracy * 100 if binary_accuracy is not None else None, 1, "%"), f"n={binary_count}", "blue"),
+            metric_card("文本准确率", number(text_accuracy * 100 if text_accuracy is not None else None, 1, "%"), f"LLM 语义判分, n={text_count}", "purple"),
             metric_card("位置 L2 误差", number(metrics.get("position_mean_l2_error"), 2, " m"), f"n={metrics.get('position_count', 0)}", "orange"),
             metric_card("时间 MAE", number(metrics.get("time_mean_absolute_error"), 2, " min"), f"n={metrics.get('time_count', 0)}", "purple"),
             metric_card("持续时间 MAE", number(metrics.get("duration_mean_absolute_error"), 2, " min"), f"n={metrics.get('duration_count', 0)}", "cyan"),
@@ -258,10 +269,11 @@ def build_report(
         for key, value in failure_types.most_common()
     ) or "无失败"
     findings = [
-        f"{failed} 个失败全部来自{failure_summary}；当前最明显的接口问题是位置题没有稳定返回坐标。",
+        f"共有 {failed} 个失败：{failure_summary}。失败不会被计入相应题型的分母，阅读准确率时应同时检查计分数量。",
+        f"描述题准确率为 {number(descriptive_accuracy * 100 if descriptive_accuracy is not None else None, 1, '%')}（二元 {binary_count} 题 + 文本 {text_count} 题）；文本题采用固定本地 LLM 语义判分，不与论文的判分器严格等价。",
         f"位置误差中位数为 {number(position_median, 2, ' m')}，均值为 {number(metrics.get('position_mean_l2_error'), 2, ' m')}，需要进一步拆分检索误差与答案生成误差。",
         f"有效模型调用平均耗时 {number(latency_mean, 1, ' s')}，最慢题目 {number(latency_max, 1, ' s')}；带重试题显著拉高总耗时。",
-        f"二元题准确率为 {number(binary_accuracy * 100 if binary_accuracy is not None else None, 1, '%')}，但只有 {binary_count} 道题，样本量不足以代表整体效果。",
+        f"二元题准确率为 {number(binary_accuracy * 100 if binary_accuracy is not None else None, 1, '%')}；文本题准确率为 {number(text_accuracy * 100 if text_accuracy is not None else None, 1, '%')}。",
     ]
 
     table_rows = []
@@ -274,14 +286,16 @@ def build_report(
         question_text = question.get("question", "")
         answer_text = response.get("text") or ""
         failure = response.get("evaluation_failure") or ""
+        judge = (response.get("error") or {}).get("text_judge") or {}
+        judge_rationale = judge.get("rationale", "")
         gt = ground_truth(question)
         prediction = prediction_value(question, response)
         elapsed = response.get("elapsed")
         searchable = " ".join(
-            [question_text, answer_text, failure, question.get("id", ""), question_type]
+            [question_text, answer_text, failure, judge_rationale, question.get("id", ""), question_type]
         ).lower()
         if status == "skipped":
-            prediction_html = '<span class="muted">按原评测逻辑跳过文本题</span>'
+            prediction_html = '<span class="muted">未运行或没有可计分输出</span>'
         elif status == "failed":
             prediction_html = (
                 f'<span class="failure-reason">{esc(failure)}</span>'
@@ -291,6 +305,7 @@ def build_report(
             prediction_html = (
                 f'<strong>{format_structured(prediction)}</strong>'
                 + (f'<div class="answer-text">{esc(answer_text)}</div>' if answer_text else "")
+                + (f'<div class="answer-text">判分理由：{esc(judge_rationale)}</div>' if judge_rationale else "")
             )
         table_rows.append(
             f"""
@@ -316,7 +331,9 @@ def build_report(
         )
 
     generated_at = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
-    title = "ReMEmbR × Qwen3-8B · NaVQA 序列 0"
+    sequence_id = questions_path.parent.name
+    answer_model = result.get("config", {}).get("answer_model", "ReMEmbR")
+    title = f"{answer_model} · NaVQA 序列 {sequence_id}"
 
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -342,7 +359,7 @@ def build_report(
     p {{ margin:0; }}
     .muted, small {{ color:var(--muted); }}
     .source {{ text-align:right; color:var(--muted); font-size:12px; max-width:440px; overflow-wrap:anywhere; }}
-    .metrics {{ display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; margin-bottom:18px; }}
+    .metrics {{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:18px; }}
     .metric-card,.panel {{ border:1px solid var(--line); background:linear-gradient(145deg,rgba(20,34,56,.96),rgba(12,24,41,.96)); box-shadow:0 18px 50px rgba(0,0,0,.17); border-radius:16px; }}
     .metric-card {{ padding:18px; position:relative; overflow:hidden; }}
     .metric-card:before {{ content:""; position:absolute; inset:0 auto 0 0; width:3px; background:var(--blue); }}
@@ -396,7 +413,7 @@ def build_report(
   <main class="container">
     <header>
       <div>
-        <div class="eyebrow">Evaluation report · Sequence 0</div>
+        <div class="eyebrow">Evaluation report · Sequence {esc(sequence_id)}</div>
         <h1>{title}</h1>
         <p class="muted">VILA1.5-13B captions · 3 秒间隔 · 本地向量检索 · Qwen3-8B 回答</p>
       </div>
@@ -413,7 +430,7 @@ def build_report(
           <div class="legend">
             <div><i class="dot" style="background:{STATUS_COLORS['scored']}"></i><span>已计分</span><strong>{scored}</strong></div>
             <div><i class="dot" style="background:{STATUS_COLORS['failed']}"></i><span>结构化失败</span><strong>{failed}</strong></div>
-            <div><i class="dot" style="background:{STATUS_COLORS['skipped']}"></i><span>文本题跳过</span><strong>{skipped}</strong></div>
+            <div><i class="dot" style="background:{STATUS_COLORS['skipped']}"></i><span>未计分</span><strong>{skipped}</strong></div>
           </div>
         </div>
       </article>
@@ -456,7 +473,7 @@ def build_report(
         </table>
       </div>
     </section>
-    <footer>这是序列 0 的端到端 NaVQA 报告，不代表全部 7 个序列，也不是独立的纯检索 Recall@K 评测。</footer>
+    <footer>这是序列 {esc(sequence_id)} 的端到端 NaVQA 报告；文本题由 {esc(result.get('config', {}).get('text_judge_model') or '未配置')} 做语义判分，不是独立的纯检索 Recall@K 评测。</footer>
   </main>
   <script>
     const search = document.getElementById('search');

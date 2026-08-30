@@ -25,7 +25,14 @@ NUM_PREDICT=${NUM_PREDICT:-2048}
 DISABLE_THINKING=${DISABLE_THINKING:-0}
 QUESTION_INDICES=${QUESTION_INDICES:-}
 NAVQA_TIMEZONE=${NAVQA_TIMEZONE:-America/Los_Angeles}
+TEXT_JUDGE_MODEL=${TEXT_JUDGE_MODEL:-$MODEL}
+TEXT_JUDGE_NUM_PREDICT=${TEXT_JUDGE_NUM_PREDICT:-96}
 EMBEDDING_MODEL=${EMBEDDING_MODEL:-/hpc2hdd/home/yichenwang/.cache/huggingface/hub/models--mixedbread-ai--mxbai-embed-large-v1/snapshots/b33106f585b9ce46904ad7443a3b52b7a63e231c}
+TEXT_RETRIEVER=${TEXT_RETRIEVER:-dense}
+GTE_MODEL=${GTE_MODEL:-Alibaba-NLP/gte-multilingual-base}
+EMBEDDING_DEVICE=${EMBEDDING_DEVICE:-cpu}
+EMBEDDING_BATCH_SIZE=${EMBEDDING_BATCH_SIZE:-16}
+EMBEDDING_CACHE_DIR=${EMBEDDING_CACHE_DIR:-$RUNTIME_ROOT/embedding_cache}
 
 export OLLAMA_MODELS OLLAMA_HOST
 export TZ="$NAVQA_TIMEZONE"
@@ -36,7 +43,7 @@ export no_proxy="127.0.0.1,localhost${no_proxy:+,$no_proxy}"
 
 LOG_DIR="$RUNTIME_ROOT/logs"
 OUT_DIR="$RUNTIME_ROOT/eval_outs"
-mkdir -p "$LOG_DIR" "$OUT_DIR" "$VENV_ROOT" "$OLLAMA_MODELS" "$DOWNLOAD_CACHE"
+mkdir -p "$LOG_DIR" "$OUT_DIR" "$VENV_ROOT" "$OLLAMA_MODELS" "$DOWNLOAD_CACHE" "$EMBEDDING_CACHE_DIR"
 
 timestamp() {
     date '+%Y-%m-%d %H:%M:%S'
@@ -69,6 +76,26 @@ fi
 
 step "Verifying Python runtime"
 "$VENV_ROOT/bin/python" -c 'import torch, langchain, langgraph, sentence_transformers; print(f"torch={torch.__version__} cuda={torch.cuda.is_available()} langchain={langchain.__version__}")'
+
+if [[ "$TEXT_RETRIEVER" == gte_dense ]]; then
+    if [[ -d "$GTE_MODEL" ]]; then
+        GTE_MODEL_PATH="$GTE_MODEL"
+    else
+        step "Staging $GTE_MODEL for the GTE dense ablation"
+        GTE_MODEL_PATH=$("$VENV_ROOT/bin/python" -c \
+            'from huggingface_hub import snapshot_download; import sys; print(snapshot_download(sys.argv[1]))' \
+            "$GTE_MODEL")
+    fi
+    # The pinned local snapshot vendors Alibaba-NLP/new-impl's configuration.py
+    # and modeling.py. Validate that the model is genuinely self-contained so
+    # the ablation cannot silently depend on network availability.
+    HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 "$VENV_ROOT/bin/python" -c \
+        'from transformers import AutoModel, AutoTokenizer; import sys; AutoTokenizer.from_pretrained(sys.argv[1]); model = AutoModel.from_pretrained(sys.argv[1], trust_remote_code=True); print(model.config.hidden_size)' \
+        "$GTE_MODEL_PATH"
+    step "Using GTE snapshot at $GTE_MODEL_PATH"
+else
+    GTE_MODEL_PATH="$GTE_MODEL"
+fi
 
 OLLAMA_BIN="$OLLAMA_ROOT/bin/ollama"
 if [[ ! -x "$OLLAMA_BIN" ]]; then
@@ -145,7 +172,12 @@ run_eval() {
         --sequence_id "$SEQUENCE_ID" \
         --model "remembr+$MODEL" \
         --memory_backend local \
+        --text_retriever "$TEXT_RETRIEVER" \
         --embedding_model "$EMBEDDING_MODEL" \
+        --gte_model "$GTE_MODEL_PATH" \
+        --embedding_device "$EMBEDDING_DEVICE" \
+        --embedding_batch_size "$EMBEDDING_BATCH_SIZE" \
+        --embedding_cache_dir "$EMBEDDING_CACHE_DIR" \
         --captions_dir "$INPUT_ARTIFACT_ROOT/captions" \
         --questions_dir "$INPUT_ARTIFACT_ROOT/questions" \
         --coda_dir "$PROJECT_ROOT/CODa" \
@@ -154,6 +186,9 @@ run_eval() {
         --temperature 0 \
         --num_ctx 32768 \
         --num_predict "$NUM_PREDICT" \
+        --text_judge_model "$TEXT_JUDGE_MODEL" \
+        --text_judge_host "$OLLAMA_HOST" \
+        --text_judge_num_predict "$TEXT_JUDGE_NUM_PREDICT" \
         --max_retries 2 \
         --resume \
         --postfix "_$postfix" \

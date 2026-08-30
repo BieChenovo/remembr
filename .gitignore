@@ -11,6 +11,9 @@ out_old
 artifacts/
 previews/
 
+# Downloaded model weights and external source checkouts
+third_party/
+
 # milvus-related
 embedEtcd.yaml
 *.lock

@@ -215,6 +215,13 @@ class ReMEmbRAgent(Agent):
         disable_thinking,
     ):
         llm = None
+        # langchain-community 0.2 hard-codes localhost:11434 and does not read
+        # OLLAMA_HOST itself. Respect the standard Ollama environment variable
+        # so parallel workers can be pinned to independent GPU-local servers.
+        ollama_host = os.environ.get("OLLAMA_HOST")
+        if ollama_host and "://" not in ollama_host:
+            ollama_host = f"http://{ollama_host}"
+        ollama_connection = {"base_url": ollama_host} if ollama_host else {}
         # Support for LLM Gateway
         if 'gpt-4' in llm_type:
             # TODO: ADD OpenAI here
@@ -234,6 +241,7 @@ class ReMEmbRAgent(Agent):
                 temperature=temperature,
                 num_ctx=num_ctx,
                 num_predict=num_predict,
+                **ollama_connection,
             )
         else:
             llm_class = (
@@ -247,6 +255,7 @@ class ReMEmbRAgent(Agent):
                 temperature=temperature,
                 num_ctx=num_ctx,
                 num_predict=num_predict,
+                **ollama_connection,
                 **(
                     {"think": False}
                     if disable_thinking and llm_class is ThinkAwareChatOllama
@@ -279,6 +288,14 @@ class ReMEmbRAgent(Agent):
         self.chat_history = ChatMessageHistory()
         self.create_tools(memory)
         self.build_graph()
+
+    def get_retrieval_trace(self):
+        getter = getattr(self.memory, "get_retrieval_trace", None)
+        return getter() if getter is not None else []
+
+    def get_candidate_pool_metadata(self):
+        getter = getattr(self.memory, "get_candidate_pool_metadata", None)
+        return getter() if getter is not None else {}
 
 
 

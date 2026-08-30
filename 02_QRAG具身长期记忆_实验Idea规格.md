@@ -2,11 +2,11 @@
 
 > 文档类型：跨论文研究 Idea、实验规格与 Agent 交接协议
 >
-> 版本：v0.2，2026-08-25
+> 版本：v0.4，2026-08-30
 >
 > 目标读者：负责数据、模型和实验实现的 Agent
 >
-> 当前状态：**可进入 Phase 0 NaVQA / ReMEmbR 数据审计；尚未证明核心假设**
+> 当前状态：**B0–B3 的 210 题 zero-shot 全量实验、retrieval trace、误差分析与可视化均已完成**
 
 ## 0. 一分钟版本
 
@@ -36,6 +36,7 @@ Q-RAG-style state-conditioned sequential retrieval
 ### 状态标签
 
 - **[论文事实]**：原文或库内论文笔记已支持；
+- **[当前实测]**：已由当前服务器上的代码、数据或运行产物验证；
 - **[当前判断]**：跨论文归纳得到的研究判断；
 - **[待验证假设]**：需要实验支持或否证；
 - **[项目决策]**：为了可归因而暂定的实现边界；
@@ -99,6 +100,54 @@ Q-RAG-style state-conditioned sequential retrieval
 - **[论文事实]** 12 s caption 消融为 `.54±.5 / .50±.5 / .38±.5`，说明 caption 时间粒度本身也是重要混淆因子。[ReMEmbR Table II]
 
 Table II 的数值在原文中以 mean ± standard deviation 呈现；本文仅将其用作复现校验参考，不将跨配置的点差解读为显著性。
+
+### 2.4 当前服务器上的 210 题基线与错误审计
+
+**[当前实测]** 当前本地结果使用 VILA1.5-13B 3 s captions、ReMEmbR controller、
+Qwen3-8B reader、`no_thinking`、256-token 输出上限和
+`America/Los_Angeles` 时区。按 ReMEmbR 论文阈值重新对全部 210 题计分，
+无效结构化输出按错误处理：
+
+| 分组 | 正确 / 总数 | 严格准确率 |
+|---|---:|---:|
+| Overall | 115 / 210 | 54.8% |
+| binary | 41 / 67 | 61.2% |
+| descriptive text | 26 / 33 | 78.8% |
+| position（15 m） | 26 / 71 | 36.6% |
+| point-in-time（2 min） | 20 / 30 | 66.7% |
+| duration（2 min） | 2 / 9 | 22.2% |
+| short | 49 / 70 | 70.0% |
+| medium | 38 / 70 | 54.3% |
+| long | 28 / 70 | 40.0% |
+
+95 个错误的可观察分类为：43 个有效位置越界、23 个有效 binary 答错、
+9 个有效时间越界、7 个有效 duration 越界、6 个有效 text 语义答错，以及
+7 个结构化输出失效。7 个失效必须计错并单独报告 output coverage；不能从相应
+题型的分母中删除后只报条件准确率。
+
+**[当前实测] reference context 审计：**
+
+- 210/210 个问题都带有非空 `context`；
+- `context` 共包含 230 个 reference caption block；
+- 230/230 都能通过 caption 文本和位置精确映射回当前 caption memory；
+- 按当前 `load_memory()` 的问题起止窗口，只有 191/210 个问题的全部 reference
+  entries 位于候选池内；19 个问题至少有一个 reference entry 在池外；
+- 19 个池外 entry 中 14 个在起点之前、5 个在终点之后；其中 10 个只相差约
+  3–6.1 s，属于明显的 3 s caption 边界/索引问题，其余存在更大的标注窗口不一致；
+- reference 全部入池的 191 题严格准确率为 56.0%，reference 在池外的 19 题为
+  42.1%。这是相关性描述，不单独证明因果。
+
+`context` 可作为 **derived reference support candidate**，但在确认其标注来源、
+穷尽性和是否允许训练前，不应直接称为完整 gold supporting facts。当前历史运行
+没有保存实际 retrieval query、top-k entry ID 或 score，因此除候选池遗漏和输出
+schema 失败外，尚不能把每个错误严格分解为 retriever 或 reader 责任。
+
+当前审计产物：
+
+- `artifacts/eval_reports/navqa_210_error_analysis_v1/index.html`
+- `artifacts/eval_reports/navqa_210_error_analysis_v1/error_analysis.json`
+- `artifacts/eval_reports/navqa_210_error_analysis_v1/question_diagnostics.csv`
+- `artifacts/eval_reports/navqa_210_error_analysis_v1/reference_context_manifest.jsonl`
 
 ## 3. 什么保持不变，什么被替换
 
@@ -206,27 +255,56 @@ Q-RAG 原设定依赖 gold supporting facts。如果对问题 $q$ 可定义一�
 r_T=\mathbb 1[\exists E\in\mathcal S^*(q):E\subseteq R_T]-\lambda_c|R_T|.
 \]
 
-**[Gate]** ReMEmbR 原文说明 NaVQA 有问题和答案，但没有在论文中说明公开了每个问题的 gold supporting captions 或检索轨迹。因此不得假设原 Q-RAG reward 可以直接使用。
+ReMEmbR 论文没有说明是否公开了逐题 gold supporting captions 或检索轨迹；但
+**[当前实测]** 当前 NaVQA 问题文件中的 `context` 可全部映射为 230 个 caption
+entry IDs。它为 Q-RAG 监督提供了此前未确认的派生 support 候选。
 
-若没有 gold support，备选路线必须分开报告：
+**[Gate]** 在将这些 entry IDs 用作 reward 前必须确认：
 
-1. **Support reconstruction**：仅在答案时间/位置能可靠对齐 caption 的问题上生成候选 support，并人工审计歧义；
-2. **Answer-reward variant**：以 NaVQA 最终正确性作为 reward，但这是高方差、reader-dependent 的新变体，不是原 Q-RAG 复现；
-3. **Synthetic pretraining**：从 caption / metadata 自动生成带 support 的问题用于训练，只在人工 NaVQA 上测试；
-4. **Supervised / inference-only fallback**：如果无法构建可靠 reward，先将研究降级为 sequential reranking，不宣称 RL / value learning 收益。
+1. `context` 是人工标注者使用的答案证据，而非评测时自动拼接或答案泄漏；
+2. 一个问题的 `context` 是否穷尽全部等价 support，还是只给出一个可行证据；
+3. 多 block context 应按“全部命中”还是“任一等价集合命中”计 reward；
+4. 19 个 reference context 在当前候选池外的问题如何修正，且所有 baseline 使用
+   完全相同的候选池；
+5. 训练只使用训练序列的 derived support，不能用测试序列 reference context 调参。
+
+在完成上述 Gate 前，公开 checkpoint 只能作为 inference-only / zero-shot baseline，
+不能把利用全部 210 个 reference contexts 微调后的同集结果称为泛化性能。
+
+若 derived reference support 通过审计，可按以下优先级推进：
+
+1. **Derived-support reward**：以 `reference_context_manifest.jsonl` 的 entry IDs
+   构造 support reward，并按 sequence split；这是当前最直接路线；
+2. **Support reconstruction**：为位置/时间可对齐问题补充等价 support sets，并人工
+   审计多解；
+3. **Answer-reward variant**：以 NaVQA 最终正确性作为 reward，但这是高方差、
+   reader-dependent 的新变体，不是原 Q-RAG 复现；
+4. **Synthetic pretraining**：从 caption / metadata 自动生成带 support 的问题训练，
+   只在人工 NaVQA 上测试；
+5. **Supervised / inference-only fallback**：若 support provenance 不通过审计，降级为
+   sequential reranking，不宣称 RL / value learning 收益。
+
+原先“无 support 时”的备选路线仍必须分开报告：
+
+- derived support、synthetic support 和 answer reward 不得混在同一结果列；
+- pseudo label 不得在命名中伪装成官方 gold；
+- support F1 与最终 answer correctness 必须同时报告。
 
 ## 5. Phase 0：数据与监督 Gate
 
 ### 5.1 必须审计的项目
 
-- [ ] NaVQA 问题、答案、对应 CODa 序列和片段是否全部可获取；
-- [ ] ReMEmbR 官方 code / config / prompts / captions 是否可复现；
-- [ ] 是否提供已预计算 captions，或必须重新跑 VILA；
-- [ ] 每条 caption 与 position / timestamp / segment 的对齐 schema；
-- [ ] 是否有 support timestamp、support captions、relevant interval 或 retrieval traces；
+- [x] 当前实验所需的 7 序列、210 个 NaVQA 问题/答案和 CODa 预处理片段可用；
+- [x] 当前 fork 的 ReMEmbR code / prompts / VILA captions 可端到端运行；尚未完成
+  与 GPT-4o 官方数值的严格复现；
+- [x] 7 个序列的 VILA1.5-13B 3 s captions 已生成；
+- [x] caption、position、timestamp 和 3 s segment 对齐 schema 已核对；
+- [x] 210 题均有可映射到 caption IDs 的 reference `context`；没有历史 retrieval
+  traces，且 support provenance / completeness 仍待确认；
 - [ ] 210 个问题是否有官方 train / validation / test 拆分；
 - [ ] 原始 ReMEmbR 的确切 `k`、`m`、最大调用数、prompt 与 evaluator 版本；
-- [ ] 位置与时间类答案能否反向构建无泄漏的支持区间；
+- [x] 已生成 derived reference-context manifest；仍需按 sequence split 并审计等价
+  support sets；
 - [ ] 在相同 reader 下，oracle support 是否显著高于 dense top-k；
 - [ ] 公开 license、数据体积、checksum 与必要计算资源。
 
@@ -324,10 +402,16 @@ oracle_or_upper_bound_report.md
 
 ### Phase 1：复现 ReMEmbR 与简单检索基线
 
-1. 在同一子集上复现 A0 和 A1；
-2. 跑 A2，校验 caption、candidate pool、reader 与 evaluator；
-3. 输出按问题类型和长度分层的 trace；
-4. 复现偏差过大时，不进入 Q-RAG 比较。
+0. 先修复并冻结 evaluator：无效输出计错、按官方阈值计算 overall、保存 output
+   coverage；审计 19 题 reference context 被候选窗口排除的问题；
+   候选池修正必须由与答案无关的统一时间规则产生，不得为单题注入
+   reference IDs；
+1. 为 A0 增加逐步 retrieval trace（tool query、candidate IDs、scores、selected IDs、
+   reader evidence）；历史 210 题结果没有该 trace，不能用于精确 retriever/reader 归因；
+2. 在同一子集上复现 A0 和 A1；
+3. 跑 A2，校验 caption、candidate pool、reader 与 evaluator；
+4. 输出按问题类型和长度分层的 trace；
+5. 复现偏差过大时，不进入 Q-RAG 比较。
 
 ### Phase 2：非 value-learning 强基线
 
@@ -458,20 +542,240 @@ oracle_or_upper_bound_report.md
 
 ## 13. 第一个最小实验
 
-不要一开始就训练 Q-RAG。第一个可交付实验是：
+当前 7 序列、210 题 baseline 已经跑通，但发现 output contract、候选窗口和 trace
+三个前置问题。因此更新后的最小实验不是再次盲跑 210 题，而是：
 
-1. 只选 1 条 CODa sequence，打通 question → captions → retrieval → reader → evaluator；
-2. 复现 ReMEmbR 最多 3 calls 与 `1 call only`；
-3. 加入相同 caption encoder 的 one-shot dense top-k；
-4. 人工审查该序列上的 30 个问题，记录是否可指定 support caption / interval；
-5. 为每个问题保存检索 trace、答案和评分；
-6. 之后才决定 Q-RAG 使用 gold-support reward、synthetic pretraining 还是 answer reward。
+1. 用序列 0 的 30 题验证修正后的 candidate-pool policy 与 output schema；
+2. 保存 A0 每次 tool call 的完整 retrieval trace；
+3. 用 `context` 映射出的 entry IDs 计算 derived-support Recall@K；
+4. 跑相同 GTE encoder 的 dense top-k 与 Q-RAG zero-shot fixed-step；
+5. 固定同一 reader、候选池、证据数、tool-call 数与输出 schema；
+6. 只有 oracle/derived-support evidence 明显提高 reader ceiling 后，才进入 Q-RAG
+   微调或 answer reward。
 
-该实验的目标是确认接口和评测灵敏度，不是报告可发表的结果。
+该实验的目标是确认接口、support 标签和评测灵敏度，不是报告可发表的结果。
 
 ## 14. 对实验 Agent 的直接交接指令
 
-> 请先完整阅读 `literature/09_notes/02_QRAG具身长期记忆_实验Idea规格.md`。本轮只执行 Phase 0：审计 ReMEmbR 官方代码与 NaVQA 数据，确认 3 s captions、position、timestamp、question / answer、split、support annotations、reader prompt 和 evaluator 的实际可用性。先在一条 sequence 上打通官方 ReMEmbR、`1 call only` 和 one-shot dense top-k，不训练 Q-RAG，不引入 raw images、FindingDory 或多楼层导航。将数据 schema、实际数量、可复现命令、检索 trace、support 标注状态、无泄漏 split 和 Gate A–D 结论写入新的 task 文件与 `dataset_audit.md`。任何未能从代码、数据或原文确认的字段标为 `unknown`，不得猜测。
+### 14.1 本轮交付边界
+
+另一个实验 Agent 本轮只实现 **Scope A / Stage 1A 的 inference-only
+adapter**：仅替换 `search_by_text()` 的 caption ranker，position/time 检索、
+ReMEmbR controller、Qwen reader、prompt、候选池、证据数和 evaluator 都保持不变。
+
+本轮不做：
+
+- 不使用 210 题的 reference context 训练或调参；
+- 不实现 learned STOP，停止决策继续交给 ReMEmbR controller；
+- 不改 position/time tool，不引入 raw frame；
+- 不为了提升 support recall 按问题注入 reference IDs 或改变时间窗口；
+- 不把 zero-shot 适配结果称为 Q-RAG 在 NaVQA 上的完整复现。
+
+### 14.2 已就绪资产与未就绪依赖
+
+| 项目 | 当前状态 |
+|---|---|
+| Q-RAG 代码 | `third_party/Q-RAG`，commit `42358d78ac491843763b90677f07237471c97086` |
+| 官方 checkpoint | `third_party/qrag-models/qrag-ft-gte-on-hotpotqa_musique/model_best.pt` |
+| checkpoint SHA-256 | `ff2ab1db095fe05f0f854672a224e9dff6ff0a9a8ecda5cf35cdf88a94d37c56` |
+| 原始配置 | 同目录 `config_orig.yaml`，HotpotQA + Musique，`max_steps=6`，`positions_processor=none` |
+| 当前 3-step 副本 | 同目录 `config.yaml`；仅是本地运行副本，不代表 checkpoint 重训练 |
+| encoder | `Alibaba-NLP/gte-multilingual-base`；当前 checkpoint 的实际 inference forward 输出为 768 维 |
+| GTE base/tokenizer | 已下载到本地 `third_party/`；模型文件不纳入 Git |
+| NaVQA captions | 7 序列共 3260 条，已就绪 |
+| derived support manifest | `artifacts/eval_reports/navqa_210_error_analysis_v1/reference_context_manifest.jsonl` |
+
+当前 mxbai caption embeddings 是 1024 维，与 Q-RAG 的 768 维 action encoder
+不兼容，不得直接复用。必须用 checkpoint 对应的 GTE action encoder 将
+3260 条 caption 重新编码并缓存。
+
+Q-RAG 模型代码中虽定义了 768→384 的线性 head，但官方 `BertPredictor.forward`
+没有调用该 head；当前适配器按实际 forward 输出与正式 trace 校验，使用 768 维
+state/action embeddings。
+
+### 14.3 建议新增的代码边界
+
+Q-RAG 第三方目录保持原样；适配代码放在 ReMEmbR 内：
+
+```text
+remembr/memory/qrag_text_retriever.py
+    加载 slim inference weights、编码 state、对 caption actions 打分、去重选择
+
+remembr/memory/qrag_local_memory.py
+    实现 Memory 接口；text 调 Q-RAG，position/time 完全沿用 LocalVectorMemory
+
+remembr/scripts/export_qrag_inference_checkpoint.py
+    一次性从 11 GB checkpoint 导出 policy state encoder 和 critic action encoder
+
+remembr/scripts/precompute_qrag_caption_embeddings.py
+    按 sequence 生成 action embedding cache 和 manifest
+```
+
+`eval.py` 只新增显式参数，不更改 dense 默认行为：
+
+```text
+--text_retriever dense|gte_dense|qrag_static|qrag
+--qrag_checkpoint PATH
+--qrag_inference_checkpoint PATH
+--embedding_cache_dir PATH
+--qrag_evidence_budget 1|3|5
+--qrag_state_format native|controller
+```
+
+retrieval trace 随每题结果写入评测 JSON/JSONL，不另设
+`--retrieval-trace-dir` 参数。
+
+`dense` 必须回归到当前行为；`gte_dense` 用未经 NaVQA 训练的同款
+GTE base 作普通 question/caption dense baseline；`qrag_static` 使用与
+Q-RAG 相同的 checkpoint state/action encoders，但不在取回证据后更新
+state，而是一次取 question-only score 最高的 top-B；`qrag` 才逐步
+追加已选 evidence 并重新打分。`qrag_static` 是区分“学到的 encoder/
+scorer”和“state-conditioned sequential update”的必要对照。
+
+### 14.4 zero-shot 检索算法
+
+checkpoint 的 native 训练状态是“question + 已选 evidence”，action 是文本
+chunk，且该 checkpoint 不包含可直接迁移的 learned STOP action。因此实现两种
+state format，以 `native` 为 zero-shot 主配置：
+
+```text
+native:
+  original_question [SEP] selected_caption_1 [SEP] ...
+
+controller (域外消融):
+  original_question [SEP] current_tool_query [SEP] selected_caption_1 [SEP] ...
+```
+
+每一步：
+
+1. 将 state 编码为 768 维；
+2. 读取当前候选池的 caption action embeddings；
+3. 计算 state/action dot-product，屏蔽已选 IDs；
+4. greedy 选最高分 action，追加到 state；
+5. 重复到固定 evidence budget，将相同数量 caption 按同一模板返回
+   ReMEmbR controller。
+
+Scope A 下 controller 每次 text-tool call 是一个新的 ranker episode；本轮不让
+Q-RAG 自己决定是否继续发起 tool call。
+
+### 14.5 缓存与资源约束
+
+action cache manifest 至少保存：
+
+```json
+{
+  "sequence_id": "0",
+  "caption_file_sha256": "...",
+  "checkpoint_sha256": "...",
+  "encoder": "Alibaba-NLP/gte-multilingual-base",
+  "entry_ids": ["..."],
+  "embedding_shape": [0, 768],
+  "dtype": "float16|float32"
+}
+```
+
+任一 hash、entry 顺序、encoder 或维度不一致时必须拒绝使用旧缓存。全部
+3260 条 caption 很小，应预编码而不是每题重复跑 action encoder。不要让
+每个评测 worker 都加载完整 11 GB 训练 checkpoint；先导出 slim inference
+weights，再每张 GPU 一个共享 retriever 进程，或先单进程完成可复现性验证。
+
+### 14.6 候选池与无泄漏规则
+
+在跑 Q-RAG 前，必须把 candidate-pool policy 记录为版本化配置。可考虑
+“与 `[start_time,end_time]` 区间相交的 caption + 固定的 3 s 边界容差”，
+但不得为了命中 reference 而按题扩窗。19 题中较大时间差的样本必须
+人工审计数据含义；如不能修正原始 metadata，则同时报告：
+
+- 全部 210 题的主结果；
+- 191 题 reference-complete-in-pool 子集的诊断结果；
+- 19 题 pool-mismatch 子集，不将它们从 overall 分母中删除。
+
+### 14.7 对照实验顺序
+
+| 阶段 | 方法 | 目的 |
+|---|---|---|
+| B0 | 当前 mxbai dense | 只作现有系统参考，不用于归因 Q-RAG encoder |
+| B1 | GTE base dense，budget = 1/3/5 | 分离更换 base encoder 本身的影响 |
+| B2 | Q-RAG checkpoint static top-B，budget = 1/3/5 | 相同 learned encoders/scorer，不更新 state |
+| B3 | Q-RAG checkpoint sequential zero-shot，fixed budget = 1/3/5 | 相对 B2 测 state-conditioned update 的独立收益 |
+| B4 | oracle / derived-support evidence | 测 reader ceiling，不是可部署系统 |
+| B5 | 按 sequence split 的 derived-support fine-tuning | 只在 support Gate 通过后由后续阶段执行 |
+
+B1/B2/B3 必须共享同一 candidate IDs、caption 文本、evidence budget、reader
+input 模板、outer controller 最大 tool calls、Qwen 参数和 evaluator。先在序列 0
+上跑 30 题，接口与 trace 通过后再跑 7 序列。
+
+### 14.8 必须落盘的 retrieval trace
+
+每个 text-tool call 至少保存：
+
+```json
+{
+  "run_id": "...",
+  "question_id": "...",
+  "sequence_id": "0",
+  "method": "gte_dense|qrag_static|qrag_sequential_zero_shot",
+  "candidate_pool_policy": "...",
+  "candidate_entry_ids": ["..."],
+  "original_question": "...",
+  "tool_query": "...",
+  "state_format": "native|controller",
+  "steps": [
+    {
+      "step": 0,
+      "state_text": "...",
+      "selected_entry_id": "...",
+      "selected_score": 0.0,
+      "top_candidate_ids": ["..."],
+      "top_candidate_scores": [0.0],
+      "latency_ms": 0.0
+    }
+  ],
+  "reader_evidence_entry_ids": ["..."],
+  "prediction": {},
+  "evaluation": {}
+}
+```
+
+评测后再用 derived support manifest 计算 Recall@B / complete-support success；检索推理
+本身不得读取 `reference_answer` 或 `support_entry_ids`。
+
+### 14.9 验收标准
+
+- checkpoint SHA 校验通过，slim 模型与完整 checkpoint 在小样本上的
+  state/action scores 和 greedy IDs 一致；
+- `--text-retriever dense` 的回归测试通过，不改当前基线行为；
+- position/time tool 在 dense 和 Q-RAG 组返回完全一致的 IDs；
+- Q-RAG 选择是 deterministic 的，不重复选同一 ID，所有 ID 均属于冻结候选池；
+- cache hash / 维度 / ID 顺序错误时 fail closed，不静默重算或混用；
+- 序列 0 的 30 题生成完整 trace，无 adapter 异常、无 NaN score；
+- 输出 B1/B2/B3 的 strict accuracy、output coverage、support recall、latency 和
+  按题型/长度分组对比。
+
+### 14.10 2026-08-28 全量 210 题结果
+
+以下均为 NaVQA 210 题 zero-shot 评测，未使用 `reference_answer` 或
+`support_entry_ids` 训练或参与推理：
+
+| 组别 | 检索方法 | 正确 / 总数 | 严格准确率 | 结构化失败 | 平均延迟 / 题 |
+|---|---|---:|---:|---:|---:|
+| B0 | mxbai dense | 115 / 210 | 54.8% | 7 | 37.70 s |
+| B1 | GTE dense | 102 / 210 | 48.6% | 5 | 40.44 s |
+| B2 | Q-RAG static top-B | 112 / 210 | 53.3% | 11 | 41.11 s |
+| B3 | Q-RAG sequential zero-shot | 111 / 210 | 52.9% | 6 | 44.39 s |
+
+**[当前实测]** B2 相比同 encoder 的 B1 提高 10 题，说明 checkpoint scorer
+有正向信号；B3 相比 B2 净少 1 题，其中 21 题改善、22 题退化，因此当前结果
+不支持“sequential state update 带来净收益”。derived-support conditional hit rate
+分别为 B1 50.6%、B2 38.6%、B3 36.3%，检索命中与最终回答准确率并不等价。
+
+outer controller 实际产生的 text-tool calls 不完全相同（B1 476、B2 517、
+B3 483），所以本轮尚不是严格等总 tool-call budget 的因果隔离实验。完整对比报告
+发布于 `docs/reports/navqa_210_retriever_comparison_v2/index.html`。
+
+### 14.11 可直接复制给另一对话的任务
+
+> 请在项目根目录完整阅读 `02_QRAG具身长期记忆_实验Idea规格.md`，重点执行第 14 节。实现 Scope A 的 Q-RAG inference-only adapter：仅替换 ReMEmbR `search_by_text()` ranker，导出 slim checkpoint，用 GTE 重编码 captions，实现 GTE base dense、Q-RAG static top-B 和 Q-RAG sequential 三个对照，保留 position/time tools 和 outer controller，并为每个 text-tool call 落盘完整 trace。先只跑序列 0 的 B1/B2/B3，budget = 1/3/5；未通过 candidate-pool、support provenance 和 sequence split Gate 前不训练 Q-RAG。不修改第三方 Q-RAG 源码，不读取答案或 support IDs 进行推理，不引入 raw images 或 learned STOP。完成后提供代码路径、环境/模型依赖、可复现命令、回归测试、trace 样例和序列 0 对比报告。
 
 ## 15. 后续路线图
 
@@ -508,6 +812,8 @@ Stage 4: multi-floor navigation interface
 最需要保持警惕的两点是：
 
 1. ReMEmbR 的 caption 是文本，因此数据 encoder 适配很小；但 ReMEmbR 是三类检索工具 + LLM controller，不能含糊地说“替换了 retrieval”；
-2. NaVQA 规模小，而原文未说明存在 gold supporting captions 和可训练 split。数据/监督审计是 Q-RAG 训练前的真正第一步。
+2. NaVQA 规模小；当前数据中存在可精确映射的 derived reference
+   contexts，但原文未说明其 provenance、穷尽性或可训练 split。因此
+   zero-shot 适配可先进行，训练仍必须等待 supervision/split Gate。
 
 如果这两个问题得到解决，第一阶段应先用 Scope A 验证最小替换，再以 Scope B 检验 Q-RAG 替换整个多轮检索 loop 的收益。

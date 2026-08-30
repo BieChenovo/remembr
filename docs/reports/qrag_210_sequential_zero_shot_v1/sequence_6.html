@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>remembr+qwen3:8b · NaVQA 序列 6</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#08111f; --panel:#101c2e; --panel2:#142238; --line:#273750;
+      --text:#edf4ff; --muted:#9eacc2; --blue:#53a7ff; --green:#32d583;
+      --red:#ff6b6b; --orange:#ffae57; --purple:#ad8cff; --cyan:#3ddbd9;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 12% 0,#15345a 0,transparent 28rem),var(--bg); color:var(--text); font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; }
+    .container { width:min(1440px,calc(100% - 40px)); margin:auto; padding:44px 0 72px; }
+    header { display:flex; justify-content:space-between; gap:24px; align-items:flex-end; margin-bottom:28px; }
+    .eyebrow { color:var(--blue); text-transform:uppercase; letter-spacing:.16em; font-weight:800; font-size:12px; }
+    h1 { margin:6px 0 5px; font-size:clamp(28px,4vw,48px); line-height:1.1; letter-spacing:-.04em; }
+    h2 { margin:0 0 18px; font-size:20px; }
+    h3 { margin:0 0 14px; font-size:15px; }
+    p { margin:0; }
+    .muted, small { color:var(--muted); }
+    .source { text-align:right; color:var(--muted); font-size:12px; max-width:440px; overflow-wrap:anywhere; }
+    .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+    .metric-card,.panel { border:1px solid var(--line); background:linear-gradient(145deg,rgba(20,34,56,.96),rgba(12,24,41,.96)); box-shadow:0 18px 50px rgba(0,0,0,.17); border-radius:16px; }
+    .metric-card { padding:18px; position:relative; overflow:hidden; }
+    .metric-card:before { content:""; position:absolute; inset:0 auto 0 0; width:3px; background:var(--blue); }
+    .metric-card.green:before { background:var(--green); } .metric-card.red:before { background:var(--red); }
+    .metric-card.orange:before { background:var(--orange); } .metric-card.purple:before { background:var(--purple); } .metric-card.cyan:before { background:var(--cyan); }
+    .metric-card span { display:block; color:var(--muted); font-size:12px; }
+    .metric-card strong { display:block; font-size:26px; margin:7px 0 1px; white-space:nowrap; }
+    .dashboard { display:grid; grid-template-columns:1fr 1.4fr; gap:18px; margin-bottom:18px; }
+    .panel { padding:22px; }
+    .status-layout { display:flex; gap:28px; align-items:center; }
+    .donut { width:154px; aspect-ratio:1; flex:0 0 auto; border-radius:50%; background:conic-gradient(#32d583 0.000% 100.000%,#ff6b6b 100.000% 100.000%,#98a2b3 100.000% 100.000%); display:grid; place-items:center; }
+    .donut:after { content:"30 题"; display:grid; place-items:center; width:104px; aspect-ratio:1; border-radius:50%; background:var(--panel); font-size:22px; font-weight:800; }
+    .legend { flex:1; display:grid; gap:10px; }
+    .legend div { display:grid; grid-template-columns:10px 1fr auto; align-items:center; gap:9px; }
+    .dot { width:10px; height:10px; border-radius:50%; }
+    .type-row { display:grid; grid-template-columns:74px 1fr 28px; align-items:center; gap:12px; margin:12px 0; }
+    .stacked-bar { height:25px; display:flex; overflow:hidden; border-radius:7px; background:#0a1424; }
+    .stacked-bar span { min-width:18px; display:flex; align-items:center; justify-content:center; color:#07101c; font-size:11px; font-weight:900; }
+    .findings { margin:0; padding-left:21px; display:grid; gap:9px; color:#dce7f7; }
+    .charts { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:18px; }
+    .bar-row { display:grid; grid-template-columns:34px 1fr 82px; gap:8px; align-items:center; margin:9px 0; font-size:12px; }
+    .bar-track { height:10px; background:#091423; border-radius:99px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:99px; }
+    .bar-row strong { text-align:right; font-size:11px; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+    input,select { color:var(--text); background:#0a1526; border:1px solid var(--line); padding:10px 12px; border-radius:9px; font:inherit; }
+    input { min-width:280px; flex:1; }
+    .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; }
+    table { width:100%; border-collapse:collapse; min-width:1120px; }
+    th { position:sticky; top:0; background:#182840; color:#b9c6d9; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em; z-index:1; }
+    th,td { padding:13px 12px; border-bottom:1px solid #22324a; vertical-align:top; }
+    tbody tr:hover { background:rgba(83,167,255,.055); }
+    td:first-child small { display:block; }
+    .question-cell { min-width:370px; max-width:560px; }
+    summary { cursor:pointer; font-weight:650; }
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; padding:13px; margin-top:10px; border-radius:9px; background:#091423; }
+    .detail-grid span { display:block; color:var(--muted); font-size:10px; text-transform:uppercase; }
+    code { color:#b9d9ff; overflow-wrap:anywhere; }
+    .answer-text { color:var(--muted); font-size:12px; margin-top:6px; max-width:330px; }
+    .failure-reason { color:#ff9f9f; font-size:12px; }
+    .status-pill,.type-pill { display:inline-block; padding:3px 8px; border-radius:99px; font-size:11px; font-weight:750; white-space:nowrap; }
+    .status-scored { color:#5ee6a5; background:#11382d; } .status-failed { color:#ff9f9f; background:#451f2a; } .status-skipped { color:#c3ccda; background:#303a49; }
+    .type-position { color:#ffc279; background:#3b2d1e; } .type-time { color:#c5b3ff; background:#30284e; } .type-duration { color:#79efed; background:#193c43; } .type-binary { color:#8ec8ff; background:#193553; } .type-text { color:#c9d1dd; background:#333b48; }
+    footer { color:var(--muted); font-size:12px; margin-top:16px; }
+    @media(max-width:1100px) { .metrics { grid-template-columns:repeat(3,1fr); } .charts { grid-template-columns:1fr; } }
+    @media(max-width:720px) { .container { width:min(100% - 22px,1440px); padding-top:24px; } header { display:block; } .source { text-align:left; margin-top:12px; } .metrics { grid-template-columns:1fr 1fr; } .dashboard { grid-template-columns:1fr; } .status-layout { align-items:flex-start; } }
+    @media print { body { background:#fff; color:#111; } .metric-card,.panel { box-shadow:none; } .toolbar { display:none; } }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div>
+        <div class="eyebrow">Evaluation report · Sequence 6</div>
+        <h1>remembr+qwen3:8b · NaVQA 序列 6</h1>
+        <p class="muted">VILA1.5-13B captions · 3 秒间隔 · 本地向量检索 · Qwen3-8B 回答</p>
+      </div>
+      <div class="source">生成于 2026-08-28 06:34:28 PDT<br>结果：remembr/artifacts/eval_outs/6/human_qa/remembr+qwen3:8b__captions_VILA1.5-13b_3_secs__qrag_qrag_210_sequential_zero_shot_v1.json<br>题目：remembr/artifacts/questions/6/human_qa.json</div>
+    </header>
+
+    <section class="metrics">
+    <article class="metric-card green">
+      <span>完成情况</span>
+      <strong>30/30</strong>
+      <small>成功计分题目</small>
+    </article>
+    <article class="metric-card red">
+      <span>结构化失败</span>
+      <strong>0</strong>
+      <small>超过重试上限</small>
+    </article>
+    <article class="metric-card blue">
+      <span>描述题准确率</span>
+      <strong>75.0%</strong>
+      <small>binary + text, n=20</small>
+    </article>
+    <article class="metric-card blue">
+      <span>二元准确率</span>
+      <strong>66.7%</strong>
+      <small>n=12</small>
+    </article>
+    <article class="metric-card purple">
+      <span>文本准确率</span>
+      <strong>87.5%</strong>
+      <small>LLM 语义判分, n=8</small>
+    </article>
+    <article class="metric-card orange">
+      <span>位置 L2 误差</span>
+      <strong>131.41 m</strong>
+      <small>n=8</small>
+    </article>
+    <article class="metric-card purple">
+      <span>时间 MAE</span>
+      <strong>0.33 min</strong>
+      <small>n=2</small>
+    </article>
+    <article class="metric-card cyan">
+      <span>持续时间 MAE</span>
+      <strong>—</strong>
+      <small>n=0</small>
+    </article></section>
+
+    <section class="dashboard">
+      <article class="panel">
+        <h2>题目处理结果</h2>
+        <div class="status-layout">
+          <div class="donut" aria-label="30 题"></div>
+          <div class="legend">
+            <div><i class="dot" style="background:#32d583"></i><span>已计分</span><strong>30</strong></div>
+            <div><i class="dot" style="background:#ff6b6b"></i><span>结构化失败</span><strong>0</strong></div>
+            <div><i class="dot" style="background:#98a2b3"></i><span>未计分</span><strong>0</strong></div>
+          </div>
+        </div>
+      </article>
+      <article class="panel">
+        <h2>不同题型的处理结果</h2>
+
+            <div class="type-row">
+              <span>位置</span>
+              <div class="stacked-bar"><span title="已计分 8" style="width:100.000%;background:#32d583">8</span></div>
+              <strong>8</strong>
+            </div>
+            <div class="type-row">
+              <span>时间点</span>
+              <div class="stacked-bar"><span title="已计分 2" style="width:100.000%;background:#32d583">2</span></div>
+              <strong>2</strong>
+            </div>
+            <div class="type-row">
+              <span>二元判断</span>
+              <div class="stacked-bar"><span title="已计分 12" style="width:100.000%;background:#32d583">12</span></div>
+              <strong>12</strong>
+            </div>
+            <div class="type-row">
+              <span>文本</span>
+              <div class="stacked-bar"><span title="已计分 8" style="width:100.000%;background:#32d583">8</span></div>
+              <strong>8</strong>
+            </div>
+      </article>
+    </section>
+
+    <section class="dashboard">
+      <article class="panel">
+        <h2>当前结果暴露的问题</h2>
+        <ol class="findings"><li>共有 0 个失败：无失败。失败不会被计入相应题型的分母，阅读准确率时应同时检查计分数量。</li><li>描述题准确率为 75.0%（二元 12 题 + 文本 8 题）；文本题采用固定本地 LLM 语义判分，不与论文的判分器严格等价。</li><li>位置误差中位数为 113.22 m，均值为 131.41 m，需要进一步拆分检索误差与答案生成误差。</li><li>有效模型调用平均耗时 37.9 s，最慢题目 59.8 s；带重试题显著拉高总耗时。</li><li>二元题准确率为 66.7%；文本题准确率为 87.5%。</li></ol>
+      </article>
+      <article class="panel">
+        <h2>推理耗时</h2>
+        <p class="muted">仅包含实际调用模型的题目；失败重试时间已计入。</p>
+        <div style="margin-top:16px">
+            <div class="bar-row">
+              <span class="bar-label">Q1</span>
+              <div class="bar-track"><div class="bar-fill" style="width:53.57%;background:#53a7ff"></div></div>
+              <strong>32.01 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q2</span>
+              <div class="bar-track"><div class="bar-fill" style="width:74.21%;background:#53a7ff"></div></div>
+              <strong>44.35 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q3</span>
+              <div class="bar-track"><div class="bar-fill" style="width:83.36%;background:#53a7ff"></div></div>
+              <strong>49.82 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q4</span>
+              <div class="bar-track"><div class="bar-fill" style="width:64.48%;background:#53a7ff"></div></div>
+              <strong>38.53 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q5</span>
+              <div class="bar-track"><div class="bar-fill" style="width:77.16%;background:#53a7ff"></div></div>
+              <strong>46.11 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q6</span>
+              <div class="bar-track"><div class="bar-fill" style="width:78.64%;background:#53a7ff"></div></div>
+              <strong>46.99 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q7</span>
+              <div class="bar-track"><div class="bar-fill" style="width:71.95%;background:#53a7ff"></div></div>
+              <strong>43.00 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q8</span>
+              <div class="bar-track"><div class="bar-fill" style="width:61.54%;background:#53a7ff"></div></div>
+              <strong>36.78 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q9</span>
+              <div class="bar-track"><div class="bar-fill" style="width:66.75%;background:#53a7ff"></div></div>
+              <strong>39.89 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q10</span>
+              <div class="bar-track"><div class="bar-fill" style="width:58.42%;background:#53a7ff"></div></div>
+              <strong>34.91 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q11</span>
+              <div class="bar-track"><div class="bar-fill" style="width:69.62%;background:#53a7ff"></div></div>
+              <strong>41.60 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q12</span>
+              <div class="bar-track"><div class="bar-fill" style="width:62.86%;background:#53a7ff"></div></div>
+              <strong>37.56 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q13</span>
+              <div class="bar-track"><div class="bar-fill" style="width:59.27%;background:#53a7ff"></div></div>
+              <strong>35.42 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q14</span>
+              <div class="bar-track"><div class="bar-fill" style="width:12.82%;background:#53a7ff"></div></div>
+              <strong>7.66 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q15</span>
+              <div class="bar-track"><div class="bar-fill" style="width:43.44%;background:#53a7ff"></div></div>
+              <strong>25.96 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q16</span>
+              <div class="bar-track"><div class="bar-fill" style="width:24.88%;background:#53a7ff"></div></div>
+              <strong>14.87 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q17</span>
+              <div class="bar-track"><div class="bar-fill" style="width:79.60%;background:#53a7ff"></div></div>
+              <strong>47.57 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q18</span>
+              <div class="bar-track"><div class="bar-fill" style="width:47.04%;background:#53a7ff"></div></div>
+              <strong>28.11 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q19</span>
+              <div class="bar-track"><div class="bar-fill" style="width:39.31%;background:#53a7ff"></div></div>
+              <strong>23.49 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q20</span>
+              <div class="bar-track"><div class="bar-fill" style="width:48.66%;background:#53a7ff"></div></div>
+              <strong>29.08 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q21</span>
+              <div class="bar-track"><div class="bar-fill" style="width:35.09%;background:#53a7ff"></div></div>
+              <strong>20.97 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q22</span>
+              <div class="bar-track"><div class="bar-fill" style="width:100.00%;background:#53a7ff"></div></div>
+              <strong>59.76 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q23</span>
+              <div class="bar-track"><div class="bar-fill" style="width:91.83%;background:#53a7ff"></div></div>
+              <strong>54.88 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q24</span>
+              <div class="bar-track"><div class="bar-fill" style="width:85.88%;background:#53a7ff"></div></div>
+              <strong>51.32 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q25</span>
+              <div class="bar-track"><div class="bar-fill" style="width:33.67%;background:#53a7ff"></div></div>
+              <strong>20.12 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q26</span>
+              <div class="bar-track"><div class="bar-fill" style="width:77.11%;background:#53a7ff"></div></div>
+              <strong>46.08 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q27</span>
+              <div class="bar-track"><div class="bar-fill" style="width:46.03%;background:#53a7ff"></div></div>
+              <strong>27.51 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q28</span>
+              <div class="bar-track"><div class="bar-fill" style="width:85.68%;background:#53a7ff"></div></div>
+              <strong>51.20 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q29</span>
+              <div class="bar-track"><div class="bar-fill" style="width:78.34%;background:#53a7ff"></div></div>
+              <strong>46.82 s</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q30</span>
+              <div class="bar-track"><div class="bar-fill" style="width:92.85%;background:#53a7ff"></div></div>
+              <strong>55.49 s</strong>
+            </div></div>
+      </article>
+    </section>
+
+    <section class="charts">
+      <article class="panel"><h2>位置误差</h2>
+            <div class="bar-row">
+              <span class="bar-label">Q2</span>
+              <div class="bar-track"><div class="bar-fill" style="width:45.49%;background:#ffae57"></div></div>
+              <strong>121.56 m</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q3</span>
+              <div class="bar-track"><div class="bar-fill" style="width:100.00%;background:#ffae57"></div></div>
+              <strong>267.21 m</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q5</span>
+              <div class="bar-track"><div class="bar-fill" style="width:39.74%;background:#ffae57"></div></div>
+              <strong>106.19 m</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q6</span>
+              <div class="bar-track"><div class="bar-fill" style="width:98.61%;background:#ffae57"></div></div>
+              <strong>263.48 m</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q10</span>
+              <div class="bar-track"><div class="bar-fill" style="width:42.08%;background:#ffae57"></div></div>
+              <strong>112.44 m</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q12</span>
+              <div class="bar-track"><div class="bar-fill" style="width:24.79%;background:#ffae57"></div></div>
+              <strong>66.23 m</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q14</span>
+              <div class="bar-track"><div class="bar-fill" style="width:42.66%;background:#ffae57"></div></div>
+              <strong>113.99 m</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q26</span>
+              <div class="bar-track"><div class="bar-fill" style="width:1.50%;background:#ffae57"></div></div>
+              <strong>0.18 m</strong>
+            </div></article>
+      <article class="panel"><h2>时间误差</h2>
+            <div class="bar-row">
+              <span class="bar-label">Q20</span>
+              <div class="bar-track"><div class="bar-fill" style="width:100.00%;background:#ad8cff"></div></div>
+              <strong>0.65 min</strong>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Q24</span>
+              <div class="bar-track"><div class="bar-fill" style="width:1.54%;background:#ad8cff"></div></div>
+              <strong>0.01 min</strong>
+            </div></article>
+      <article class="panel"><h2>持续时间误差</h2><p class="muted">没有可绘制的数据。</p></article>
+    </section>
+
+    <section class="panel">
+      <h2>逐题结果</h2>
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="搜索问题、ID、答案或失败原因">
+        <select id="statusFilter"><option value="all">全部状态</option><option value="scored">已计分</option><option value="failed">失败</option><option value="skipped">跳过</option></select>
+        <select id="typeFilter"><option value="all">全部题型</option><option value="position">位置</option><option value="time">时间点</option><option value="duration">持续时间</option><option value="binary">二元判断</option><option value="text">文本</option></select>
+        <span class="muted" id="visibleCount"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>序号</th><th>题型</th><th>状态</th><th>问题与真值</th><th>模型预测</th><th>误差</th><th>耗时</th></tr></thead>
+          <tbody id="resultsBody">
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:29:43. the current time is 2023-01-26 12:37:34 and you are located at [-76.31, 309.81, 0.65].
+ is it sunny outside? yes, it is sunny outside.   6_long_f6065dfb-213b-467e-9fd8-f0e67a772191 binary">
+              <td><strong>Q1</strong><small>LONG</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:29:43. The current time is 2023-01-26 12:37:34 and you are located at [-76.31, 309.81, 0.65].
+ Is it sunny outside?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_f6065dfb-213b-467e-9fd8-f0e67a772191</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>471.0 s</strong></div>
+                    <div><span>类别</span><strong>environmental</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>yes</strong><div class="answer-text">Yes, it is sunny outside.</div></td>
+              <td><strong>正确</strong></td>
+              <td>32.0 s</td>
+            </tr>
+            <tr data-status="scored" data-type="position" data-search="you started moving at 2023-01-26 12:31:49. the current time is 2023-01-26 12:41:38 and you are located at [-67.37, 121.37, -0.87].
+ where can i get food here? you can get food near the yellow food truck with a red and yellow logo, which is located near the herringbone patterned brick walkway with trees.   6_long_d0e0a27c-67f0-4186-b330-9148db321d15 position">
+              <td><strong>Q2</strong><small>LONG</small></td>
+              <td><span class="type-pill type-position">位置</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:31:49. The current time is 2023-01-26 12:41:38 and you are located at [-67.37, 121.37, -0.87].
+ Where can I get food here?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_d0e0a27c-67f0-4186-b330-9148db321d15</code></div>
+                    <div><span>标准答案</span><strong>[-183.5261898, 322.93878526666674, 1.1057519999999998]</strong></div>
+                    <div><span>轨迹长度</span><strong>588.9 s</strong></div>
+                    <div><span>类别</span><strong>spatial</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>[-73.083, 272.162, 0.233]</strong><div class="answer-text">You can get food near the yellow food truck with a red and yellow logo, which is located near the herringbone patterned brick walkway with trees.</div></td>
+              <td><strong>121.56 m</strong></td>
+              <td>44.3 s</td>
+            </tr>
+            <tr data-status="scored" data-type="position" data-search="you started moving at 2023-01-26 12:26:30. the current time is 2023-01-26 12:42:08 and you are located at [-65.89, 93.11, -0.86].
+ where is an atm? the atm is likely located near the current position at [-65.89, 93.11, -0.86].   6_long_1dfb386f-cd34-43e4-ad57-cd4d0b70bcc2 position">
+              <td><strong>Q3</strong><small>LONG</small></td>
+              <td><span class="type-pill type-position">位置</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:26:30. The current time is 2023-01-26 12:42:08 and you are located at [-65.89, 93.11, -0.86].
+ Where is an ATM?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_1dfb386f-cd34-43e4-ad57-cd4d0b70bcc2</code></div>
+                    <div><span>标准答案</span><strong>[-185.7339039, 331.92782810000006, 1.208152866666667]</strong></div>
+                    <div><span>轨迹长度</span><strong>938.4 s</strong></div>
+                    <div><span>类别</span><strong>spatial</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>[-65.89, 93.11, -0.86]</strong><div class="answer-text">The ATM is likely located near the current position at [-65.89, 93.11, -0.86].</div></td>
+              <td><strong>267.21 m</strong></td>
+              <td>49.8 s</td>
+            </tr>
+            <tr data-status="scored" data-type="text" data-search="you started moving at 2023-01-26 12:29:10. the current time is 2023-01-26 12:38:32 and you are located at [-72.07, 272.68, 0.25].
+ what&#x27;s the name of the coffee shop? the name of the coffee shop is &#x27;longhorn coffee co.&#x27;  the candidate answer is a semantically correct paraphrase of the reference answer. 6_long_82f2e531-d605-4a72-beab-095dd4b9e08f text">
+              <td><strong>Q4</strong><small>LONG</small></td>
+              <td><span class="type-pill type-text">文本</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:29:10. The current time is 2023-01-26 12:38:32 and you are located at [-72.07, 272.68, 0.25].
+ What&#x27;s the name of the coffee shop?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_82f2e531-d605-4a72-beab-095dd4b9e08f</code></div>
+                    <div><span>标准答案</span><strong>[&quot;The name of the coffee shop is Longhorn Coffee Co&quot;]</strong></div>
+                    <div><span>轨迹长度</span><strong>562.1 s</strong></div>
+                    <div><span>类别</span><strong>temporal, text interpretation</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>The name of the coffee shop is &#x27;Longhorn Coffee Co.&#x27;</strong><div class="answer-text">The name of the coffee shop is &#x27;Longhorn Coffee Co.&#x27;</div><div class="answer-text">判分理由：The candidate answer is a semantically correct paraphrase of the reference answer.</div></td>
+              <td><strong>语义正确</strong></td>
+              <td>38.5 s</td>
+            </tr>
+            <tr data-status="scored" data-type="position" data-search="you started moving at 2023-01-26 12:28:18. the current time is 2023-01-26 12:37:43 and you are located at [-78.04, 302.85, 0.6].
+ where is the closest place to eat outside? the closest place to eat outside is the cafeteria or common area within the university building, located near [-184.119, 333.033, 1.206].   6_long_9acacace-2350-4ad0-8eb1-7182a39cf6e8 position">
+              <td><strong>Q5</strong><small>LONG</small></td>
+              <td><span class="type-pill type-position">位置</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:28:18. The current time is 2023-01-26 12:37:43 and you are located at [-78.04, 302.85, 0.6].
+ Where is the closest place to eat outside?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_9acacace-2350-4ad0-8eb1-7182a39cf6e8</code></div>
+                    <div><span>标准答案</span><strong>[-88.75821986666668, 286.31502129999996, 0.6238858666666667]</strong></div>
+                    <div><span>轨迹长度</span><strong>564.5 s</strong></div>
+                    <div><span>类别</span><strong>environmental, spatial</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>[-184.119, 333.033, 1.206]</strong><div class="answer-text">The closest place to eat outside is the cafeteria or common area within the university building, located near [-184.119, 333.033, 1.206].</div></td>
+              <td><strong>106.19 m</strong></td>
+              <td>46.1 s</td>
+            </tr>
+            <tr data-status="scored" data-type="position" data-search="you started moving at 2023-01-26 12:34:00. the current time is 2023-01-26 12:42:05 and you are located at [-66.11, 95.83, -0.87].
+ where is the nearest aed? the nearest aed is likely located near the buildings or walkways in the area. for precise information, you may need to check with nearby buildings or ask for directions from people in the area.   6_long_628ccb31-49df-457d-b43a-c247d3a9b82f position">
+              <td><strong>Q6</strong><small>LONG</small></td>
+              <td><span class="type-pill type-position">位置</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:34:00. The current time is 2023-01-26 12:42:05 and you are located at [-66.11, 95.83, -0.87].
+ Where is the nearest AED?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_628ccb31-49df-457d-b43a-c247d3a9b82f</code></div>
+                    <div><span>标准答案</span><strong>[-140.26599753333332, 348.65564770000015, 1.1073881333333337]</strong></div>
+                    <div><span>轨迹长度</span><strong>485.6 s</strong></div>
+                    <div><span>类别</span><strong>object detection, spatial</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>[-66.11, 95.83, -0.87]</strong><div class="answer-text">The nearest AED is likely located near the buildings or walkways in the area. For precise information, you may need to check with nearby buildings or ask for directions from people in the area.</div></td>
+              <td><strong>263.48 m</strong></td>
+              <td>47.0 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:23:45. the current time is 2023-01-26 12:42:45 and you are located at [-66.2, 72.45, -0.88].
+ did you see anyone riding an electric scooter? yes, i saw someone riding an electric scooter.   6_long_7eb863ca-4343-4181-8a96-a28bb5bb792c binary">
+              <td><strong>Q7</strong><small>LONG</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:23:45. The current time is 2023-01-26 12:42:45 and you are located at [-66.2, 72.45, -0.88].
+ Did you see anyone riding an electric scooter?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_7eb863ca-4343-4181-8a96-a28bb5bb792c</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>1139.8 s</strong></div>
+                    <div><span>类别</span><strong>object detection, contextual reasoning</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>yes</strong><div class="answer-text">Yes, I saw someone riding an electric scooter.</div></td>
+              <td><strong>正确</strong></td>
+              <td>43.0 s</td>
+            </tr>
+            <tr data-status="scored" data-type="text" data-search="you started moving at 2023-01-26 12:24:12. the current time is 2023-01-26 12:38:07 and you are located at [-78.73, 281.17, 0.31].
+ what was the color of the food truck? the color of the food truck was not specified in the provided information.  the candidate answer correctly states that the color of the food truck was not specified, which aligns with the reference answer&#x27;s absence of color information. 6_long_7c5b8ad3-242a-4a35-abb9-eca2fd2c2402 text">
+              <td><strong>Q8</strong><small>LONG</small></td>
+              <td><span class="type-pill type-text">文本</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:24:12. The current time is 2023-01-26 12:38:07 and you are located at [-78.73, 281.17, 0.31].
+ What was the color of the food truck?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_7c5b8ad3-242a-4a35-abb9-eca2fd2c2402</code></div>
+                    <div><span>标准答案</span><strong>[&quot;The food truck was yellow&quot;]</strong></div>
+                    <div><span>轨迹长度</span><strong>835.4 s</strong></div>
+                    <div><span>类别</span><strong>environmental, object detection</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>The color of the food truck was not specified in the provided information.</strong><div class="answer-text">The color of the food truck was not specified in the provided information.</div><div class="answer-text">判分理由：The candidate answer correctly states that the color of the food truck was not specified, which aligns with the reference answer&#x27;s absence of color information.</div></td>
+              <td><strong>语义正确</strong></td>
+              <td>36.8 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:29:46. the current time is 2023-01-26 12:39:21 and you are located at [-78.13, 230.14, -0.16].
+ did you see any bike racks? i did not see any bike racks.   6_long_258dba25-f218-436e-ab68-c742babc97ef binary">
+              <td><strong>Q9</strong><small>LONG</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:29:46. The current time is 2023-01-26 12:39:21 and you are located at [-78.13, 230.14, -0.16].
+ Did you see any bike racks?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_258dba25-f218-436e-ab68-c742babc97ef</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>575.0 s</strong></div>
+                    <div><span>类别</span><strong>object detection, environmental</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>no</strong><div class="answer-text">I did not see any bike racks.</div></td>
+              <td><strong>错误</strong></td>
+              <td>39.9 s</td>
+            </tr>
+            <tr data-status="scored" data-type="position" data-search="you started moving at 2023-01-26 12:27:45. the current time is 2023-01-26 12:36:05 and you are located at [-86.07, 363.27, 0.8].
+ where did you see a crowd of people standing? i saw a crowd of people standing near the corner of a building with a red wall and a white wall with a fire extinguisher mounted on it.   6_long_fc569d7c-6544-4dc1-9591-baee636e5cb2 position">
+              <td><strong>Q10</strong><small>LONG</small></td>
+              <td><span class="type-pill type-position">位置</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:27:45. The current time is 2023-01-26 12:36:05 and you are located at [-86.07, 363.27, 0.8].
+ Where did you see a crowd of people standing?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_LONG_fc569d7c-6544-4dc1-9591-baee636e5cb2</code></div>
+                    <div><span>标准答案</span><strong>[-74.13211946666668, 335.3594660999999, 0.6564575]</strong></div>
+                    <div><span>轨迹长度</span><strong>499.7 s</strong></div>
+                    <div><span>类别</span><strong>environmental, contextual reasoning</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>[-186.527, 332.308, 1.223]</strong><div class="answer-text">I saw a crowd of people standing near the corner of a building with a red wall and a white wall with a fire extinguisher mounted on it.</div></td>
+              <td><strong>112.44 m</strong></td>
+              <td>34.9 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:38:50. the current time is 2023-01-26 12:43:43 and you are located at [-43.32, 36.03, -0.94].
+ did you pass through any bollards? yes, i passed through bollards.   6_medium_adb9a59c-93f6-4171-901a-00782038ff83 binary">
+              <td><strong>Q11</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:38:50. The current time is 2023-01-26 12:43:43 and you are located at [-43.32, 36.03, -0.94].
+ Did you pass through any bollards?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_adb9a59c-93f6-4171-901a-00782038ff83</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>293.1 s</strong></div>
+                    <div><span>类别</span><strong>environmental, egocentric reasoning</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>yes</strong><div class="answer-text">Yes, I passed through bollards.</div></td>
+              <td><strong>正确</strong></td>
+              <td>41.6 s</td>
+            </tr>
+            <tr data-status="scored" data-type="position" data-search="you started moving at 2023-01-26 12:30:10. the current time is 2023-01-26 12:36:57 and you are located at [-74.2, 344.0, 0.67].
+ can you take me to the restroom near the food court? i currently do not have specific information about the location of the restroom near the food court. however, i can suggest you look for nearby landmarks such as the food court or other public areas for guidance.   6_medium_4701bd3d-352e-40d4-94fe-3d2a18edbd23 position">
+              <td><strong>Q12</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-position">位置</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:30:10. The current time is 2023-01-26 12:36:57 and you are located at [-74.2, 344.0, 0.67].
+ Can you take me to the restroom near the food court?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_4701bd3d-352e-40d4-94fe-3d2a18edbd23</code></div>
+                    <div><span>标准答案</span><strong>[-140.26599753333332, 348.65564770000015, 1.1073881333333337]</strong></div>
+                    <div><span>轨迹长度</span><strong>407.2 s</strong></div>
+                    <div><span>类别</span><strong>spatial, signs</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>[-74.2, 344.0, 0.67]</strong><div class="answer-text">I currently do not have specific information about the location of the restroom near the food court. However, I can suggest you look for nearby landmarks such as the food court or other public areas for guidance.</div></td>
+              <td><strong>66.23 m</strong></td>
+              <td>37.6 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:41:59. the current time is 2023-01-26 12:45:09 and you are located at [0.0, -0.09, -0.03].
+ did you see a loading zone? yes, i saw a loading zone.   6_medium_8ddfc026-55ad-4a28-9c1d-df9385c32b94 binary">
+              <td><strong>Q13</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:41:59. The current time is 2023-01-26 12:45:09 and you are located at [0.0, -0.09, -0.03].
+ Did you see a loading zone?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_8ddfc026-55ad-4a28-9c1d-df9385c32b94</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>189.5 s</strong></div>
+                    <div><span>类别</span><strong>environmental, text interpretation</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>yes</strong><div class="answer-text">Yes, I saw a loading zone.</div></td>
+              <td><strong>正确</strong></td>
+              <td>35.4 s</td>
+            </tr>
+            <tr data-status="scored" data-type="position" data-search="you started moving at 2023-01-26 12:35:43. the current time is 2023-01-26 12:39:42 and you are located at [-77.28, 209.9, -0.37].
+ where did you see orange cones? i do not have specific information about where orange cones were seen. please provide more details or check your context for any mention of orange cones.   6_medium_abc888ec-e5a1-4ba9-8612-cc4fec8549f2 position">
+              <td><strong>Q14</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-position">位置</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:35:43. The current time is 2023-01-26 12:39:42 and you are located at [-77.28, 209.9, -0.37].
+ Where did you see orange cones?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_abc888ec-e5a1-4ba9-8612-cc4fec8549f2</code></div>
+                    <div><span>标准答案</span><strong>[-74.55478741935485, 323.85622419354837, 0.6552014838709678]</strong></div>
+                    <div><span>轨迹长度</span><strong>238.3 s</strong></div>
+                    <div><span>类别</span><strong>environmental, object detection</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>[-77.28, 209.9, -0.37]</strong><div class="answer-text">I do not have specific information about where orange cones were seen. Please provide more details or check your context for any mention of orange cones.</div></td>
+              <td><strong>113.99 m</strong></td>
+              <td>7.7 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:40:46. the current time is 2023-01-26 12:43:43 and you are located at [-43.32, 36.03, -0.94].
+ did you see a stop sign? yes, i saw a stop sign during the time frame you mentioned.   6_medium_b4e59b77-8e44-4f48-ab04-a3d4fc653a6c binary">
+              <td><strong>Q15</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:40:46. The current time is 2023-01-26 12:43:43 and you are located at [-43.32, 36.03, -0.94].
+ Did you see a Stop sign?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_b4e59b77-8e44-4f48-ab04-a3d4fc653a6c</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>176.9 s</strong></div>
+                    <div><span>类别</span><strong>traffic signs interpretation</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>yes</strong><div class="answer-text">Yes, I saw a stop sign during the time frame you mentioned.</div></td>
+              <td><strong>正确</strong></td>
+              <td>26.0 s</td>
+            </tr>
+            <tr data-status="scored" data-type="text" data-search="you started moving at 2023-01-26 12:38:04. the current time is 2023-01-26 12:43:15 and you are located at [-65.05, 43.58, -0.91].
+ what does the food truck sell? the food truck sells pretzels.  the candidate answer exactly matches the reference answer. 6_medium_a60e24ac-50b6-49e7-8c68-abfd677d4ea5 text">
+              <td><strong>Q16</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-text">文本</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:38:04. The current time is 2023-01-26 12:43:15 and you are located at [-65.05, 43.58, -0.91].
+ What does the food truck sell?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_a60e24ac-50b6-49e7-8c68-abfd677d4ea5</code></div>
+                    <div><span>标准答案</span><strong>[&quot;The food truck sells pretzels&quot;]</strong></div>
+                    <div><span>轨迹长度</span><strong>311.2 s</strong></div>
+                    <div><span>类别</span><strong>text interpretation</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>The food truck sells pretzels.</strong><div class="answer-text">The food truck sells pretzels.</div><div class="answer-text">判分理由：The candidate answer exactly matches the reference answer.</div></td>
+              <td><strong>语义正确</strong></td>
+              <td>14.9 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:39:36. the current time is 2023-01-26 12:45:03 and you are located at [-0.42, -0.4, -0.03].
+ is it safe to walk outside? it is safe to walk outside.   6_medium_7a9d7a3c-6730-42dd-a834-91e3eb684fc6 binary">
+              <td><strong>Q17</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:39:36. The current time is 2023-01-26 12:45:03 and you are located at [-0.42, -0.4, -0.03].
+ Is it safe to walk outside?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_7a9d7a3c-6730-42dd-a834-91e3eb684fc6</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>326.9 s</strong></div>
+                    <div><span>类别</span><strong>contextual reasoning, object detection</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>yes</strong><div class="answer-text">It is safe to walk outside.</div></td>
+              <td><strong>正确</strong></td>
+              <td>47.6 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:42:48. the current time is 2023-01-26 12:45:09 and you are located at [0.0, -0.09, -0.03].
+ did you see an elevated pedestrian bridge? no, i did not see an elevated pedestrian bridge.   6_medium_eed3c4de-9597-49af-951b-b2588dbf7c4c binary">
+              <td><strong>Q18</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:42:48. The current time is 2023-01-26 12:45:09 and you are located at [0.0, -0.09, -0.03].
+ Did you see an elevated pedestrian bridge?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_eed3c4de-9597-49af-951b-b2588dbf7c4c</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>141.0 s</strong></div>
+                    <div><span>类别</span><strong>environmental</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>no</strong><div class="answer-text">No, I did not see an elevated pedestrian bridge.</div></td>
+              <td><strong>错误</strong></td>
+              <td>28.1 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:40:34. the current time is 2023-01-26 12:42:36 and you are located at [-65.64, 80.65, -0.86].
+ did you see any traffic lights? i did not see any traffic lights during my observations.   6_medium_a76280fa-7bd6-42d8-b16f-01d457362826 binary">
+              <td><strong>Q19</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:40:34. The current time is 2023-01-26 12:42:36 and you are located at [-65.64, 80.65, -0.86].
+ Did you see any traffic lights?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_a76280fa-7bd6-42d8-b16f-01d457362826</code></div>
+                    <div><span>标准答案</span><strong>no</strong></div>
+                    <div><span>轨迹长度</span><strong>121.7 s</strong></div>
+                    <div><span>类别</span><strong>object detection, environmental</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>no</strong><div class="answer-text">I did not see any traffic lights during my observations.</div></td>
+              <td><strong>正确</strong></td>
+              <td>23.5 s</td>
+            </tr>
+            <tr data-status="scored" data-type="time" data-search="you started moving at 2023-01-26 12:24:03. the current time is 2023-01-26 12:27:18 and you are located at [-71.98, 183.75, -0.57].
+ when did you reach the tree-lined path? i reached the tree-lined path at 2023-01-26 12:24:12.   6_medium_d27a4b07-7b8e-4591-87b5-d732d57e695d time">
+              <td><strong>Q20</strong><small>MEDIUM</small></td>
+              <td><span class="type-pill type-time">时间点</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:24:03. The current time is 2023-01-26 12:27:18 and you are located at [-71.98, 183.75, -0.57].
+ When did you reach the tree-lined path?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_MEDIUM_d27a4b07-7b8e-4591-87b5-d732d57e695d</code></div>
+                    <div><span>标准答案</span><strong>2.350</strong></div>
+                    <div><span>轨迹长度</span><strong>195.3 s</strong></div>
+                    <div><span>类别</span><strong>temporal</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>3.000</strong><div class="answer-text">I reached the tree-lined path at 2023-01-26 12:24:12.</div></td>
+              <td><strong>0.65 min</strong></td>
+              <td>29.1 s</td>
+            </tr>
+            <tr data-status="scored" data-type="text" data-search="you started moving at 2023-01-26 12:37:55. the current time is 2023-01-26 12:38:38 and you are located at [-74.24, 269.84, 0.2].
+ what was the color of the semi truck the color of the semi truck was yellow.  the candidate answer directly states the color of the semi truck as yellow, which matches the reference answer. 6_short_0a24625a-bc44-4bab-8cc7-5e5fc31eb0b0 text">
+              <td><strong>Q21</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-text">文本</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:37:55. The current time is 2023-01-26 12:38:38 and you are located at [-74.24, 269.84, 0.2].
+ What was the color of the semi truck</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_0a24625a-bc44-4bab-8cc7-5e5fc31eb0b0</code></div>
+                    <div><span>标准答案</span><strong>[&quot;yellow&quot;]</strong></div>
+                    <div><span>轨迹长度</span><strong>42.7 s</strong></div>
+                    <div><span>类别</span><strong>object detection</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>The color of the semi truck was yellow.</strong><div class="answer-text">The color of the semi truck was yellow.</div><div class="answer-text">判分理由：The candidate answer directly states the color of the semi truck as yellow, which matches the reference answer.</div></td>
+              <td><strong>语义正确</strong></td>
+              <td>21.0 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:44:14. the current time is 2023-01-26 12:45:00 and you are located at [0.4, -0.64, -0.02].
+ did you see a building with large windows? yes, i saw a building with large windows.   6_short_116cb2c2-8a03-4491-abe1-31b3c9b809bd binary">
+              <td><strong>Q22</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:44:14. The current time is 2023-01-26 12:45:00 and you are located at [0.4, -0.64, -0.02].
+ Did you see a building with large windows?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_116cb2c2-8a03-4491-abe1-31b3c9b809bd</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>46.1 s</strong></div>
+                    <div><span>类别</span><strong>environmental</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>yes</strong><div class="answer-text">Yes, I saw a building with large windows.</div></td>
+              <td><strong>正确</strong></td>
+              <td>59.8 s</td>
+            </tr>
+            <tr data-status="scored" data-type="text" data-search="you started moving at 2023-01-26 12:35:16. the current time is 2023-01-26 12:36:29 and you are located at [-72.8, 363.91, 0.7].
+ what was the color of shoes of the person who opened the door for you? the person who opened the door for you was wearing white shoes.  the candidate answer is a semantically correct paraphrase of the reference answer. 6_short_4b6d1d26-871c-43ee-9e86-98d1cf75a132 text">
+              <td><strong>Q23</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-text">文本</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:35:16. The current time is 2023-01-26 12:36:29 and you are located at [-72.8, 363.91, 0.7].
+ What was the color of shoes of the person who opened the door for you?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_4b6d1d26-871c-43ee-9e86-98d1cf75a132</code></div>
+                    <div><span>标准答案</span><strong>[&quot;The person who opened the door for me was wearing white shoes&quot;]</strong></div>
+                    <div><span>轨迹长度</span><strong>73.3 s</strong></div>
+                    <div><span>类别</span><strong>environmental, spatial</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>The person who opened the door for you was wearing white shoes.</strong><div class="answer-text">The person who opened the door for you was wearing white shoes.</div><div class="answer-text">判分理由：The candidate answer is a semantically correct paraphrase of the reference answer.</div></td>
+              <td><strong>语义正确</strong></td>
+              <td>54.9 s</td>
+            </tr>
+            <tr data-status="scored" data-type="time" data-search="you started moving at 2023-01-26 12:42:51. the current time is 2023-01-26 12:43:58 and you are located at [-29.0, 36.06, -0.96].
+ when did you pass through the yellow bollards? i passed through the yellow bollards 0.72 minutes ago.   6_short_136fb34b-f179-47ec-98ba-16fe18a7f7f3 time">
+              <td><strong>Q24</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-time">时间点</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:42:51. The current time is 2023-01-26 12:43:58 and you are located at [-29.0, 36.06, -0.96].
+ When did you pass through the yellow bollards?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_136fb34b-f179-47ec-98ba-16fe18a7f7f3</code></div>
+                    <div><span>标准答案</span><strong>0.710</strong></div>
+                    <div><span>轨迹长度</span><strong>67.4 s</strong></div>
+                    <div><span>类别</span><strong>temporal, environmental</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>0.720</strong><div class="answer-text">I passed through the yellow bollards 0.72 minutes ago.</div></td>
+              <td><strong>0.01 min</strong></td>
+              <td>51.3 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:42:57. the current time is 2023-01-26 12:43:46 and you are located at [-40.41, 36.0, -0.91].
+ did you see any vehicles? no, i did not see any vehicles.   6_short_aae33b1e-1d56-4e1a-a067-69b5ac3ec84a binary">
+              <td><strong>Q25</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:42:57. The current time is 2023-01-26 12:43:46 and you are located at [-40.41, 36.0, -0.91].
+ Did you see any vehicles?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_aae33b1e-1d56-4e1a-a067-69b5ac3ec84a</code></div>
+                    <div><span>标准答案</span><strong>yes</strong></div>
+                    <div><span>轨迹长度</span><strong>49.1 s</strong></div>
+                    <div><span>类别</span><strong>environmental</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>no</strong><div class="answer-text">No, I did not see any vehicles.</div></td>
+              <td><strong>错误</strong></td>
+              <td>20.1 s</td>
+            </tr>
+            <tr data-status="scored" data-type="position" data-search="you started moving at 2023-01-26 12:33:23. the current time is 2023-01-26 12:34:27 and you are located at [-154.53, 348.94, 1.41].
+ where is the fire extinguisher? the fire extinguisher is located at [-186.527, 332.308, 1.223].   6_short_2732dae9-2d64-4bc1-b36e-1adf39854dc3 position">
+              <td><strong>Q26</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-position">位置</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:33:23. The current time is 2023-01-26 12:34:27 and you are located at [-154.53, 348.94, 1.41].
+ Where is the fire extinguisher?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_2732dae9-2d64-4bc1-b36e-1adf39854dc3</code></div>
+                    <div><span>标准答案</span><strong>[-186.44837138709678, 332.1441339354839, 1.22504935483871]</strong></div>
+                    <div><span>轨迹长度</span><strong>64.2 s</strong></div>
+                    <div><span>类别</span><strong>environmental, object detection</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>[-186.527, 332.308, 1.223]</strong><div class="answer-text">The fire extinguisher is located at [-186.527, 332.308, 1.223].</div></td>
+              <td><strong>0.18 m</strong></td>
+              <td>46.1 s</td>
+            </tr>
+            <tr data-status="scored" data-type="text" data-search="you started moving at 2023-01-26 12:40:12. the current time is 2023-01-26 12:42:08 and you are located at [-65.89, 93.11, -0.86].
+ what was written on the back of the trailer? the back of the trailer had the word &#x27;cotton&#x27; written on it.  the candidate answer is a semantically correct paraphrase of the reference answer, with equivalent wording and meaning. 6_short_47b97723-1b7f-4dee-9a57-b71c478299b6 text">
+              <td><strong>Q27</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-text">文本</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:40:12. The current time is 2023-01-26 12:42:08 and you are located at [-65.89, 93.11, -0.86].
+ What was written on the back of the trailer?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_47b97723-1b7f-4dee-9a57-b71c478299b6</code></div>
+                    <div><span>标准答案</span><strong>[&quot;The word \&quot;Cotton\&quot; was written on the back of the trailer&quot;]</strong></div>
+                    <div><span>轨迹长度</span><strong>115.9 s</strong></div>
+                    <div><span>类别</span><strong>environmental, text interpretation</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>The back of the trailer had the word &#x27;COTTON&#x27; written on it.</strong><div class="answer-text">The back of the trailer had the word &#x27;COTTON&#x27; written on it.</div><div class="answer-text">判分理由：The candidate answer is a semantically correct paraphrase of the reference answer, with equivalent wording and meaning.</div></td>
+              <td><strong>语义正确</strong></td>
+              <td>27.5 s</td>
+            </tr>
+            <tr data-status="scored" data-type="text" data-search="you started moving at 2023-01-26 12:28:09. the current time is 2023-01-26 12:28:51 and you are located at [-71.85, 221.57, -0.25].
+ which hand was the person using to pull the cart? the context does not provide information about which hand the person was using to pull the cart. i cannot determine the answer to this question.  the candidate answer correctly identifies that the context does not provide information about the hand used to pull the cart, aligning with the reference answer&#x27;s implication. 6_short_df3a971e-ad32-4e0e-b450-391e4ae37e24 text">
+              <td><strong>Q28</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-text">文本</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:28:09. The current time is 2023-01-26 12:28:51 and you are located at [-71.85, 221.57, -0.25].
+ Which hand was the person using to pull the cart?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_df3a971e-ad32-4e0e-b450-391e4ae37e24</code></div>
+                    <div><span>标准答案</span><strong>[&quot;The person was using their left hand to pull the cart&quot;]</strong></div>
+                    <div><span>轨迹长度</span><strong>42.2 s</strong></div>
+                    <div><span>类别</span><strong>environmental, contextual reasoning</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>The context does not provide information about which hand the person was using to pull the cart. I cannot determine the answer to this question.</strong><div class="answer-text">The context does not provide information about which hand the person was using to pull the cart. I cannot determine the answer to this question.</div><div class="answer-text">判分理由：The candidate answer correctly identifies that the context does not provide information about the hand used to pull the cart, aligning with the reference answer&#x27;s implication.</div></td>
+              <td><strong>语义正确</strong></td>
+              <td>51.2 s</td>
+            </tr>
+            <tr data-status="scored" data-type="text" data-search="you started moving at 2023-01-26 12:43:25. the current time is 2023-01-26 12:44:41 and you are located at [-1.95, 14.98, -0.43].
+ which direction did you turn after the parked bicycles? the exact direction the robot turned after the parked bicycles is not explicitly mentioned in the context. however, based on the movement pattern, it is possible that the robot turned right or left.  the candidate answer contradicts the reference answer by suggesting uncertainty and possibilities, whereas the reference answer explicitly states the direction as &#x27;right&#x27;. 6_short_8938e1b4-a114-4f7d-a06c-d132acaba896 text">
+              <td><strong>Q29</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-text">文本</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:43:25. The current time is 2023-01-26 12:44:41 and you are located at [-1.95, 14.98, -0.43].
+ Which direction did you turn after the parked bicycles?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_8938e1b4-a114-4f7d-a06c-d132acaba896</code></div>
+                    <div><span>标准答案</span><strong>[&quot;I turned right after the parked bicycles&quot;]</strong></div>
+                    <div><span>轨迹长度</span><strong>76.5 s</strong></div>
+                    <div><span>类别</span><strong>environmental, egocentric reasoning</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>The exact direction the robot turned after the parked bicycles is not explicitly mentioned in the context. However, based on the movement pattern, it is possible that the robot turned right or left.</strong><div class="answer-text">The exact direction the robot turned after the parked bicycles is not explicitly mentioned in the context. However, based on the movement pattern, it is possible that the robot turned right or left.</div><div class="answer-text">判分理由：The candidate answer contradicts the reference answer by suggesting uncertainty and possibilities, whereas the reference answer explicitly states the direction as &#x27;right&#x27;.</div></td>
+              <td><strong>语义错误</strong></td>
+              <td>46.8 s</td>
+            </tr>
+            <tr data-status="scored" data-type="binary" data-search="you started moving at 2023-01-26 12:41:11. the current time is 2023-01-26 12:42:48 and you are located at [-66.21, 69.59, -0.9].
+ did you go over any grass? i am unsure if i went over any grass, but i was near grassy areas.   6_short_39bc90dd-27ee-420a-b578-046237c0b0aa binary">
+              <td><strong>Q30</strong><small>SHORT</small></td>
+              <td><span class="type-pill type-binary">二元判断</span></td>
+              <td><span class="status-pill status-scored">已计分</span></td>
+              <td class="question-cell">
+                <details>
+                  <summary>You started moving at 2023-01-26 12:41:11. The current time is 2023-01-26 12:42:48 and you are located at [-66.21, 69.59, -0.9].
+ Did you go over any grass?</summary>
+                  <div class="detail-grid">
+                    <div><span>题目 ID</span><code>6_SHORT_39bc90dd-27ee-420a-b578-046237c0b0aa</code></div>
+                    <div><span>标准答案</span><strong>no</strong></div>
+                    <div><span>轨迹长度</span><strong>97.2 s</strong></div>
+                    <div><span>类别</span><strong>environmental, egocentric reasoning</strong></div>
+                  </div>
+                </details>
+              </td>
+              <td><strong>yes</strong><div class="answer-text">I am unsure if I went over any grass, but I was near grassy areas.</div></td>
+              <td><strong>错误</strong></td>
+              <td>55.5 s</td>
+            </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <footer>这是序列 6 的端到端 NaVQA 报告；文本题由 qwen3:8b 做语义判分，不是独立的纯检索 Recall@K 评测。</footer>
+  </main>
+  <script>
+    const search = document.getElementById('search');
+    const statusFilter = document.getElementById('statusFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const tableRows = [...document.querySelectorAll('#resultsBody tr')];
+    const visibleCount = document.getElementById('visibleCount');
+    function applyFilters() {
+      const term = search.value.trim().toLowerCase();
+      let shown = 0;
+      tableRows.forEach(row => {
+        const visible = (statusFilter.value === 'all' || row.dataset.status === statusFilter.value)
+          && (typeFilter.value === 'all' || row.dataset.type === typeFilter.value)
+          && (!term || row.dataset.search.includes(term));
+        row.hidden = !visible;
+        if (visible) shown += 1;
+      });
+      visibleCount.textContent = `显示 ${shown} / ${tableRows.length} 题`;
+    }
+    [search,statusFilter,typeFilter].forEach(control => control.addEventListener('input',applyFilters));
+    applyFilters();
+  </script>
+</body>
+</html>
