@@ -97,9 +97,20 @@ class GteDenseMemory(LocalVectorMemory):
         time_offset,
         text_k=5,
         numeric_k=4,
+        text_episode_mode="per_call",
+        question_text_evidence_budget=None,
         device="cpu",
         batch_size=16,
     ):
+        if text_episode_mode not in {"per_call", "question"}:
+            raise ValueError(
+                f"Unsupported text retrieval episode mode: {text_episode_mode}"
+            )
+        if (
+            question_text_evidence_budget is not None
+            and int(question_text_evidence_budget) < 1
+        ):
+            raise ValueError("Question text evidence budget must be positive")
         self.encoder = GteDenseEncoder(
             model_name=model_name,
             device=device,
@@ -110,6 +121,12 @@ class GteDenseMemory(LocalVectorMemory):
         self.time_offset = time_offset
         self.text_k = text_k
         self.numeric_k = numeric_k
+        self.text_episode_mode = text_episode_mode
+        self.question_text_evidence_budget = int(
+            question_text_evidence_budget
+            if question_text_evidence_budget is not None
+            else text_k
+        )
         self.reset()
 
     @staticmethod
@@ -288,5 +305,7 @@ class GteDenseMemory(LocalVectorMemory):
         trace["embedding_dimension"] = int(query_embedding.shape[0])
         trace["retrieval_method"] = "gte_dense"
         output = self.memory_to_string(selected)
+        if not selected:
+            output = self.empty_text_result_context(trace["budget_exhausted"])
         trace["returned_context"] = output
         return output

@@ -6,7 +6,7 @@
 >
 > 目标读者：负责数据、模型和实验实现的 Agent
 >
-> 当前状态：**B0–B3 的 210 题 zero-shot 全量实验均已完成；B1–B3 保存了 210 题 retrieval trace，B0 原 210 题无 trace，仅有 sequence 0 补跑 trace；误差分析与可视化已完成**
+> 当前状态：**B0–B3 的旧版 210 题 zero-shot 全量实验均已完成；审计发现旧 B2/B3 是 per-call native episode，会忽略 tool query 并在多次 call 中重复同一批证据。question-state v2 修复已实现并通过测试，B1/B2/B3 v2 尚待重跑。**
 
 ## 0. 一分钟版本
 
@@ -620,6 +620,10 @@ remembr/scripts/precompute_qrag_caption_embeddings.py
 --embedding_cache_dir PATH
 --qrag_evidence_budget 1|3|5
 --qrag_state_format native|controller
+--qrag_episode_mode per_call|question
+--qrag_question_evidence_budget N
+--text_episode_mode per_call|question
+--question_text_evidence_budget N
 ```
 
 retrieval trace 随每题结果写入评测 JSON/JSONL，不另设
@@ -635,28 +639,43 @@ scorer”和“state-conditioned sequential update”的必要对照。
 ### 14.4 zero-shot 检索算法
 
 checkpoint 的 native 训练状态是“question + 已选 evidence”，action 是文本
-chunk，且该 checkpoint 不包含可直接迁移的 learned STOP action。因此实现两种
-state format，以 `native` 为 zero-shot 主配置：
+chunk，且该 checkpoint 不包含可直接迁移的 learned STOP action。旧版 v1 曾以
+`native + per_call` 为 zero-shot 主配置：
 
 ```text
 native:
   original_question [SEP] selected_caption_1 [SEP] ...
 
-controller (域外消融):
+controller:
   original_question [SEP] current_tool_query [SEP] selected_caption_1 [SEP] ...
+```
+
+2026-08-31 的 trace 审计确认：`native + per_call` 会让 controller 的 tool query
+完全不参与打分，并在每次 text call 开头清空 selected-ID mask。只要原问题和候选池
+不变，多次 call 就会确定性地返回同一条链。因此 v2 的 ReMEmbR 集成默认改为：
+
+```text
+state_format = controller
+episode_mode = question
+state = original_question [SEP] current_tool_query
+        [SEP] question_episode_selected_caption_1 [SEP] ...
 ```
 
 每一步：
 
 1. 将 state 编码为 768 维；
 2. 读取当前候选池的 caption action embeddings；
-3. 计算 state/action dot-product，屏蔽已选 IDs；
+3. 计算 state/action dot-product，屏蔽本 call 及同一 answer attempt 已选 IDs；
 4. greedy 选最高分 action，追加到 state；
-5. 重复到固定 evidence budget，将相同数量 caption 按同一模板返回
+5. 重复到 per-call 上限或题级唯一 evidence budget，将 caption 按同一模板返回
    ReMEmbR controller。
 
-Scope A 下 controller 每次 text-tool call 是一个新的 ranker episode；本轮不让
-Q-RAG 自己决定是否继续发起 tool call。
+同一 answer attempt 的多次 text-tool call 属于同一个 question episode；达到题级
+唯一 evidence budget 后，controller 不再暴露 text tool；若并发/直接调用仍触发，
+retriever 明确返回 budget exhausted，不重复注入旧证据。
+结构化输出失败后的 evaluator retry 会开启新 episode，但旧 trace 继续保留用于审计。
+`per_call + native` 只保留用于复现旧结果。本轮仍不让 Q-RAG 自己决定是否继续发起
+tool call。
 
 ### 14.5 缓存与资源约束
 
@@ -801,9 +820,37 @@ B3 483），所以本轮尚不是严格等总 tool-call budget 的因果隔离�
 Grounded 回答报告发布于
 `docs/reports/navqa_210_grounded_accuracy_v1/index.html`。
 
+#### 14.10.1 B2/B3 多次 call 状态审计与 v2 修复
+
+旧 B3 的最终有效 attempts 中，168 / 210 题调用过 text tool，143 题调用至少两次；
+这 143 题的多次 call 全部返回完全相同的 entry-ID 链。其中 61 题虽然 controller
+生成了不同 query，链仍完全相同。旧 B2 同样有 142 / 142 个多 text-call 问题重复
+同一批 IDs。根因不是可视化，而是：
+
+1. 每个 call 都从空 `selected_indices` 和全可用 mask 开始；
+2. `native` state 只读取 original question，不读取 tool query；
+3. outer controller 允许三次调用，但 retriever 没有跨-call episode state 或去重。
+
+因此 14.10 的 B2/B3 只能解释为 **legacy per-call native**：B3 的 sequential update
+只发生在单次 call 内部，不能解释为完整 ReMEmbR retrieval process 的跨-call
+statefulness。v2 已实施以下修复：
+
+- B2/B3 默认 `state_format=controller`、`episode_mode=question`；
+- B3 state 跨 call 继承已选 captions，并全局 mask 已返回 IDs；
+- B2 保持 static scorer，但同样使用 query、全局 ID mask 和题级预算；
+- dense/GTE 对照也支持相同的题级唯一 evidence budget；
+- text budget 用尽后从 controller 的可用工具中移除 text tool；
+- 每次 evaluator retry 重置 episode budget/mask，但不清除历史 trace；
+- trace 新增 episode ID、call index、有效请求数、预算前后余额、全局 IDs 和
+  `budget_exhausted`。
+
+默认全量脚本使用新的 `*_210_question_state_v2` tag，防止 `--resume` 误读旧结果。
+旧结果可用 `--qrag_state_format native --qrag_episode_mode per_call` 精确复现。v2
+必须重新跑 B1/B2/B3 后再报告数字；不能把 14.10 的旧结果当成修复后结果。
+
 ### 14.11 可直接复制给另一对话的任务
 
-> 请在项目根目录完整阅读 `02_QRAG具身长期记忆_实验Idea规格.md`，重点执行第 14 节。实现 Scope A 的 Q-RAG inference-only adapter：仅替换 ReMEmbR `search_by_text()` ranker，导出 slim checkpoint，用 GTE 重编码 captions，实现 GTE base dense、Q-RAG static top-B 和 Q-RAG sequential 三个对照，保留 position/time tools 和 outer controller，并为每个 text-tool call 落盘完整 trace。先只跑序列 0 的 B1/B2/B3，budget = 1/3/5；未通过 candidate-pool、support provenance 和 sequence split Gate 前不训练 Q-RAG。不修改第三方 Q-RAG 源码，不读取答案或 support IDs 进行推理，不引入 raw images 或 learned STOP。完成后提供代码路径、环境/模型依赖、可复现命令、回归测试、trace 样例和序列 0 对比报告。
+> 请在项目根目录完整阅读 `02_QRAG具身长期记忆_实验Idea规格.md`，重点执行第 14.10.1 节。使用 question-state v2 重跑 B1/B2/B3：Q-RAG 使用 `state_format=controller`、`episode_mode=question`，同一 answer attempt 跨 text calls 继承 evidence state、全局 mask 已返回的 text IDs，并按题级唯一 evidence budget 截止；dense/GTE 使用同一题级预算。evaluator retry 必须重置 episode 但保留 trace，旧 `per_call + native` 结果只作历史对照。先跑 sequence 0 的 30 题并验证没有跨-call 重复 IDs、不同 query 进入 state、budget exhausted 后 text tool 不再暴露，再扩展到 210 题。不得读取答案或 support IDs 参与推理。完成后生成严格准确率、retrieval-hit、Grounded accuracy 和逐题 trace 可视化。
 
 ## 15. 后续路线图
 

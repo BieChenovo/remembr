@@ -343,6 +343,8 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
                     if args.text_retriever == 'qrag_static'
                     else 'sequential'
                 ),
+                episode_mode=args.qrag_episode_mode,
+                question_evidence_budget=args.qrag_question_evidence_budget,
                 device=args.embedding_device,
                 batch_size=args.embedding_batch_size,
             )
@@ -350,6 +352,8 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
             memory = GteDenseMemory(
                 model_name=args.gte_model,
                 time_offset=start_time,
+                text_episode_mode=args.text_episode_mode,
+                question_text_evidence_budget=args.question_text_evidence_budget,
                 device=args.embedding_device,
                 batch_size=args.embedding_batch_size,
             )
@@ -357,6 +361,8 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
             memory = LocalVectorMemory(
                 embedding_model=args.embedding_model,
                 time_offset=start_time,
+                text_episode_mode=args.text_episode_mode,
+                question_text_evidence_budget=args.question_text_evidence_budget,
             )
     elif 'vlm' in args.model:
         memory = VideoMemory()
@@ -454,6 +460,20 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
                 'question_start_time': float(start_time),
                 'question_end_time': float(end_time),
                 'text_retriever': args.text_retriever,
+                'text_episode_mode': (
+                    args.qrag_episode_mode
+                    if args.text_retriever in {'qrag_static', 'qrag'}
+                    else args.text_episode_mode
+                ),
+                'question_text_evidence_budget': (
+                    (
+                        args.qrag_question_evidence_budget
+                        if args.qrag_question_evidence_budget is not None
+                        else args.qrag_evidence_budget
+                    )
+                    if args.text_retriever in {'qrag_static', 'qrag'}
+                    else args.question_text_evidence_budget
+                ),
                 'embedding_model': (
                     args.gte_model
                     if args.text_retriever in {'gte_dense', 'qrag_static', 'qrag'}
@@ -643,7 +663,7 @@ def main(args):
             "duration_mean_absolute_error": running_duration_error / num_duration if num_duration else None,
         }
         out_json = {
-            "version": 0.3,
+            "version": 0.4,
             "in_progress": in_progress,
             "config": {
                 "timezone": args.timezone,
@@ -663,6 +683,20 @@ def main(args):
                 ),
                 "embedding_device": args.embedding_device,
                 "embedding_cache_dir": args.embedding_cache_dir,
+                "text_episode_mode": (
+                    args.qrag_episode_mode
+                    if args.text_retriever in {'qrag_static', 'qrag'}
+                    else args.text_episode_mode
+                ),
+                "question_text_evidence_budget": (
+                    (
+                        args.qrag_question_evidence_budget
+                        if args.qrag_question_evidence_budget is not None
+                        else args.qrag_evidence_budget
+                    )
+                    if args.text_retriever in {'qrag_static', 'qrag'}
+                    else args.question_text_evidence_budget
+                ),
                 "qrag_checkpoint": (
                     args.qrag_checkpoint
                     if args.text_retriever in {'qrag_static', 'qrag'}
@@ -680,6 +714,20 @@ def main(args):
                 ),
                 "qrag_evidence_budget": (
                     args.qrag_evidence_budget
+                    if args.text_retriever in {'qrag_static', 'qrag'}
+                    else None
+                ),
+                "qrag_episode_mode": (
+                    args.qrag_episode_mode
+                    if args.text_retriever in {'qrag_static', 'qrag'}
+                    else None
+                ),
+                "qrag_question_evidence_budget": (
+                    (
+                        args.qrag_question_evidence_budget
+                        if args.qrag_question_evidence_budget is not None
+                        else args.qrag_evidence_budget
+                    )
                     if args.text_retriever in {'qrag_static', 'qrag'}
                     else None
                 ),
@@ -873,6 +921,21 @@ if __name__ == "__main__":
         help="Optional writable directory for validated full-sequence GTE vectors",
     )
     parser.add_argument(
+        "--text_episode_mode",
+        choices=['per_call', 'question'],
+        default='per_call',
+        help=(
+            "For dense/GTE text retrieval, either rank independently per tool "
+            "call or enforce a unique question-level evidence budget"
+        ),
+    )
+    parser.add_argument(
+        "--question_text_evidence_budget",
+        type=int,
+        default=5,
+        help="Maximum unique dense/GTE text memories per answer attempt",
+    )
+    parser.add_argument(
         "--qrag_checkpoint",
         type=str,
         default=None,
@@ -891,13 +954,31 @@ if __name__ == "__main__":
         type=int,
         default=5,
         choices=[1, 3, 5],
-        help="Fixed number of sequential Q-RAG actions per text-tool call",
+        help="Maximum number of Q-RAG actions in one text-tool call",
     )
     parser.add_argument(
         "--qrag_state_format",
         choices=['native', 'controller'],
-        default='native',
+        default='controller',
         help="Q-RAG state: question+evidence, optionally including tool query",
+    )
+    parser.add_argument(
+        "--qrag_episode_mode",
+        choices=['per_call', 'question'],
+        default='question',
+        help=(
+            "Use a legacy fresh Q-RAG episode per tool call or carry selected "
+            "evidence and masks across calls in the same answer attempt"
+        ),
+    )
+    parser.add_argument(
+        "--qrag_question_evidence_budget",
+        type=int,
+        default=None,
+        help=(
+            "Maximum unique text memories per answer attempt in question "
+            "episode mode; defaults to --qrag_evidence_budget"
+        ),
     )
     parser.add_argument("--max_questions", type=int, default=None)
     parser.add_argument(

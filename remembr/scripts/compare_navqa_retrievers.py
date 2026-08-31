@@ -206,9 +206,14 @@ def summarize_run(args, run, aligned, sequences=SEQUENCES):
                 else "qrag_sequential_zero_shot"
             )
             for call in text_calls:
-                expected_steps = min(
-                    int(call.get("requested_k", 5)),
-                    int(call.get("candidate_count", 0)),
+                expected_steps = int(
+                    call.get(
+                        "effective_requested_k",
+                        min(
+                            int(call.get("requested_k", 5)),
+                            int(call.get("candidate_count", 0)),
+                        ),
+                    )
                 )
                 selected = [
                     record.get("entry_id")

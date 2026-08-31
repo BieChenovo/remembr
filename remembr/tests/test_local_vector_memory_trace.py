@@ -25,12 +25,14 @@ class FakeEmbedder:
         return vectors[query]
 
 
-def make_memory():
+def make_memory(text_episode_mode="per_call", question_text_evidence_budget=2):
     memory = LocalVectorMemory.__new__(LocalVectorMemory)
     memory.embedder = FakeEmbedder()
     memory.time_offset = 1_672_000_000
     memory.text_k = 2
     memory.numeric_k = 2
+    memory.text_episode_mode = text_episode_mode
+    memory.question_text_evidence_budget = question_text_evidence_budget
     memory.reset()
     memory.set_candidate_pool_metadata(
         {"sequence_id": 0, "start_index": 115, "end_index": 117, "count": 3}
@@ -97,6 +99,33 @@ class LocalVectorMemoryTraceTest(unittest.TestCase):
 
         self.assertEqual(len(memory.get_retrieval_trace()[0]["selected"]), 2)
         self.assertEqual(memory.get_candidate_pool_metadata()["count"], 3)
+
+    def test_question_budget_blocks_duplicate_dense_evidence_and_resets(self):
+        memory = make_memory(text_episode_mode="question")
+        memory.begin_retrieval_episode()
+
+        memory.search_by_text("door")
+        self.assertFalse(memory.text_retrieval_available())
+        exhausted = memory.search_by_text("hall")
+        traces = memory.get_retrieval_trace()
+
+        self.assertEqual(
+            [row["entry_id"] for row in traces[0]["selected"]],
+            [115, 116],
+        )
+        self.assertEqual(traces[1]["selected"], [])
+        self.assertTrue(traces[1]["budget_exhausted"])
+        self.assertIn("evidence budget is exhausted", exhausted)
+
+        memory.begin_retrieval_episode()
+        self.assertTrue(memory.text_retrieval_available())
+        memory.search_by_text("hall")
+        retry = memory.get_retrieval_trace()[2]
+        self.assertEqual(retry["text_episode_id"], 2)
+        self.assertEqual(
+            [row["entry_id"] for row in retry["selected"]],
+            [117, 116],
+        )
 
 
 if __name__ == "__main__":

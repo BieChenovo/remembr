@@ -31,8 +31,10 @@ class QragLocalMemory(LocalVectorMemory):
         time_offset,
         evidence_budget=5,
         numeric_k=4,
-        state_format="native",
+        state_format="controller",
         retrieval_mode="sequential",
+        episode_mode="question",
+        question_evidence_budget=None,
         device="cpu",
         batch_size=16,
     ):
@@ -40,6 +42,10 @@ class QragLocalMemory(LocalVectorMemory):
             raise ValueError(f"Unsupported Q-RAG state format: {state_format}")
         if retrieval_mode not in {"static", "sequential"}:
             raise ValueError(f"Unsupported Q-RAG retrieval mode: {retrieval_mode}")
+        if episode_mode not in {"per_call", "question"}:
+            raise ValueError(f"Unsupported Q-RAG episode mode: {episode_mode}")
+        if question_evidence_budget is not None and int(question_evidence_budget) < 1:
+            raise ValueError("Q-RAG question evidence budget must be positive")
         self.embedding_model = os.path.realpath(model_name)
         self.source_checkpoint = os.path.realpath(source_checkpoint)
         self.inference_checkpoint = os.path.realpath(inference_checkpoint)
@@ -55,8 +61,37 @@ class QragLocalMemory(LocalVectorMemory):
         self.numeric_k = int(numeric_k)
         self.state_format = state_format
         self.retrieval_mode = retrieval_mode
+        self.episode_mode = episode_mode
+        self.question_evidence_budget = int(
+            question_evidence_budget
+            if question_evidence_budget is not None
+            else evidence_budget
+        )
         self.original_question = None
         self.reset()
+
+    def reset(self):
+        super().reset()
+        self._qrag_episode_id = 0
+        self._qrag_text_call_count = 0
+        self._qrag_episode_selected_indices = []
+
+    def begin_retrieval_episode(self):
+        """Start an independent answer attempt without discarding trace history."""
+
+        self._qrag_episode_id += 1
+        self._qrag_text_call_count = 0
+        self._qrag_episode_selected_indices = []
+
+    def text_retrieval_available(self):
+        if not self.items:
+            return False
+        if self.episode_mode != "question":
+            return True
+        return (
+            len(self._qrag_episode_selected_indices) < self.question_evidence_budget
+            and len(self._qrag_episode_selected_indices) < len(self.items)
+        )
 
     @staticmethod
     def _sha256(path):
@@ -205,7 +240,31 @@ class QragLocalMemory(LocalVectorMemory):
         self.items.append(item)
         self.text_embeddings.append(np.asarray(text_embedding, dtype=np.float32))
 
-    def _state_components(self, tool_query, selected_indices):
+    def _episode_prior_indices(self):
+        if self.episode_mode != "question":
+            return []
+        return list(self._qrag_episode_selected_indices)
+
+    def _remaining_question_budget(self, prior_indices):
+        if self.episode_mode != "question":
+            return None
+        return max(self.question_evidence_budget - len(prior_indices), 0)
+
+    def _requested_count(self, candidate_count, prior_indices):
+        available_count = max(candidate_count - len(set(prior_indices)), 0)
+        requested = min(self.text_k, available_count)
+        remaining = self._remaining_question_budget(prior_indices)
+        if remaining is not None:
+            requested = min(requested, remaining)
+        return requested, remaining
+
+    def _state_components(
+        self,
+        tool_query,
+        selected_indices,
+        *,
+        include_episode_evidence=True,
+    ):
         if self.original_question is None:
             raise ValueError(
                 "Q-RAG original question was not set before text retrieval"
@@ -213,23 +272,92 @@ class QragLocalMemory(LocalVectorMemory):
         components = [self.original_question]
         if self.state_format == "controller":
             components.append(tool_query)
-        components.extend(self.items[index].caption for index in selected_indices)
+        evidence_indices = []
+        if include_episode_evidence:
+            evidence_indices.extend(self._episode_prior_indices())
+        evidence_indices.extend(selected_indices)
+        components.extend(self.items[index].caption for index in evidence_indices)
         return components
+
+    def _commit_episode_selection(self, selected_indices):
+        if self.episode_mode != "question":
+            return
+        seen = set(self._qrag_episode_selected_indices)
+        for index in selected_indices:
+            if index not in seen:
+                self._qrag_episode_selected_indices.append(index)
+                seen.add(index)
+
+    def _episode_trace_fields(self, prior_indices, selected_indices):
+        after_indices = list(prior_indices)
+        after_seen = set(after_indices)
+        for index in selected_indices:
+            if index not in after_seen:
+                after_indices.append(index)
+                after_seen.add(index)
+        remaining_before = self._remaining_question_budget(prior_indices)
+        remaining_after = self._remaining_question_budget(after_indices)
+        return {
+            "qrag_episode_mode": self.episode_mode,
+            "qrag_episode_id": self._qrag_episode_id,
+            "qrag_text_call_index": self._qrag_text_call_count,
+            "question_evidence_budget": (
+                self.question_evidence_budget
+                if self.episode_mode == "question"
+                else None
+            ),
+            "question_budget_remaining_before": remaining_before,
+            "question_budget_remaining_after": remaining_after,
+            "episode_selected_entry_ids_before": [
+                getattr(self.items[index], "entry_id", None)
+                for index in prior_indices
+            ],
+            "episode_selected_entry_ids_after": [
+                getattr(self.items[index], "entry_id", None)
+                for index in after_indices
+            ],
+            "budget_exhausted": (
+                remaining_after == 0 if remaining_after is not None else False
+            ),
+        }
+
+    @staticmethod
+    def _empty_result_context(budget_exhausted):
+        if budget_exhausted:
+            return (
+                "No additional text memories were retrieved because the "
+                "question-level evidence budget is exhausted."
+            )
+        return "No additional text memories were available."
 
     def _search_by_text_static(self, query: str) -> str:
         candidate_count = len(self.items)
-        requested = min(self.text_k, candidate_count)
-        components = self._state_components(query, [])
+        self._qrag_text_call_count += 1
+        prior_indices = self._episode_prior_indices()
+        requested, _ = self._requested_count(candidate_count, prior_indices)
+        components = self._state_components(
+            query,
+            [],
+            # Static mode keeps a fixed question/query state across ranking
+            # calls; only its global selected-ID mask advances.
+            include_episode_evidence=False,
+        )
         action_embeddings = np.asarray(self.text_embeddings, dtype=np.float32)
-        if candidate_count:
+        available = np.ones(candidate_count, dtype=bool)
+        if prior_indices:
+            available[np.asarray(prior_indices, dtype=int)] = False
+        if candidate_count and requested:
             state_embedding = np.asarray(
                 self.encoder.encode_state(components),
                 dtype=np.float32,
             )
             scores = action_embeddings @ state_embedding
-            ranking_indices = np.argsort(-scores, kind="stable")
+            available_indices = np.flatnonzero(available)
+            ranking_indices = available_indices[
+                np.argsort(-scores[available_indices], kind="stable")
+            ]
         else:
-            scores = np.asarray([], dtype=np.float32)
+            scores = np.zeros(candidate_count, dtype=np.float32)
             ranking_indices = np.asarray([], dtype=np.int64)
         selected_indices = [int(index) for index in ranking_indices[:requested]]
         ranking = [
@@ -249,6 +377,11 @@ class QragLocalMemory(LocalVectorMemory):
 
         selected = [self.items[index] for index in selected_indices]
         self.working_memory.extend(selected)
+        self._commit_episode_selection(selected_indices)
+        episode_fields = self._episode_trace_fields(
+            prior_indices,
+            selected_indices,
+        )
         trace = {
             "call_index": len(self.retrieval_trace) + 1,
             "tool": "retrieve_from_text",
@@ -261,6 +394,7 @@ class QragLocalMemory(LocalVectorMemory):
             "lower_is_better": False,
             "candidate_count": candidate_count,
             "requested_k": self.text_k,
+            "effective_requested_k": requested,
             "returned_count": len(selected),
             "selected": selected_records,
             "ranking": ranking,
@@ -268,7 +402,7 @@ class QragLocalMemory(LocalVectorMemory):
             "retrieval_method": "qrag_static_topk_zero_shot",
             "qrag_selection_mode": "static_topk",
             "qrag_state_format": self.state_format,
-            "state_encode_count": 1 if candidate_count else 0,
+            "state_encode_count": 1 if requested else 0,
             "embedding_model": "Alibaba-NLP/gte-multilingual-base",
             "embedding_dimension": 768,
             "pooling": "attention_masked_mean_div_10",
@@ -279,16 +413,25 @@ class QragLocalMemory(LocalVectorMemory):
             "training_max_steps": 6,
             "evidence_budget": self.text_k,
         }
-        output = self.memory_to_string(selected)
+        trace.update(episode_fields)
+        output = (
+            self.memory_to_string(selected)
+            if selected
+            else self._empty_result_context(trace["budget_exhausted"])
+        )
         trace["returned_context"] = output
         self.retrieval_trace.append(trace)
         return output
 
     def _search_by_text_sequential(self, query: str) -> str:
         candidate_count = len(self.items)
-        requested = min(self.text_k, candidate_count)
+        self._qrag_text_call_count += 1
+        prior_indices = self._episode_prior_indices()
+        requested, _ = self._requested_count(candidate_count, prior_indices)
         action_embeddings = np.asarray(self.text_embeddings, dtype=np.float32)
         available = np.ones(candidate_count, dtype=bool)
+        if prior_indices:
+            available[np.asarray(prior_indices, dtype=int)] = False
         selected_indices = []
         selected_records = []
         steps = []
@@ -362,6 +505,11 @@ class QragLocalMemory(LocalVectorMemory):
 
         selected = [self.items[index] for index in selected_indices]
         self.working_memory.extend(selected)
+        self._commit_episode_selection(selected_indices)
+        episode_fields = self._episode_trace_fields(
+            prior_indices,
+            selected_indices,
+        )
         trace = {
             "call_index": len(self.retrieval_trace) + 1,
             "tool": "retrieve_from_text",
@@ -373,6 +521,7 @@ class QragLocalMemory(LocalVectorMemory):
             "lower_is_better": False,
             "candidate_count": candidate_count,
             "requested_k": self.text_k,
+            "effective_requested_k": requested,
             "returned_count": len(selected),
             "selected": selected_records,
             "ranking": initial_ranking,
@@ -391,7 +540,12 @@ class QragLocalMemory(LocalVectorMemory):
             "training_max_steps": 6,
             "inference_fixed_steps": self.text_k,
         }
-        output = self.memory_to_string(selected)
+        trace.update(episode_fields)
+        output = (
+            self.memory_to_string(selected)
+            if selected
+            else self._empty_result_context(trace["budget_exhausted"])
+        )
         trace["returned_context"] = output
         self.retrieval_trace.append(trace)
         return output

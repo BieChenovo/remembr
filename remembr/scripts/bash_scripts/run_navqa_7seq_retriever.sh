@@ -17,11 +17,18 @@ MODEL=${MODEL:-qwen3:8b}
 CAPTION_FILE=${CAPTION_FILE:-captions_VILA1.5-13b_3_secs}
 SEQUENCES=${SEQUENCES:-"0 3 4 6 16 21 22"}
 TEXT_RETRIEVER=${TEXT_RETRIEVER:-gte_dense}
-RUN_TAG=${RUN_TAG:-${TEXT_RETRIEVER}_210_zero_shot_v1}
+if [[ -z "${RUN_TAG:-}" ]]; then
+    RUN_TAG="${TEXT_RETRIEVER}_210_question_state_v2"
+fi
 GTE_MODEL=${GTE_MODEL:-$PROJECT_ROOT/third_party/gte-models/gte-multilingual-base}
 QRAG_CHECKPOINT=${QRAG_CHECKPOINT:-$PROJECT_ROOT/third_party/qrag-models/qrag-ft-gte-on-hotpotqa_musique/model_best.pt}
 QRAG_INFERENCE_CHECKPOINT=${QRAG_INFERENCE_CHECKPOINT:-$PROJECT_ROOT/third_party/qrag-models/qrag-ft-gte-on-hotpotqa_musique/qrag_inference.pt}
 QRAG_STEPS=${QRAG_STEPS:-5}
+QRAG_STATE_FORMAT=${QRAG_STATE_FORMAT:-controller}
+QRAG_EPISODE_MODE=${QRAG_EPISODE_MODE:-question}
+QRAG_QUESTION_EVIDENCE_BUDGET=${QRAG_QUESTION_EVIDENCE_BUDGET:-5}
+TEXT_EPISODE_MODE=${TEXT_EPISODE_MODE:-question}
+QUESTION_TEXT_EVIDENCE_BUDGET=${QUESTION_TEXT_EVIDENCE_BUDGET:-5}
 GPU_COUNT=${GPU_COUNT:-4}
 BASE_PORT=${BASE_PORT:-12434}
 NAVQA_TIMEZONE=${NAVQA_TIMEZONE:-America/Los_Angeles}
@@ -73,6 +80,35 @@ trap on_error ERR
     printf 'TEXT_RETRIEVER must be gte_dense, qrag_static, or qrag; got %s\n' "$TEXT_RETRIEVER" >&2
     exit 2
 }
+[[ "$TEXT_EPISODE_MODE" == per_call || "$TEXT_EPISODE_MODE" == question ]] || {
+    printf 'TEXT_EPISODE_MODE must be per_call or question; got %s\n' \
+        "$TEXT_EPISODE_MODE" >&2
+    exit 2
+}
+[[ "$QRAG_STATE_FORMAT" == native || "$QRAG_STATE_FORMAT" == controller ]] || {
+    printf 'QRAG_STATE_FORMAT must be native or controller; got %s\n' \
+        "$QRAG_STATE_FORMAT" >&2
+    exit 2
+}
+[[ "$QRAG_EPISODE_MODE" == per_call || "$QRAG_EPISODE_MODE" == question ]] || {
+    printf 'QRAG_EPISODE_MODE must be per_call or question; got %s\n' \
+        "$QRAG_EPISODE_MODE" >&2
+    exit 2
+}
+[[ "$QRAG_STEPS" == 1 || "$QRAG_STEPS" == 3 || "$QRAG_STEPS" == 5 ]] || {
+    printf 'QRAG_STEPS must be 1, 3, or 5; got %s\n' "$QRAG_STEPS" >&2
+    exit 2
+}
+[[ "$QUESTION_TEXT_EVIDENCE_BUDGET" =~ ^[1-9][0-9]*$ ]] || {
+    printf 'QUESTION_TEXT_EVIDENCE_BUDGET must be positive; got %s\n' \
+        "$QUESTION_TEXT_EVIDENCE_BUDGET" >&2
+    exit 2
+}
+[[ "$QRAG_QUESTION_EVIDENCE_BUDGET" =~ ^[1-9][0-9]*$ ]] || {
+    printf 'QRAG_QUESTION_EVIDENCE_BUDGET must be positive; got %s\n' \
+        "$QRAG_QUESTION_EVIDENCE_BUDGET" >&2
+    exit 2
+}
 [[ -x "$PYTHON" ]] || { printf 'Missing Python: %s\n' "$PYTHON" >&2; exit 1; }
 [[ -x "$OLLAMA_BIN" ]] || { printf 'Missing Ollama: %s\n' "$OLLAMA_BIN" >&2; exit 1; }
 [[ -d "$GTE_MODEL" ]] || { printf 'Missing GTE model: %s\n' "$GTE_MODEL" >&2; exit 1; }
@@ -115,6 +151,10 @@ fi
 set_status "starting retriever=$TEXT_RETRIEVER sequences=$SEQUENCES"
 step "Run tag: $RUN_TAG"
 step "Retriever: $TEXT_RETRIEVER"
+step "Dense/GTE text episode: $TEXT_EPISODE_MODE, question budget: $QUESTION_TEXT_EVIDENCE_BUDGET"
+if [[ "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]]; then
+    step "Q-RAG state: $QRAG_STATE_FORMAT, episode: $QRAG_EPISODE_MODE, per-call max: $QRAG_STEPS, question budget: $QRAG_QUESTION_EVIDENCE_BUDGET"
+fi
 step "Visible GPUs: ${visible_gpus[*]}"
 
 step "Starting $GPU_COUNT GPU-pinned Ollama servers"
@@ -179,12 +219,17 @@ for ordinal in "${!sequence_array[@]}"; do
             --embedding_device cuda:0
             --embedding_batch_size 32
             --embedding_cache_dir "$CACHE_DIR"
+            --text_episode_mode "$TEXT_EPISODE_MODE"
+            --question_text_evidence_budget "$QUESTION_TEXT_EVIDENCE_BUDGET"
         )
         if [[ "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]]; then
             extra_args+=(
                 --qrag_checkpoint "$QRAG_CHECKPOINT"
                 --qrag_inference_checkpoint "$QRAG_INFERENCE_CHECKPOINT"
                 --qrag_steps "$QRAG_STEPS"
+                --qrag_state_format "$QRAG_STATE_FORMAT"
+                --qrag_episode_mode "$QRAG_EPISODE_MODE"
+                --qrag_question_evidence_budget "$QRAG_QUESTION_EVIDENCE_BUDGET"
             )
         fi
         CUDA_VISIBLE_DEVICES="$gpu" \

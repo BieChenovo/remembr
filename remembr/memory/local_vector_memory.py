@@ -19,7 +19,24 @@ from remembr.memory.memory import Memory, MemoryItem
 class LocalVectorMemory(Memory):
     _embedder_cache = {}
 
-    def __init__(self, embedding_model, time_offset, text_k=5, numeric_k=4):
+    def __init__(
+        self,
+        embedding_model,
+        time_offset,
+        text_k=5,
+        numeric_k=4,
+        text_episode_mode="per_call",
+        question_text_evidence_budget=None,
+    ):
+        if text_episode_mode not in {"per_call", "question"}:
+            raise ValueError(
+                f"Unsupported text retrieval episode mode: {text_episode_mode}"
+            )
+        if (
+            question_text_evidence_budget is not None
+            and int(question_text_evidence_budget) < 1
+        ):
+            raise ValueError("Question text evidence budget must be positive")
         if embedding_model not in self._embedder_cache:
             self._embedder_cache[embedding_model] = HuggingFaceEmbeddings(
                 model_name=embedding_model
@@ -28,6 +45,12 @@ class LocalVectorMemory(Memory):
         self.time_offset = time_offset
         self.text_k = text_k
         self.numeric_k = numeric_k
+        self.text_episode_mode = text_episode_mode
+        self.question_text_evidence_budget = int(
+            question_text_evidence_budget
+            if question_text_evidence_budget is not None
+            else text_k
+        )
         self.reset()
 
     def reset(self):
@@ -36,6 +59,56 @@ class LocalVectorMemory(Memory):
         self.working_memory = []
         self.retrieval_trace = []
         self.candidate_pool_metadata = {}
+        self._text_episode_id = 0
+        self._text_episode_selected_indices = []
+
+    def begin_retrieval_episode(self):
+        """Reset question-level text budget and masks for a new answer attempt."""
+
+        self._text_episode_id += 1
+        self._text_episode_selected_indices = []
+
+    def text_retrieval_available(self):
+        if not self.items:
+            return False
+        if getattr(self, "text_episode_mode", "per_call") != "question":
+            return True
+        total_budget = int(
+            getattr(self, "question_text_evidence_budget", self.text_k)
+        )
+        return (
+            len(self._text_episode_selected_indices) < total_budget
+            and len(self._text_episode_selected_indices) < len(self.items)
+        )
+
+    def _text_episode_policy(self, k):
+        if getattr(self, "text_episode_mode", "per_call") != "question":
+            return set(), int(k), None
+        prior = set(self._text_episode_selected_indices)
+        total_budget = int(
+            getattr(self, "question_text_evidence_budget", self.text_k)
+        )
+        remaining = max(total_budget - len(prior), 0)
+        return prior, min(int(k), remaining), remaining
+
+    def _commit_text_episode_selection(self, indices):
+        if getattr(self, "text_episode_mode", "per_call") != "question":
+            return
+        seen = set(self._text_episode_selected_indices)
+        for index in indices:
+            index = int(index)
+            if index not in seen:
+                self._text_episode_selected_indices.append(index)
+                seen.add(index)
+
+    @staticmethod
+    def empty_text_result_context(budget_exhausted):
+        if budget_exhausted:
+            return (
+                "No additional text memories were retrieved because the "
+                "question-level evidence budget is exhausted."
+            )
+        return "No additional text memories were available."
 
     def set_candidate_pool_metadata(self, metadata):
         """Attach evaluator-side bounds to the next retrieval trace.
@@ -86,18 +159,36 @@ class LocalVectorMemory(Memory):
         score_unit=None,
         lower_is_better=True,
     ):
+        is_text = tool == "retrieve_from_text"
+        prior_text_indices, effective_k, remaining_before = (
+            self._text_episode_policy(k) if is_text else (set(), int(k), None)
+        )
+        prior_text_order = (
+            list(self._text_episode_selected_indices)
+            if is_text
+            and getattr(self, "text_episode_mode", "per_call") == "question"
+            else []
+        )
         if not self.items:
             selected = []
             indices = np.asarray([], dtype=int)
             distance_array = np.asarray([], dtype=float)
         else:
-            count = min(k, len(self.items))
             distance_array = np.asarray(distances, dtype=float)
             if lower_is_better:
                 full_ranking = np.argsort(distance_array, kind="stable")
             else:
                 full_ranking = np.argsort(-distance_array, kind="stable")
-            indices = full_ranking[:count]
+            eligible_ranking = np.asarray(
+                [
+                    int(index)
+                    for index in full_ranking
+                    if int(index) not in prior_text_indices
+                ],
+                dtype=int,
+            )
+            count = min(effective_k, len(eligible_ranking))
+            indices = eligible_ranking[:count]
             selected = [self.items[int(index)] for index in indices]
             self.working_memory.extend(selected)
 
@@ -109,6 +200,26 @@ class LocalVectorMemory(Memory):
             record.update({"rank": rank, "score": float(distance_array[int(index)])})
             selected_records.append(record)
 
+        if is_text:
+            self._commit_text_episode_selection(indices)
+        question_mode = (
+            is_text
+            and getattr(self, "text_episode_mode", "per_call") == "question"
+        )
+        selected_after = (
+            list(self._text_episode_selected_indices) if question_mode else []
+        )
+        question_budget = (
+            int(getattr(self, "question_text_evidence_budget", self.text_k))
+            if question_mode
+            else None
+        )
+        remaining_after = (
+            max(question_budget - len(selected_after), 0)
+            if question_budget is not None
+            else None
+        )
+
         trace_record = {
             "call_index": len(self.retrieval_trace) + 1,
             "tool": tool,
@@ -119,6 +230,7 @@ class LocalVectorMemory(Memory):
             "lower_is_better": bool(lower_is_better),
             "candidate_count": len(self.items),
             "requested_k": int(k),
+            "effective_requested_k": int(effective_k),
             "returned_count": len(selected),
             "selected": selected_records,
             # The complete lightweight ranking lets an audit determine the exact
@@ -133,6 +245,33 @@ class LocalVectorMemory(Memory):
                 for rank, index in enumerate(full_ranking, start=1)
             ],
         }
+        if is_text:
+            trace_record.update(
+                {
+                    "text_episode_mode": getattr(
+                        self,
+                        "text_episode_mode",
+                        "per_call",
+                    ),
+                    "text_episode_id": getattr(self, "_text_episode_id", 0),
+                    "question_evidence_budget": question_budget,
+                    "question_budget_remaining_before": remaining_before,
+                    "question_budget_remaining_after": remaining_after,
+                    "episode_selected_entry_ids_before": [
+                        getattr(self.items[index], "entry_id", None)
+                        for index in prior_text_order
+                    ],
+                    "episode_selected_entry_ids_after": [
+                        getattr(self.items[index], "entry_id", None)
+                        for index in selected_after
+                    ],
+                    "budget_exhausted": (
+                        remaining_after == 0
+                        if remaining_after is not None
+                        else False
+                    ),
+                }
+            )
         self.retrieval_trace.append(trace_record)
         return selected, trace_record
 
@@ -151,6 +290,8 @@ class LocalVectorMemory(Memory):
             score_name="embedding_l2_distance",
         )
         output = self.memory_to_string(selected)
+        if not selected:
+            output = self.empty_text_result_context(trace["budget_exhausted"])
         trace["returned_context"] = output
         return output
 

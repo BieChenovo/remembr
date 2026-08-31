@@ -95,6 +95,11 @@
       <article class="card b3"><div class="label">B3 · state update</div><div class="method">Q-RAG sequential</div><div class="score">52.9% <small>111 / 210</small></div></article>
     </section>
 
+    <section class="panel">
+      <h2>实现审计说明</h2>
+      <p class="section-copy">这里展示的 B2/B3 数字来自旧版 <code>per-call native</code> 运行：sequential update 仅发生在单次 call 内，跨 call 会重置状态且忽略 tool query。question-state v2 修复已完成，B1/B2/B3 修正版结果尚待重跑，因此旧数字不能解释为跨-call stateful retrieval 的收益。</p>
+    </section>
+
     <section class="panel primary">
       <div>
         <h2>以“检索到正确记忆”为标准的新报告</h2>

@@ -33,7 +33,7 @@ class FakeGteEncoder:
         return vectors
 
 
-def make_memory():
+def make_memory(text_episode_mode="per_call", question_text_evidence_budget=2):
     memory = GteDenseMemory.__new__(GteDenseMemory)
     memory.encoder = FakeGteEncoder()
     memory.embedding_model = "fake-gte"
@@ -41,6 +41,8 @@ def make_memory():
     memory.time_offset = 1_672_000_000
     memory.text_k = 2
     memory.numeric_k = 2
+    memory.text_episode_mode = text_episode_mode
+    memory.question_text_evidence_budget = question_text_evidence_budget
     memory.reset()
     for index, score in enumerate([1.0, 3.0, 2.0]):
         item = MemoryItem(
@@ -110,6 +112,22 @@ class GteDenseMemoryTest(unittest.TestCase):
                 len([name for name in os.listdir(cache_dir) if name.endswith(".npz")]),
                 1,
             )
+
+    def test_question_budget_prevents_repeated_gte_topk(self):
+        memory = make_memory(text_episode_mode="question")
+        memory.begin_retrieval_episode()
+
+        memory.search_by_text("query")
+        exhausted = memory.search_by_text("query")
+        traces = memory.get_retrieval_trace()
+
+        self.assertEqual(
+            [record["entry_id"] for record in traces[0]["selected"]],
+            [101, 102],
+        )
+        self.assertEqual(traces[1]["selected"], [])
+        self.assertTrue(traces[1]["budget_exhausted"])
+        self.assertIn("evidence budget is exhausted", exhausted)
 
 
 if __name__ == "__main__":

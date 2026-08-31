@@ -372,9 +372,20 @@ class ReMEmbRAgent(Agent):
         model = self.chat
 
 
-        # limit to 5 tool calls.
+        # Limit the outer controller to three calls and stop advertising text
+        # retrieval after its question-level unique-evidence budget is spent.
         if self.agent_call_count < 3:
-            model = model.bind_tools(tools=self.tool_definitions)
+            text_available = getattr(
+                self.memory,
+                "text_retrieval_available",
+                lambda: True,
+            )()
+            available_tool_definitions = [
+                definition
+                for tool, definition in zip(self.tool_list, self.tool_definitions)
+                if text_available or tool.name != "retrieve_from_text"
+            ]
+            model = model.bind_tools(tools=available_tool_definitions)
             prompt = self.agent_prompt
         else:
             prompt = self.agent_gen_only_prompt
@@ -538,6 +549,16 @@ class ReMEmbRAgent(Agent):
 
 
     def query(self, question: str):
+
+        # ``answer_squad_question`` may retry the same question after a parse or
+        # evaluation failure.  Each retry is an independent retrieval episode:
+        # keep the trace history for audit, but do not inherit consumed Q-RAG
+        # budget, selected-ID masks, or stale controller tool requests.
+        begin_episode = getattr(self.memory, "begin_retrieval_episode", None)
+        if begin_episode is not None:
+            begin_episode()
+        self.previous_tool_requests = "These are the tools I have previously used so far: \n"
+        self.agent_call_count = 0
 
         inputs = { "messages": [
                                 (("user", question)),
