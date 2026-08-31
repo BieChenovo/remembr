@@ -475,6 +475,19 @@ class ReMEmbRAgent(Agent):
 
     ### Nodes
 
+    @staticmethod
+    def _controller_chat_prompt(policy, controller_ledger):
+        """Build a controller prompt without templating embedded JSON."""
+
+        return ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(content=policy),
+                SystemMessage(content=controller_ledger),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{question}"),
+            ]
+        )
+
     def agent(self, state):
         """
         Invokes the agent model to generate a response based on the current state. Given
@@ -502,13 +515,12 @@ class ReMEmbRAgent(Agent):
             prompt = self.agent_gen_only_prompt
 
         # Controller policy is a system instruction, not an assistant utterance.
-        agent_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", prompt),
-                ("system", self.previous_tool_requests),
-                MessagesPlaceholder("chat_history"),
-                ("human", "{question}"),
-            ]
+        # Keep the policy and controller ledger as concrete messages.  Treating
+        # either string as a prompt template makes the JSON examples (and later
+        # JSON-encoded tool arguments) look like undeclared template variables.
+        agent_prompt = self._controller_chat_prompt(
+            prompt,
+            self.previous_tool_requests,
         )
         model = agent_prompt | model
         question = self.generation_directive(

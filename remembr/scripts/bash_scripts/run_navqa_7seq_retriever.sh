@@ -14,6 +14,7 @@ CUDA_TORCH_SHIM=${CUDA_TORCH_SHIM:-/tmp/remembr_cuda_torch}
 OLLAMA_ROOT=${OLLAMA_ROOT:-/hpc2hdd/home/yichenwang/.local/opt/ollama}
 OLLAMA_MODELS=${OLLAMA_MODELS:-/hpc2hdd/home/yichenwang/.local/share/ollama/models}
 MODEL=${MODEL:-qwen3:8b}
+NUM_PREDICT=${NUM_PREDICT:-512}
 CAPTION_FILE=${CAPTION_FILE:-captions_VILA1.5-13b_3_secs}
 SEQUENCES=${SEQUENCES:-"0 3 4 6 16 21 22"}
 TEXT_RETRIEVER=${TEXT_RETRIEVER:-gte_dense}
@@ -143,6 +144,10 @@ fi
         "$MAX_RETRIEVAL_ROUNDS" >&2
     exit 2
 }
+[[ "$NUM_PREDICT" =~ ^[1-9][0-9]*$ ]] || {
+    printf 'NUM_PREDICT must be positive; got %s\n' "$NUM_PREDICT" >&2
+    exit 2
+}
 [[ "$QUESTION_TEXT_EVIDENCE_BUDGET" =~ ^[1-9][0-9]*$ ]] || {
     printf 'QUESTION_TEXT_EVIDENCE_BUDGET must be positive; got %s\n' \
         "$QUESTION_TEXT_EVIDENCE_BUDGET" >&2
@@ -223,6 +228,7 @@ set_status "starting retriever=$TEXT_RETRIEVER sequences=$SEQUENCES"
 step "Run tag: $RUN_TAG"
 step "Retriever: $TEXT_RETRIEVER"
 step "Controller: interleaved single-call, max rounds: $MAX_RETRIEVAL_ROUNDS"
+step "Controller/reader output budget: $NUM_PREDICT tokens"
 step "Dense/GTE text episode: $TEXT_EPISODE_MODE, question budget: $QUESTION_TEXT_EVIDENCE_BUDGET"
 if [[ "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]]; then
     step "Q-RAG state: $QRAG_STATE_FORMAT, episode: $QRAG_EPISODE_MODE, per-call max: $QRAG_STEPS, question budget: $QRAG_QUESTION_EVIDENCE_BUDGET"
@@ -324,7 +330,7 @@ for ordinal in "${!sequence_array[@]}"; do
                 --out_dir "$RESULT_ROOT" \
                 --temperature 0 \
                 --num_ctx 32768 \
-                --num_predict 256 \
+                --num_predict "$NUM_PREDICT" \
                 --disable_thinking \
                 --max_retrieval_rounds "$MAX_RETRIEVAL_ROUNDS" \
                 --text_judge_model "$MODEL" \

@@ -102,6 +102,14 @@
 
     <section class="panel primary">
       <div>
+        <h2>B3 v3 · controller-interleaved Q-RAG</h2>
+        <p>210 题答案准确率 44.3%（93/210），reference-memory hit 9.0%，Grounded 正确率 6.7%。222 个回答尝试的闭环、top-1、状态继承、预算与去重审计为 0 错误；报告同时展示它相对 B3-v2 的退化。</p>
+      </div>
+      <a class="button" href="reports/comparison/v3_interleaved/">打开 v3 对比 →</a>
+    </section>
+
+    <section class="panel primary">
+      <div>
         <h2>以“检索到正确记忆”为标准的新报告</h2>
         <p>B1/B2/B3 的检索命中率分别为 39.0% / 25.2% / 25.2%，Grounded 正确率为 26.2% / 13.3% / 17.6%；同时标出答对但未命中与 reader failure。</p>
       </div>
@@ -123,6 +131,7 @@
         <a class="report" href="reports/b1/v2/analysis/">B1 · GTE dense · v2<span>题级唯一 evidence budget 的 dense 对照</span></a>
         <a class="report" href="reports/b2/v2/analysis/">B2 · Q-RAG static · v2<span>query-aware static scorer 与题级全局 mask</span></a>
         <a class="report" href="reports/b3/v2/analysis/">B3 · Q-RAG sequential · v2<span>五步 state update 与题级全局 mask</span></a>
+        <a class="report" href="reports/b3/v2/v3_interleaved/analysis/">B3 · Q-RAG interleaved · v3<span>controller 闭环、逐轮 top-1 与重复调用拦截</span></a>
       </div>
     </section>
 
@@ -135,6 +144,7 @@
         <a class="report" href="reports/b1/v2/sequence_0_audit/">B1 · GTE dense · v2<span>题级预算、各次 call 与最终答案</span></a>
         <a class="report" href="reports/b2/v2/sequence_0_audit/">B2 · Q-RAG static · v2<span>query state、全局 mask、排名与返回证据</span></a>
         <a class="report" href="reports/b3/v2/sequence_0_audit/">B3 · Q-RAG sequential · v2<span>逐步 state components、排名与最终答案</span></a>
+        <a class="report" href="reports/b3/v2/v3_interleaved/sequence_0_audit/">B3 · Q-RAG interleaved · v3<span>跨轮可见证据、单次调用与最终答案</span></a>
       </div>
       <p class="note">网页发布版视频为 720×602、10 FPS、H.264，时长和帧顺序与 154MB 本地原视频一致；压缩后约 68MB，以满足 GitHub 单文件限制。</p>
     </section>
@@ -147,6 +157,7 @@
         <a class="report" href="reports/comparison/v1/answer_accuracy/">Comparison · v1<span>修复前 B0–B3 答案准确率</span></a>
         <a class="report" href="reports/comparison/v1/grounded/">Grounded · v1<span>修复前 retrieval-hit 与 Grounded 指标</span></a>
         <a class="report" href="reports/comparison/v2/">Comparison · v2<span>修复后答案、检索命中和 question-state 审计</span></a>
+        <a class="report" href="reports/comparison/v3_interleaved/">Comparison · v3 interleaved<span>B3-v3 与 B0/B1/B2/B3-v2 的统一对比</span></a>
       </div>
     </section>
 
@@ -165,11 +176,15 @@
         <div class="seq-links">
           <a href="reports/b3/v2/sequences/sequence_0.html">seq 0</a><a href="reports/b3/v2/sequences/sequence_3.html">seq 3</a><a href="reports/b3/v2/sequences/sequence_4.html">seq 4</a><a href="reports/b3/v2/sequences/sequence_6.html">seq 6</a><a href="reports/b3/v2/sequences/sequence_16.html">seq 16</a><a href="reports/b3/v2/sequences/sequence_21.html">seq 21</a><a href="reports/b3/v2/sequences/sequence_22.html">seq 22</a>
         </div>
+        <div class="seq-label">B3 · Q-RAG interleaved · v3</div>
+        <div class="seq-links">
+          <a href="reports/b3/v2/v3_interleaved/sequences/sequence_0.html">seq 0</a><a href="reports/b3/v2/v3_interleaved/sequences/sequence_3.html">seq 3</a><a href="reports/b3/v2/v3_interleaved/sequences/sequence_4.html">seq 4</a><a href="reports/b3/v2/v3_interleaved/sequences/sequence_6.html">seq 6</a><a href="reports/b3/v2/v3_interleaved/sequences/sequence_16.html">seq 16</a><a href="reports/b3/v2/v3_interleaved/sequences/sequence_21.html">seq 21</a><a href="reports/b3/v2/v3_interleaved/sequences/sequence_22.html">seq 22</a>
+        </div>
       </div>
       <p class="note">所有当前生成的可视化界面、分析 JSON/CSV、sequence 0 深度审计和网页媒体资源都已列入本入口。</p>
     </section>
 
-    <footer>Generated from the completed question-state v2 B1–B3 NaVQA evaluation · synchronized 2026-08-31</footer>
+    <footer>Generated from the completed question-state v2 and controller-interleaved v3 NaVQA evaluations · synchronized 2026-08-31</footer>
   </main>
 </body>
 </html>
