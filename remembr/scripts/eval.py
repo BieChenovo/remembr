@@ -495,6 +495,9 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
 
 def main(args):
 
+    if args.qrag_evidence_budget is None:
+        args.qrag_evidence_budget = 1 if args.text_retriever == 'qrag' else 5
+
     # Questions contain human-readable clock times and the time-search tool
     # parses clock strings back into Unix timestamps.  Pin both operations to
     # the timezone used by the NaVQA annotations instead of inheriting the
@@ -520,6 +523,7 @@ def main(args):
             temperature=args.temperature,
             num_predict=args.num_predict,
             disable_thinking=args.disable_thinking,
+            max_retrieval_rounds=args.max_retrieval_rounds,
         )
         use_milvus = True
 
@@ -663,7 +667,7 @@ def main(args):
             "duration_mean_absolute_error": running_duration_error / num_duration if num_duration else None,
         }
         out_json = {
-            "version": 0.4,
+            "version": 0.5,
             "in_progress": in_progress,
             "config": {
                 "timezone": args.timezone,
@@ -675,6 +679,8 @@ def main(args):
                 "text_judge_host": args.text_judge_host,
                 "text_judge_num_predict": args.text_judge_num_predict,
                 "retrieval_trace": args.memory_backend == 'local',
+                "controller_retrieval_mode": "interleaved_single_call",
+                "max_retrieval_rounds": args.max_retrieval_rounds,
                 "text_retriever": args.text_retriever,
                 "embedding_model": (
                     args.gte_model
@@ -952,9 +958,12 @@ if __name__ == "__main__":
         "--qrag_steps",
         dest="qrag_evidence_budget",
         type=int,
-        default=5,
+        default=None,
         choices=[1, 3, 5],
-        help="Maximum number of Q-RAG actions in one text-tool call",
+        help=(
+            "Maximum Q-RAG actions in one text-tool call; defaults to one for "
+            "interleaved B3 and five for static B2"
+        ),
     )
     parser.add_argument(
         "--qrag_state_format",
@@ -974,10 +983,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--qrag_question_evidence_budget",
         type=int,
-        default=None,
+        default=5,
         help=(
             "Maximum unique text memories per answer attempt in question "
-            "episode mode; defaults to --qrag_evidence_budget"
+            "episode mode; v3 keeps this at five even when each call returns one"
         ),
     )
     parser.add_argument("--max_questions", type=int, default=None)
@@ -988,6 +997,15 @@ if __name__ == "__main__":
         help="Comma-separated zero-based question indices for a stratified benchmark",
     )
     parser.add_argument("--max_retries", type=int, default=3)
+    parser.add_argument(
+        "--max_retrieval_rounds",
+        type=int,
+        default=5,
+        help=(
+            "Maximum executed retrieval calls per answer attempt; controller "
+            "turns are interleaved so every call sees the previous result"
+        ),
+    )
     parser.add_argument("--resume", action="store_true")
 
 

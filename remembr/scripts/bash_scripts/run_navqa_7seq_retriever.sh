@@ -18,17 +18,24 @@ CAPTION_FILE=${CAPTION_FILE:-captions_VILA1.5-13b_3_secs}
 SEQUENCES=${SEQUENCES:-"0 3 4 6 16 21 22"}
 TEXT_RETRIEVER=${TEXT_RETRIEVER:-gte_dense}
 if [[ -z "${RUN_TAG:-}" ]]; then
-    RUN_TAG="${TEXT_RETRIEVER}_210_question_state_v2"
+    RUN_TAG="${TEXT_RETRIEVER}_210_question_state_v3_interleaved"
 fi
 GTE_MODEL=${GTE_MODEL:-$PROJECT_ROOT/third_party/gte-models/gte-multilingual-base}
 QRAG_CHECKPOINT=${QRAG_CHECKPOINT:-$PROJECT_ROOT/third_party/qrag-models/qrag-ft-gte-on-hotpotqa_musique/model_best.pt}
 QRAG_INFERENCE_CHECKPOINT=${QRAG_INFERENCE_CHECKPOINT:-$PROJECT_ROOT/third_party/qrag-models/qrag-ft-gte-on-hotpotqa_musique/qrag_inference.pt}
-QRAG_STEPS=${QRAG_STEPS:-5}
+if [[ -z "${QRAG_STEPS:-}" ]]; then
+    if [[ "$TEXT_RETRIEVER" == qrag ]]; then
+        QRAG_STEPS=1
+    else
+        QRAG_STEPS=5
+    fi
+fi
 QRAG_STATE_FORMAT=${QRAG_STATE_FORMAT:-controller}
 QRAG_EPISODE_MODE=${QRAG_EPISODE_MODE:-question}
 QRAG_QUESTION_EVIDENCE_BUDGET=${QRAG_QUESTION_EVIDENCE_BUDGET:-5}
 TEXT_EPISODE_MODE=${TEXT_EPISODE_MODE:-question}
 QUESTION_TEXT_EVIDENCE_BUDGET=${QUESTION_TEXT_EVIDENCE_BUDGET:-5}
+MAX_RETRIEVAL_ROUNDS=${MAX_RETRIEVAL_ROUNDS:-5}
 REPORT_VERSION=${REPORT_VERSION:-v2}
 GPU_COUNT=${GPU_COUNT:-4}
 GPU_IDS=${GPU_IDS:-}
@@ -47,7 +54,15 @@ case "$TEXT_RETRIEVER" in
     qrag) REPORT_GROUP=b3 ;;
     *) REPORT_GROUP="$TEXT_RETRIEVER" ;;
 esac
-REPORT_DIR=${REPORT_DIR:-$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/sequences}
+# Keep historical question_state_v2 reports immutable.  v3 is a run tag under
+# the existing v2 (= fixed implementation) report namespace.
+if [[ -z "${REPORT_DIR:-}" ]]; then
+    if [[ "$RUN_TAG" == *question_state_v3_interleaved* ]]; then
+        REPORT_DIR="$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/v3_interleaved/sequences"
+    else
+        REPORT_DIR="$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/sequences"
+    fi
+fi
 mkdir -p "$LOG_DIR" "$CACHE_DIR" "$REPORT_DIR" "$RESULT_ROOT"
 
 timestamp() {
@@ -109,6 +124,23 @@ trap on_error ERR
 }
 [[ "$QRAG_STEPS" == 1 || "$QRAG_STEPS" == 3 || "$QRAG_STEPS" == 5 ]] || {
     printf 'QRAG_STEPS must be 1, 3, or 5; got %s\n' "$QRAG_STEPS" >&2
+    exit 2
+}
+if [[ "$RUN_TAG" == *question_state_v3_interleaved* ]]; then
+    if [[ "$TEXT_RETRIEVER" == qrag && "$QRAG_STEPS" != 1 ]]; then
+        printf 'B3 v3 interleaved requires QRAG_STEPS=1; got %s\n' \
+            "$QRAG_STEPS" >&2
+        exit 2
+    fi
+    if [[ "$TEXT_RETRIEVER" == qrag_static && "$QRAG_STEPS" != 5 ]]; then
+        printf 'B2 v3 static requires QRAG_STEPS=5; got %s\n' \
+            "$QRAG_STEPS" >&2
+        exit 2
+    fi
+fi
+[[ "$MAX_RETRIEVAL_ROUNDS" =~ ^[1-9][0-9]*$ ]] || {
+    printf 'MAX_RETRIEVAL_ROUNDS must be positive; got %s\n' \
+        "$MAX_RETRIEVAL_ROUNDS" >&2
     exit 2
 }
 [[ "$QUESTION_TEXT_EVIDENCE_BUDGET" =~ ^[1-9][0-9]*$ ]] || {
@@ -190,6 +222,7 @@ done
 set_status "starting retriever=$TEXT_RETRIEVER sequences=$SEQUENCES"
 step "Run tag: $RUN_TAG"
 step "Retriever: $TEXT_RETRIEVER"
+step "Controller: interleaved single-call, max rounds: $MAX_RETRIEVAL_ROUNDS"
 step "Dense/GTE text episode: $TEXT_EPISODE_MODE, question budget: $QUESTION_TEXT_EVIDENCE_BUDGET"
 if [[ "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]]; then
     step "Q-RAG state: $QRAG_STATE_FORMAT, episode: $QRAG_EPISODE_MODE, per-call max: $QRAG_STEPS, question budget: $QRAG_QUESTION_EVIDENCE_BUDGET"
@@ -293,6 +326,7 @@ for ordinal in "${!sequence_array[@]}"; do
                 --num_ctx 32768 \
                 --num_predict 256 \
                 --disable_thinking \
+                --max_retrieval_rounds "$MAX_RETRIEVAL_ROUNDS" \
                 --text_judge_model "$MODEL" \
                 --text_judge_host "127.0.0.1:$port" \
                 --text_judge_num_predict 96 \

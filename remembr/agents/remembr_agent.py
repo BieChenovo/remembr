@@ -1,5 +1,7 @@
 from typing import Annotated, Any, Iterator, List, Literal, Optional, Sequence, TypedDict
 import ast
+import copy
+import json
 import traceback
 import sys, re
 
@@ -14,7 +16,7 @@ from langchain.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder
 )
-from langchain_core.messages import ToolMessage, AIMessage
+from langchain_core.messages import ToolMessage, AIMessage, SystemMessage
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 from langchain_community.chat_message_histories import ChatMessageHistory
@@ -31,6 +33,15 @@ sys.path.append(sys.path[0] + '/..')
 from remembr.utils.util import file_to_string
 from remembr.tools.tools import *
 from remembr.tools.functions_wrapper import FunctionsWrapper
+from remembr.tools.retrieval_control import (
+    RETRIEVAL_TOOL_NAMES,
+    RetrievalCallGate,
+    merge_controller_trace,
+    qrag_state_components,
+    raw_tool_query,
+    selected_entry_ids,
+    tool_call_signature,
+)
 
 from remembr.memory.memory import Memory
 
@@ -174,7 +185,11 @@ class ReMEmbRAgent(Agent):
         temperature=0,
         num_predict=2048,
         disable_thinking=False,
+        max_retrieval_rounds=5,
     ):
+
+        if int(max_retrieval_rounds) < 1:
+            raise ValueError("max_retrieval_rounds must be positive")
 
         # Wrapper that handles everything
         llm = self.llm_selector(
@@ -190,6 +205,7 @@ class ReMEmbRAgent(Agent):
         self.temperature = temperature
         self.num_predict = num_predict
         self.disable_thinking = disable_thinking
+        self.max_retrieval_rounds = int(max_retrieval_rounds)
 
         self.chat = chat
         self.llm_type = llm_type
@@ -202,6 +218,12 @@ class ReMEmbRAgent(Agent):
 
         self.previous_tool_requests = "These are the tools I have previously used so far: \n"
         self.agent_call_count = 0
+        self.answer_attempt_count = 0
+        self.answer_attempt_id = None
+        self.controller_turn_id = 0
+        self.retrieval_gate = RetrievalCallGate(self.max_retrieval_rounds)
+        self.retrieval_control_trace = []
+        self.force_reader = False
 
         self.chat_history = ChatMessageHistory()
 
@@ -285,13 +307,20 @@ class ReMEmbRAgent(Agent):
         self.memory = memory
         self.previous_tool_requests = "These are the tools I have previously used so far: \n"
         self.agent_call_count = 0
+        self.answer_attempt_count = 0
+        self.answer_attempt_id = None
+        self.controller_turn_id = 0
+        self.retrieval_gate = RetrievalCallGate(self.max_retrieval_rounds)
+        self.retrieval_control_trace = []
+        self.force_reader = False
         self.chat_history = ChatMessageHistory()
         self.create_tools(memory)
         self.build_graph()
 
     def get_retrieval_trace(self):
         getter = getattr(self.memory, "get_retrieval_trace", None)
-        return getter() if getter is not None else []
+        memory_trace = getter() if getter is not None else []
+        return merge_controller_trace(memory_trace, self.retrieval_control_trace)
 
     def get_candidate_pool_metadata(self):
         getter = getattr(self.memory, "get_candidate_pool_metadata", None)
@@ -352,7 +381,97 @@ class ReMEmbRAgent(Agent):
         )
 
         self.tool_list = [self.retriever_tool, self.position_retriever_tool, self.time_retriever_tool]
+        self.tools_by_name = {tool.name: tool for tool in self.tool_list}
         self.tool_definitions = [convert_to_openai_function(t) for t in self.tool_list]
+
+    def _local_model_history(self, messages):
+        """Serialize tool provenance for old ChatOllama adapters.
+
+        LangChain 0.2's community Ollama adapter cannot encode ToolMessage, but
+        converting it to AIMessage falsely presents memory output as something
+        the controller said.  System records retain the tool, arguments, call
+        ID, selected IDs, and result while keeping the provenance explicit.
+        """
+
+        if ('gpt-4' in self.llm_type) or ('nim' in self.llm_type):
+            return list(messages)
+
+        calls_by_id = {}
+        for message in messages:
+            if isinstance(message, AIMessage):
+                for call in message.tool_calls:
+                    calls_by_id[call.get("id")] = call
+
+        converted = []
+        for message in messages:
+            if isinstance(message, ToolMessage):
+                call = calls_by_id.get(message.tool_call_id, {})
+                payload = {
+                    "type": "retrieval_tool_result",
+                    "tool_call_id": message.tool_call_id,
+                    "tool": getattr(message, "name", None) or call.get("name"),
+                    "arguments": call.get("args"),
+                    "result": message.content,
+                }
+                converted.append(
+                    SystemMessage(
+                        content="RETRIEVAL_TOOL_RESULT\n"
+                        + json.dumps(payload, ensure_ascii=False, sort_keys=True)
+                    )
+                )
+            elif isinstance(message, AIMessage) and message.tool_calls:
+                if message.content:
+                    converted.append(AIMessage(content=message.content))
+                converted.append(
+                    SystemMessage(
+                        content="CONTROLLER_TOOL_REQUEST\n"
+                        + json.dumps(
+                            [
+                                {
+                                    "tool_call_id": call.get("id"),
+                                    "tool": call.get("name"),
+                                    "arguments": call.get("args"),
+                                }
+                                for call in message.tool_calls
+                            ],
+                            ensure_ascii=False,
+                            sort_keys=True,
+                        )
+                    )
+                )
+            else:
+                converted.append(message)
+        return converted
+
+    @staticmethod
+    def _tool_result_payload(
+        tool_call_id,
+        tool_name,
+        raw_query,
+        selected_ids,
+        result,
+        duplicate_blocked=False,
+    ):
+        return json.dumps(
+            {
+                "type": "retrieval_tool_result",
+                "tool_call_id": tool_call_id,
+                "tool": tool_name,
+                "query": raw_query,
+                "selected_ids": list(selected_ids),
+                "duplicate_blocked": bool(duplicate_blocked),
+                "result": str(result),
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+
+    @staticmethod
+    def _retrieval_kind(tool_name, memory_record):
+        if tool_name in {"retrieve_from_time", "retrieve_from_position"}:
+            return "non_qrag"
+        method = str(memory_record.get("retrieval_method", ""))
+        return "qrag" if method.startswith("qrag_") else "dense"
 
     ### Nodes
 
@@ -368,57 +487,185 @@ class ReMEmbRAgent(Agent):
             dict: The updated state with the agent response appended to messages
         """
         messages = state["messages"]
+        self.controller_turn_id += 1
+        self.agent_call_count = self.controller_turn_id
 
+        can_retrieve = (
+            not self.force_reader
+            and self.retrieval_gate.can_retrieve
+        )
         model = self.chat
-
-
-        # Keep every tool schema bound for the lifetime of an answer attempt.
-        # Some local models may repeat a tool chosen earlier even after its
-        # evidence budget is exhausted; removing that schema makes an otherwise
-        # valid call fail strict function parsing.  The memory backend enforces
-        # the question-level budget and returns an explicit empty result instead.
-        if self.agent_call_count < 3:
+        if can_retrieve:
             model = model.bind_tools(tools=self.tool_definitions)
             prompt = self.agent_prompt
         else:
             prompt = self.agent_gen_only_prompt
 
-
+        # Controller policy is a system instruction, not an assistant utterance.
         agent_prompt = ChatPromptTemplate.from_messages(
             [
-                # ("system", prompt),
+                ("system", prompt),
+                ("system", self.previous_tool_requests),
                 MessagesPlaceholder("chat_history"),
-                (("human"), self.previous_tool_requests),
-                ("ai", prompt),
                 ("human", "{question}"),
-
             ]
         )
-
-
         model = agent_prompt | model
+        question = self.generation_directive(
+            f"The question is: {messages[0].content}"
+        )
+        response = model.invoke(
+            {
+                "question": question,
+                "chat_history": self._local_model_history(messages),
+            }
+        )
 
-        question = self.generation_directive(f"The question is: {messages[0]}")
-
-        # Convert all ToolMessages into AI Messages since Ollama cann't handle ToolMessage
-        if ('gpt-4' not in self.llm_type) and ('nim' not in self.llm_type):
-            for i in range(len(messages)):
-                if type(messages[i]) == ToolMessage:
-                    messages[i] = AIMessage(id=messages[i].id, content=messages[i].content) # ignore tool_call_id
-
-
-        response = model.invoke({"question": question, "chat_history": messages[:]})
-
+        # FunctionsWrapper rejects batches, but keep this invariant explicit at
+        # the orchestration boundary as well for non-Ollama model adapters.
+        if len(response.tool_calls) > 1:
+            raise ValueError(
+                "A controller turn produced multiple retrieval calls; none executed"
+            )
         if response.tool_calls:
-            for tool_call in response.tool_calls:
-                if tool_call['name'] != "__conversational_response":
-                    args = re.sub("\{.*?\}", "", str(tool_call['args'])) # remove curly braces
-                    self.previous_tool_requests += f"I previously used the {tool_call['name']} tool with the arguments: {args}.\n"
-
-        self.agent_call_count += 1
-
+            tool_call = response.tool_calls[0]
+            if tool_call["name"] not in RETRIEVAL_TOOL_NAMES:
+                raise ValueError(f"Unsupported retrieval tool: {tool_call['name']}")
+            arguments = copy.deepcopy(tool_call.get("args") or {})
+            self.previous_tool_requests += (
+                f"Controller turn {self.controller_turn_id} used "
+                f"{tool_call['name']} with arguments "
+                f"{json.dumps(arguments, ensure_ascii=False, sort_keys=True)}.\n"
+            )
 
         return {"messages": [response]}
+
+    def call_tool(self, state):
+        """Execute one retrieval call and attach controller-level provenance."""
+
+        message = state["messages"][-1]
+        if not isinstance(message, AIMessage) or len(message.tool_calls) != 1:
+            raise ValueError("The action node requires exactly one retrieval call")
+
+        tool_call = message.tool_calls[0]
+        tool_name = tool_call.get("name")
+        if tool_name not in self.tools_by_name:
+            raise ValueError(f"Unknown retrieval tool: {tool_name}")
+        arguments = copy.deepcopy(tool_call.get("args") or {})
+        raw_query = copy.deepcopy(raw_tool_query(arguments))
+        normalized_query, signature = tool_call_signature(tool_name, arguments)
+        tool_call_id = tool_call.get("id")
+        turn_id = self.controller_turn_id
+        event = {
+            "answer_attempt_id": self.answer_attempt_id,
+            "controller_turn_id": turn_id,
+            "tool_batch_id": f"{self.answer_attempt_id}:turn_{turn_id}",
+            "tool_batch_size": 1,
+            "tool_call_id": tool_call_id,
+            "tool": tool_name,
+            "raw_arguments": arguments,
+            "raw_query": raw_query,
+            "normalized_query": normalized_query,
+            "tool_signature": signature,
+            "duplicate_blocked": False,
+            "prior_result_ids_visible_to_controller": list(
+                self.retrieval_gate.visible_result_ids
+            ),
+            "selected_ids": [],
+            "qrag_state_components": [],
+        }
+
+        if self.retrieval_gate.is_duplicate(signature):
+            reason = (
+                "Duplicate retrieval blocked: this tool and normalized query "
+                "already executed in the current answer attempt."
+            )
+            event.update(
+                {
+                    "duplicate_blocked": True,
+                    "blocked_reason": reason,
+                    "retrieval_kind": (
+                        "non_qrag"
+                        if tool_name in {
+                            "retrieve_from_time",
+                            "retrieve_from_position",
+                        }
+                        else "qrag"
+                        if self.memory.__class__.__name__ == "QragLocalMemory"
+                        else "dense"
+                    ),
+                }
+            )
+            self.retrieval_control_trace.append(event)
+            # A deterministic local controller will usually emit the same call
+            # again.  End retrieval and let the reader use prior valid evidence.
+            self.force_reader = True
+            return {
+                "messages": [
+                    ToolMessage(
+                        content=self._tool_result_payload(
+                            tool_call_id,
+                            tool_name,
+                            raw_query,
+                            [],
+                            reason,
+                            duplicate_blocked=True,
+                        ),
+                        tool_call_id=tool_call_id,
+                        name=tool_name,
+                    )
+                ]
+            }
+
+        if not self.retrieval_gate.can_retrieve:
+            raise ValueError("Retrieval round limit reached before tool execution")
+
+        getter = getattr(self.memory, "get_retrieval_trace", None)
+        before_trace = getter() if getter is not None else []
+        result = self.tools_by_name[tool_name].invoke(arguments)
+        after_trace = getter() if getter is not None else []
+        memory_trace_index = (
+            len(before_trace) if len(after_trace) > len(before_trace) else None
+        )
+        memory_record = (
+            after_trace[memory_trace_index]
+            if memory_trace_index is not None
+            else {}
+        )
+        returned_ids = selected_entry_ids(memory_record)
+
+        retrieval_round_id = self.retrieval_gate.commit(signature, returned_ids)
+        event.update(
+            {
+                "memory_trace_index": memory_trace_index,
+                "retrieval_round_id": retrieval_round_id,
+                "selected_ids": returned_ids,
+                "qrag_state_components": qrag_state_components(memory_record),
+                "retrieval_kind": self._retrieval_kind(
+                    tool_name,
+                    memory_record,
+                ),
+            }
+        )
+        self.retrieval_control_trace.append(event)
+        if not self.retrieval_gate.can_retrieve:
+            self.force_reader = True
+
+        return {
+            "messages": [
+                ToolMessage(
+                    content=self._tool_result_payload(
+                        tool_call_id,
+                        tool_name,
+                        raw_query,
+                        returned_ids,
+                        result,
+                    ),
+                    tool_call_id=tool_call_id,
+                    name=tool_name,
+                )
+            ]
+        }
 
 
     def generate(self, state):
@@ -435,11 +682,6 @@ class ReMEmbRAgent(Agent):
         question = self.generation_directive(
             messages[0].content + "\n Please responsed in the desired format."
         )
-        last_message = messages[-1]
-
-
-        docs = last_message.content
-
         prompt = PromptTemplate(
             template=self.generate_prompt,
             input_variables=["context", "question"],
@@ -460,7 +702,12 @@ class ReMEmbRAgent(Agent):
 
         model = gen_prompt | self.chat
 
-        response = model.invoke({"question": question, "chat_history": messages[1:]})
+        response = model.invoke(
+            {
+                "question": question,
+                "chat_history": self._local_model_history(messages[1:]),
+            }
+        )
 
         # let us parse and check the output is a dictionary. raise error otherwise
         response = ''.join(response.content.splitlines())
@@ -497,20 +744,13 @@ class ReMEmbRAgent(Agent):
     def build_graph(self):
 
         from langgraph.graph import END, StateGraph
-        from langgraph.prebuilt import ToolNode
 
         # Define a new graph
         workflow = StateGraph(AgentState)
 
         # Define the nodes we will cycle between
         workflow.add_node("agent", lambda state: try_except_continue(state, self.agent))  # agent
-        # retrieve = ToolNode([self.retriever_tool])
-        tool_node = ToolNode(self.tool_list)
-        workflow.add_node("action", tool_node)
-        # workflow.add_node("action", lambda state: try_except_continue(state, tool_node))
-
-
-        # workflow.add_node("action", self.call_tool)
+        workflow.add_node("action", self.call_tool)
 
         workflow.add_node(
             "generate", lambda state: try_except_continue(state, self.generate)
@@ -550,8 +790,13 @@ class ReMEmbRAgent(Agent):
         begin_episode = getattr(self.memory, "begin_retrieval_episode", None)
         if begin_episode is not None:
             begin_episode()
+        self.answer_attempt_count += 1
+        self.answer_attempt_id = f"attempt_{self.answer_attempt_count}"
         self.previous_tool_requests = "These are the tools I have previously used so far: \n"
         self.agent_call_count = 0
+        self.controller_turn_id = 0
+        self.retrieval_gate.reset()
+        self.force_reader = False
 
         inputs = { "messages": [
                                 (("user", question)),

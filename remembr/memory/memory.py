@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 import inspect 
 
@@ -40,4 +42,3 @@ class Memory:
 
     def memory_to_string(self, memory_list: list[MemoryItem]) -> str:
         raise NotImplementedError
-

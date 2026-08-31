@@ -36,6 +36,7 @@ def make_memory(
     retrieval_mode="sequential",
     episode_mode="per_call",
     question_evidence_budget=2,
+    text_k=2,
 ):
     memory = QragLocalMemory.__new__(QragLocalMemory)
     memory.encoder = FakeQragEncoder()
@@ -44,7 +45,7 @@ def make_memory(
     memory.inference_checkpoint = "fake-inference-checkpoint"
     memory.source_checkpoint_sha256 = EXPECTED_SOURCE_SHA256
     memory.time_offset = 1_672_000_000
-    memory.text_k = 2
+    memory.text_k = text_k
     memory.numeric_k = 2
     memory.state_format = state_format
     memory.retrieval_mode = retrieval_mode
@@ -170,6 +171,44 @@ class QragLocalMemoryTest(unittest.TestCase):
             for record in trace["selected"]
         ]
         self.assertEqual(len(selected_ids), len(set(selected_ids)))
+
+    def test_interleaved_top1_carries_first_caption_into_second_call(self):
+        memory = make_memory(
+            state_format="controller",
+            episode_mode="question",
+            question_evidence_budget=2,
+            text_k=1,
+        )
+        memory.begin_retrieval_episode()
+
+        first_context = memory.search_by_text("first focused query")
+        second_context = memory.search_by_text("second informed query")
+        exhausted_context = memory.search_by_text("third query")
+        traces = memory.get_retrieval_trace()
+
+        self.assertEqual(len(traces[0]["selected"]), 1)
+        self.assertEqual(len(traces[1]["selected"]), 1)
+        first_id = traces[0]["selected"][0]["entry_id"]
+        second_id = traces[1]["selected"][0]["entry_id"]
+        self.assertNotEqual(first_id, second_id)
+        self.assertEqual(traces[1]["episode_selected_entry_ids_before"], [first_id])
+        self.assertEqual(
+            traces[1]["qrag_state_components"],
+            [
+                "Which evidence answers the question?",
+                "second informed query",
+                traces[0]["selected"][0]["caption"],
+            ],
+        )
+        self.assertEqual(
+            traces[0]["retrieval_method"],
+            "qrag_interleaved_top1_zero_shot",
+        )
+        self.assertEqual(traces[2]["selected"], [])
+        self.assertTrue(traces[2]["budget_exhausted"])
+        self.assertIn("caption", first_context)
+        self.assertIn("caption", second_context)
+        self.assertIn("evidence budget is exhausted", exhausted_context)
 
     def test_new_answer_attempt_resets_question_episode_not_trace(self):
         memory = make_memory(

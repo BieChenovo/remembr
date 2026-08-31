@@ -36,6 +36,8 @@ def audit_run(
         "text_calls": 0,
         "multi_text_attempts": 0,
         "empty_exhausted_calls": 0,
+        "duplicate_blocked_calls": 0,
+        "interleaved_attempts": 0,
         "max_unique_evidence_per_attempt": 0,
         "errors": [],
     }
@@ -44,6 +46,12 @@ def audit_run(
     for sequence in sequences:
         path = result_root / str(sequence) / "human_qa" / filename
         result = json.loads(path.read_text(encoding="utf-8"))
+        config = result.get("config", {})
+        interleaved = (
+            config.get("controller_retrieval_mode")
+            == "interleaved_single_call"
+        )
+        max_retrieval_rounds = int(config.get("max_retrieval_rounds", 5))
         responses = result.get("responses", [])
         if len(responses) != 30 or result.get("in_progress", True):
             add_error(
@@ -67,10 +75,103 @@ def audit_run(
             for attempt in attempts:
                 attempt_number = attempt.get("attempt")
                 location = f"S{sequence}Q{question_index}A{attempt_number}"
-                text_calls = [
+                all_calls = [
                     call
                     for call in attempt.get("calls", [])
+                    if isinstance(call, dict)
+                ]
+                if interleaved:
+                    stats["interleaved_attempts"] += 1
+                    previous_turn = 0
+                    visible_ids: list[int] = []
+                    executed_signatures: set[str] = set()
+                    executed_count = 0
+                    for call_index, call in enumerate(all_calls, start=1):
+                        call_location = f"{location}C{call_index}"
+                        turn = call.get("controller_turn_id")
+                        if not isinstance(turn, int) or turn <= previous_turn:
+                            add_error(
+                                errors,
+                                call_location,
+                                "controller turn is missing or not increasing",
+                            )
+                        elif turn > 0:
+                            previous_turn = turn
+                        if call.get("tool_batch_size") != 1:
+                            add_error(errors, call_location, "tool batch size is not one")
+                        if not call.get("tool_call_id"):
+                            add_error(errors, call_location, "missing tool call ID")
+                        if (
+                            call.get("prior_result_ids_visible_to_controller")
+                            != visible_ids
+                        ):
+                            add_error(
+                                errors,
+                                call_location,
+                                "prior result IDs do not match visible history",
+                            )
+                        selected_ids = [
+                            row.get("entry_id")
+                            for row in call.get("selected", [])
+                            if isinstance(row, dict)
+                            and row.get("entry_id") is not None
+                        ]
+                        if call.get("selected_ids") != selected_ids:
+                            add_error(
+                                errors,
+                                call_location,
+                                "controller selected IDs differ from memory trace",
+                            )
+                        signature = call.get("tool_signature")
+                        if call.get("duplicate_blocked"):
+                            stats["duplicate_blocked_calls"] += 1
+                            if signature not in executed_signatures:
+                                add_error(
+                                    errors,
+                                    call_location,
+                                    "blocked signature was not previously executed",
+                                )
+                            if selected_ids:
+                                add_error(
+                                    errors,
+                                    call_location,
+                                    "blocked duplicate returned memories",
+                                )
+                        else:
+                            executed_count += 1
+                            if not signature:
+                                add_error(errors, call_location, "missing tool signature")
+                            elif signature in executed_signatures:
+                                add_error(
+                                    errors,
+                                    call_location,
+                                    "duplicate signature executed",
+                                )
+                            else:
+                                executed_signatures.add(signature)
+                            for entry_id in selected_ids:
+                                if entry_id not in visible_ids:
+                                    visible_ids.append(entry_id)
+                        if call.get("tool") in {
+                            "retrieve_from_time",
+                            "retrieve_from_position",
+                        } and call.get("retrieval_kind") != "non_qrag":
+                            add_error(
+                                errors,
+                                call_location,
+                                "numeric retrieval is not marked non_qrag",
+                            )
+                    if executed_count > max_retrieval_rounds:
+                        add_error(
+                            errors,
+                            location,
+                            "executed retrieval calls exceed controller limit",
+                        )
+                text_calls = [
+                    call
+                    for call in all_calls
                     if call.get("tool") == "retrieve_from_text"
+                    and not call.get("duplicate_blocked")
                 ]
                 stats["text_calls"] += len(text_calls)
                 stats["multi_text_attempts"] += len(text_calls) > 1
@@ -141,6 +242,21 @@ def audit_run(
                         if call.get("qrag_state_format") != "controller":
                             add_error(errors, call_location, "state format is not controller")
                         steps = call.get("steps", [])
+                        if interleaved:
+                            if len(selected) > 1:
+                                add_error(
+                                    errors,
+                                    call_location,
+                                    "interleaved Q-RAG returned more than one item",
+                                )
+                            if call.get("retrieval_method") != (
+                                "qrag_interleaved_top1_zero_shot"
+                            ):
+                                add_error(
+                                    errors,
+                                    call_location,
+                                    "Q-RAG call is not marked interleaved top-1",
+                                )
                         if len(steps) != len(selected):
                             add_error(errors, call_location, "step count differs from selection count")
                         for step_index, step in enumerate(steps):

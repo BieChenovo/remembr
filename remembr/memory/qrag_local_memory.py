@@ -526,9 +526,20 @@ class QragLocalMemory(LocalVectorMemory):
             "selected": selected_records,
             "ranking": initial_ranking,
             "steps": steps,
-            "retrieval_method": "qrag_sequential_zero_shot",
-            "qrag_selection_mode": "sequential",
+            "retrieval_method": (
+                "qrag_interleaved_top1_zero_shot"
+                if self.text_k == 1 and self.episode_mode == "question"
+                else "qrag_sequential_zero_shot"
+            ),
+            "qrag_selection_mode": (
+                "controller_interleaved_top1"
+                if self.text_k == 1 and self.episode_mode == "question"
+                else "sequential"
+            ),
             "qrag_state_format": self.state_format,
+            "qrag_state_components": (
+                list(steps[0]["state_components"]) if steps else []
+            ),
             "state_encode_count": len(steps),
             "embedding_model": "Alibaba-NLP/gte-multilingual-base",
             "embedding_dimension": 768,
@@ -539,6 +550,7 @@ class QragLocalMemory(LocalVectorMemory):
             "training_datasets": ["HotpotQA", "Musique"],
             "training_max_steps": 6,
             "inference_fixed_steps": self.text_k,
+            "qrag_steps_per_call": self.text_k,
         }
         trace.update(episode_fields)
         output = (

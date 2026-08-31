@@ -6,7 +6,7 @@
 >
 > 目标读者：负责数据、模型和实验实现的 Agent
 >
-> 当前状态：**B0–B3 的旧版 210 题 zero-shot 实验已保留；question-state v2 修复后的 B1/B2/B3 也已于 2026-08-31 全量重跑。三组共 630 题，跨-call ID 去重、题级预算、query state 和 retry episode 审计均为 0 个错误。**
+> 当前状态：**B0–B3 的旧版 210 题 zero-shot 实验和 question-state v2 结果均已保留；controller-interleaved v3 代码已实现并通过 23 项单元测试，新的 210 题实验尚未运行。**
 
 ## 0. 一分钟版本
 
@@ -877,9 +877,37 @@ legacy `per_call + native`，`v2` 表示修复后的 question-state。每组内�
 `comparison/v1` 或 `comparison/v2`。B0 不涉及这次状态修复，因此只保留
 `b0/v1`，v2 对比复用同一份 B0。完整规则见 `artifacts/eval_reports/README.md`。
 
+#### 14.10.2 controller-interleaved v3 修复
+
+进一步审计确认，v2 虽然修复了 memory backend 的跨-call state 和 ID mask，但仍不
+足以证明 controller 形成了闭环：同一 controller turn 可以输出多个并行 calls，
+本地 Ollama 路径又把 `ToolMessage` 改写成无来源的 `AIMessage`；此外 B3 会在一次
+text call 内部完成 5 个 Q-RAG steps，controller 只能看到最终五条结果，无法根据
+第一条证据决定第二个 query。因此 v2 仍保留为历史结果，不能重新解释成严格的
+controller-interleaved Q-RAG。
+
+v3 已完成以下代码修复：
+
+- controller prompt 改为每轮恰好一个选择，并在 wrapper 层拒绝并行或混合 batch；
+- retrieval 结果携带 tool、原始 query、call ID、selected IDs 和结果进入下一轮；
+- 本地 Ollama 不支持原生 `ToolMessage` 时使用显式 system provenance record，不再
+  伪装成 assistant 输出；
+- answer attempt 内对 `(tool, normalized_query)` 去重，time、position 和 text
+  共用最多 5 个已执行 retrieval rounds；
+- B3 v3 每个 text call 只执行一个 Q-RAG step，题级最多选择 5 条唯一 evidence，
+  后续 state 为 original question + 当前 tool query + 之前已选 captions；
+- trace 新增 controller turn、batch、call ID、raw/normalized query、duplicate flag、
+  controller 已看到的 prior IDs、selected IDs、Q-RAG state components；numeric
+  retrieval 明确标记为 `non_qrag`；
+- 新 run tag 为 `question_state_v3_interleaved`，不会覆盖 v2 数据。报告仍沿用
+  `v2 = 修复后` 的目录命名，新结果写入各组 `v2/v3_interleaved/` 子目录。
+
+完整问题分析、trace contract 和验收标准见
+`docs/QRAG_RETRIEVAL_FIX_SPEC.md`。
+
 ### 14.11 可直接复制给另一对话的任务
 
-> 请在项目根目录完整阅读 `02_QRAG具身长期记忆_实验Idea规格.md`，重点执行第 14.10.1 节。使用 question-state v2 重跑 B1/B2/B3：Q-RAG 使用 `state_format=controller`、`episode_mode=question`，同一 answer attempt 跨 text calls 继承 evidence state、全局 mask 已返回的 text IDs，并按题级唯一 evidence budget 截止；dense/GTE 使用同一题级预算。evaluator retry 必须重置 episode 但保留 trace，旧 `per_call + native` 结果只作历史对照。先跑 sequence 0 的 30 题并验证没有跨-call 重复 IDs、不同 query 进入 state、budget exhausted 后后端返回显式空结果且不重复旧证据，再扩展到 210 题。不得读取答案或 support IDs 参与推理。完成后生成严格准确率、retrieval-hit、Grounded accuracy 和逐题 trace 可视化。
+> 请在项目根目录完整阅读 `docs/QRAG_RETRIEVAL_FIX_SPEC.md` 和本文第 14.10.2 节。运行 `question_state_v3_interleaved`，先用 sequence 0 验证：每个 controller turn 最多一个 call；若有第二次 retrieval，其 trace 中的 controller turn 必须增加，且 `prior_result_ids_visible_to_controller` 包含第一次结果；同一 tool/normalized-query 不得执行两次；B3 每次 text call 只能返回 1 条，第二次 Q-RAG state 必须包含第一次 caption 且不能再次选择同一 ID；time/position 必须标记为 `non_qrag`。通过审计后再扩展到 210 题，并生成 strict accuracy、retrieval-hit、Grounded accuracy 和逐题 trace 可视化。不得覆盖 question-state v2 结果，也不得读取答案或 support IDs 参与推理。
 
 ## 15. 后续路线图
 

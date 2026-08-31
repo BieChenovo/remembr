@@ -34,6 +34,8 @@ from langchain_core.tools import BaseTool
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.language_models import BaseLanguageModel
 
+from remembr.tools.retrieval_control import ensure_single_tool_choice
+
 
 
 DEFAULT_SYSTEM_TEMPLATE = """You have access to the following tools:
@@ -299,7 +301,9 @@ class FunctionsWrapper(BaseChatModel, BaseLanguageModel):
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> ChatResult:
-        functions = kwargs.get("functions", [])
+        # ``Runnable.bind`` may reuse the same list between invocations.  Work on
+        # a copy so adding the response pseudo-tool does not mutate later turns.
+        functions = list(kwargs.get("functions", []))
         if "functions" in kwargs:
             del kwargs["functions"]
         if "function_call" in kwargs:
@@ -351,6 +355,12 @@ class FunctionsWrapper(BaseChatModel, BaseLanguageModel):
         if type(parsed_chat_result) != list:
             parsed_chat_result = [parsed_chat_result]
 
+        # ReMEmbR is an interleaved controller: the next decision must be made
+        # only after the previous tool result is visible.  Reject parallel tool
+        # arrays (including a response mixed with retrieval) at the model
+        # boundary so ToolNode-style fan-out can never execute them.
+        ensure_single_tool_choice(parsed_chat_result)
+
         # print("CHAT CONTENT:", parsed_chat_result)
       
         tool_calls = []
@@ -369,10 +379,6 @@ class FunctionsWrapper(BaseChatModel, BaseLanguageModel):
                 )
             
             if called_tool["name"] == DEFAULT_RESPONSE_FUNCTION["name"]:
-                if len(parsed_chat_result) != 1:
-                    print("NOTE: There are other tools that are being called that we are skipping.")
-                    print("This is due to the default response being called along with other tool calls.")
-
                 if ("tool_input" in tool):
                     if type(tool['tool_input']) == str:
                         response = tool['tool_input']

@@ -1,6 +1,6 @@
 # Q-RAG 检索控制器修正规格
 
-- 状态：Proposed，待实现
+- 状态：Implemented，单元测试通过；`question_state_v3_interleaved` 全量实验待运行
 - 新实验标签：`question_state_v3_interleaved`
 - 适用范围：ReMEmbR controller、工具调用封装、Q-RAG text retrieval、retrieval trace
 - 历史结果：保留 `question_state_v2`，不得将其改名或解释为 controller-interleaved Q-RAG
@@ -114,3 +114,12 @@ prior_result_ids_visible_to_controller, selected_ids, qrag_state_components
 ## 8. 实现顺序
 
 先修 controller 的单调用、消息角色、参数记录与去重，再将 B3 改为 `steps/call=1`，最后补 trace/audit 并运行 v3。否则新实验仍无法证明第二次 query 是否真正使用了第一次 retrieval context。
+
+## 9. 实现结果
+
+- controller 每轮只接受一个选择，`FunctionsWrapper` 在执行前拒绝并行或混合 batch。
+- 本地 Ollama 不支持原生 `ToolMessage` 时，工具请求与结果以带 provenance 的 system record 序列化，不再转换成 `AIMessage`。
+- answer attempt 维护稳定的 `(tool, normalized_query)` signature、五轮执行预算和此前对 controller 可见的结果 ID；重复调用不会进入 memory backend。
+- B3 v3 默认 `steps/call=1`、`episode_mode=question`、题级证据预算 5；Q-RAG 在第二次调用的 state 中携带第一次 caption，并持续 mask 已选 ID。
+- trace 已覆盖 controller turn、batch、call ID、去重、可见结果、selected IDs、Q-RAG state 和 numeric `non_qrag` 标识；审计页面同时显示这些字段。
+- 历史 `question_state_v2` 结果和报告保持不变；新脚本使用 `question_state_v3_interleaved` run tag。
