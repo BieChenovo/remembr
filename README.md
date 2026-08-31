@@ -148,7 +148,7 @@ Please check the [nova_carter_demo](./examples/nova_carter_demo) folder for deta
 
 If you are interested in the NaVQA dataset and evaluating on it, please check the [evaluation](./eval.md) readme for more information.
 
-The implemented controller-interleaved Q-RAG retrieval behavior, trace contract, and acceptance criteria are documented in the [Q-RAG retrieval fix specification](./docs/QRAG_RETRIEVAL_FIX_SPEC.md).
+The implemented v3 controller-interleaved behavior and the proposed v4 unified top-1, cross-modal state, duplicate-replanning contract are documented in the [Q-RAG retrieval fix specification](./docs/QRAG_RETRIEVAL_FIX_SPEC.md).
 
 <a id="notice"></a>
 ## Usage Notice!

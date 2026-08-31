@@ -2,11 +2,11 @@
 
 > 文档类型：跨论文研究 Idea、实验规格与 Agent 交接协议
 >
-> 版本：v0.4，2026-08-30
+> 版本：v0.5，2026-09-01
 >
 > 目标读者：负责数据、模型和实验实现的 Agent
 >
-> 当前状态：**B0–B3 的旧版 210 题 zero-shot 实验和 question-state v2 结果均已保留；controller-interleaved v3 代码已实现并通过 23 项单元测试，新的 210 题实验尚未运行。**
+> 当前状态：**B0–B3 的旧版和 question-state v2 结果均已保留；controller-interleaved B3 v3 已完成 210 题。下一步按 `question_state_v4_unified_top1` 统一三类工具的单条返回、跨模态 mask/state，并将重复 query 改为有限次数的重新规划。**
 
 ## 0. 一分钟版本
 
@@ -905,9 +905,25 @@ v3 已完成以下代码修复：
 完整问题分析、trace contract 和验收标准见
 `docs/QRAG_RETRIEVAL_FIX_SPEC.md`。
 
+#### 14.10.3 unified top-1 v4 修正决策
+
+v3 实跑后确认，B3 text 每次返回 1 条而 time/position 仍返回 4 条；numeric 结果
+虽然对 controller 可见，却没有进入后续 Q-RAG state。重复 query 还会立即触发
+reader，controller 无法根据纠错重新规划。
+
+v4 决策如下：
+
+- text、time、position 均为 top-1，并共享每题最多 5 条唯一 memory 的全局 mask；
+- time/position 保持 numeric `non_qrag`，但其返回 caption 进入后续 B3 Q-RAG state；
+- 重复 query 不执行、不消耗 retrieval round，返回结构化纠错后重新调用
+  controller；默认连续两次仍重复才进入 reader；
+- 禁止通过无依据地微调时间、坐标或文本格式绕过去重；controller 应回答、切换
+  modality，或根据已有证据生成语义不同的新 query；
+- 新实验标签为 `question_state_v4_unified_top1`，v2/v3 产物保持不可变。
+
 ### 14.11 可直接复制给另一对话的任务
 
-> 请在项目根目录完整阅读 `docs/QRAG_RETRIEVAL_FIX_SPEC.md` 和本文第 14.10.2 节。运行 `question_state_v3_interleaved`，先用 sequence 0 验证：每个 controller turn 最多一个 call；若有第二次 retrieval，其 trace 中的 controller turn 必须增加，且 `prior_result_ids_visible_to_controller` 包含第一次结果；同一 tool/normalized-query 不得执行两次；B3 每次 text call 只能返回 1 条，第二次 Q-RAG state 必须包含第一次 caption 且不能再次选择同一 ID；time/position 必须标记为 `non_qrag`。通过审计后再扩展到 210 题，并生成 strict accuracy、retrieval-hit、Grounded accuracy 和逐题 trace 可视化。不得覆盖 question-state v2 结果，也不得读取答案或 support IDs 参与推理。
+> 请在项目根目录完整阅读 `docs/QRAG_RETRIEVAL_FIX_SPEC.md` 的 v4 章节和本文第 14.10.3 节。实现 `question_state_v4_unified_top1`：text/time/position 每次只返回 1 条，三类工具共享题级 5 条唯一 evidence 的 ID mask；重复 query 不执行且不消耗 round，应返回纠错并允许 controller 生成新 query，连续两次失败后才进入 reader；time/position 返回的 caption 必须进入下一次 B3 text Q-RAG state。先用 sequence 0 验证跨模态 state、全局 mask、re-prompt 和终止上限，再扩展到 210 题。不得覆盖 v2/v3，也不得读取答案或 support IDs 参与推理。
 
 ## 15. 后续路线图
 

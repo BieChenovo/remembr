@@ -1,9 +1,10 @@
 # Q-RAG 检索控制器修正规格
 
-- 状态：Implemented，单元测试通过；`question_state_v3_interleaved` 全量实验待运行
-- 新实验标签：`question_state_v3_interleaved`
+- 状态：v3 已实现并完成 210 题；v4 修正方案待实现
+- 已完成实验：`question_state_v3_interleaved`
+- 下一实验标签：`question_state_v4_unified_top1`
 - 适用范围：ReMEmbR controller、工具调用封装、Q-RAG text retrieval、retrieval trace
-- 历史结果：保留 `question_state_v2`，不得将其改名或解释为 controller-interleaved Q-RAG
+- 历史结果：保留 `question_state_v2` 和 v3，v4 不得覆盖或改写已有产物
 
 ## 1. 已确认的问题
 
@@ -30,7 +31,7 @@
 
 这里的“5”是 evidence budget，不应被理解为“controller 看过一次结果后再调用五次”。v2 的 state update 发生在 memory backend 内部，controller 在五步完成前看不到中间证据。
 
-## 3. v3 目标行为
+## 3. v3 已实现行为
 
 ```text
 controller turn N
@@ -51,7 +52,7 @@ controller turn N
 - time/position 保持 numeric top-4，不伪装为 Q-RAG，但同样受单调用、重复 query 和 controller 回合上限约束。
 - reader 仅在 controller 明确停止或达到上限后执行。
 
-## 4. v3 实验配置
+## 4. v3 已运行配置
 
 | 参数 | B0 | B1 | B2 | B3 v3 |
 |---|---:|---:|---:|---:|
@@ -123,3 +124,144 @@ prior_result_ids_visible_to_controller, selected_ids, qrag_state_components
 - B3 v3 默认 `steps/call=1`、`episode_mode=question`、题级证据预算 5；Q-RAG 在第二次调用的 state 中携带第一次 caption，并持续 mask 已选 ID。
 - trace 已覆盖 controller turn、batch、call ID、去重、可见结果、selected IDs、Q-RAG state 和 numeric `non_qrag` 标识；审计页面同时显示这些字段。
 - 历史 `question_state_v2` 结果和报告保持不变；新脚本使用 `question_state_v3_interleaved` run tag。
+
+v3 的 210 题审计记录了 222 个 answer attempts、146 次有效 text calls 和 11 个
+multi-text attempts；跨回合状态与预算错误为 0。但实验同时记录了 81 次被拦截的
+重复调用，且单个 attempt 最多只得到 3 条唯一 text evidence。
+
+## 10. v3 运行后确认的剩余问题
+
+1. B3 text 每次返回 1 条，但 time/position 每次仍返回 4 条，单轮读取预算不一致。
+2. 题级 ID mask 只覆盖 text；time/position 可能再次返回 controller 已见过的 memory。
+3. 重复 `(tool, normalized_query)` 虽然不会执行，但当前实现立即设置
+   `force_reader=True`。controller 没有机会根据纠错消息重新规划。
+4. time/position 结果对下一轮 controller 可见，但没有进入后续 text Q-RAG 的
+   evidence state；当前 Q-RAG state 只包含此前 text retrieval 的 captions。
+
+因此，v3 已经证明了 controller-interleaved 消息链路，但还不是统一单证据预算、
+跨模态共享状态的最终实验。
+
+## 11. v4 项目决策
+
+### 11.1 所有工具统一 top-1
+
+```text
+text_k = 1
+numeric_k = 1
+max_executed_retrieval_rounds = 5
+question_unique_evidence_budget = 5
+```
+
+- text、time、position 每次只返回 1 条 memory。
+- 三类工具共享一个 answer-attempt 级 selected-ID ledger 和全局 mask。
+- 每个有效 retrieval 最多新增 1 条唯一 evidence；总计最多 5 条。
+- time/position 继续按数值距离排序并标记为 `non_qrag`，不能将其描述为 Q-RAG。
+
+为了公平比较，v4 的单条返回、全局预算、单调用 controller 和跨模态 mask 应用于
+B0–B3。B0/B1/B2 保持各自 static scorer；只有 B3 的 Q-RAG scorer 使用此前证据
+更新 state，避免把 B2 static 消融变成 sequential 方法。
+
+### 11.2 重复 query 不执行，但允许重新规划
+
+prompt 和程序 guard 必须同时工作：
+
+1. prompt 以结构化 ledger 列出所有已执行的 `(tool, normalized_query)`，要求
+   controller 回答、切换工具或生成语义上不同的新 query。
+2. 重复 query 不进入 memory backend，不消耗 retrieval round，也不消耗 evidence
+   budget。
+3. 系统返回 `invalid_retrieval_request` 纠错消息，然后重新进入 controller，而不是
+   立即进入 reader。
+4. 不自动替模型改写 query；也不允许通过轻微修改空格、大小写或把时间平移 1 秒
+   规避去重。
+5. 默认最多允许 2 次连续 duplicate replans；成功生成新调用后计数清零。达到上限
+   才强制进入 reader，防止 temperature 0 的本地模型形成死循环。
+
+纠错消息至少包含：
+
+```json
+{
+  "type": "invalid_retrieval_request",
+  "reason": "duplicate_query",
+  "tool": "retrieve_from_time",
+  "query": "07:55:32",
+  "executed_retrieval_rounds": 1,
+  "instruction": "Use the visible result to answer, switch modality, or formulate a semantically different query."
+}
+```
+
+### 11.3 time/position 结果进入 Q-RAG state
+
+共享 evidence ledger 按实际返回顺序保存所有工具得到的唯一 memory。下一次 B3
+text retrieval 的 Q-RAG state 为：
+
+```text
+[
+  original_question,
+  current_text_tool_query,
+  caption_from_prior_text_retrieval,
+  caption_from_prior_time_retrieval,
+  caption_from_prior_position_retrieval,
+  ...
+]
+```
+
+只把此前 memory 的 caption 文本送入 Q-RAG encoder；tool、query、timestamp、
+position、memory ID 等 provenance 单独保存在 trace 中，避免改变 checkpoint 的文本
+输入分布。当前调用返回的 memory 在调用完成后写入 ledger，只影响下一次 retrieval。
+
+## 12. v4 必要代码修改
+
+1. `remembr/memory/local_vector_memory.py`
+   - 将 text-only episode ledger 抽象为跨模态共享 ledger。
+   - `_select()` 对三类工具应用相同的全局 ID mask、top-1 和题级预算。
+
+2. `remembr/memory/qrag_local_memory.py`
+   - Q-RAG state 从共享 ledger 读取所有此前工具返回的 captions。
+   - 保持 B3 `steps/call=1`，并避免维护与 base memory 冲突的第二套 ID ledger。
+
+3. `remembr/tools/retrieval_control.py` 与 `remembr/agents/remembr_agent.py`
+   - 将“有效 retrieval rounds”和“无效 duplicate replans”分开计数。
+   - duplicate 返回纠错消息并重新进入 controller；只有达到纠错上限才
+     `force_reader`。
+   - 成功调用后清零连续纠错计数。
+
+4. `remembr/prompts/agent_system_prompt.txt`
+   - 明确列出禁用 signatures，要求基于可见结果形成新 query 或切换 modality。
+   - 明确禁止为了绕过去重而做无依据的时间/坐标微调。
+
+5. `remembr/scripts/eval.py`、运行脚本与审计脚本
+   - 增加 `numeric_k=1`、全局 evidence budget 和 duplicate replan limit 配置。
+   - 使用 `question_state_v4_unified_top1`，不得覆盖 v3。
+
+## 13. v4 Trace 增量字段
+
+在 v3 trace 基础上增加：
+
+```text
+retrieval_executed, duplicate_reprompted, duplicate_replan_count,
+duplicate_replan_limit, evidence_state_version,
+global_selected_entry_ids_before, global_selected_entry_ids_after,
+prior_evidence_sources, forced_stop_reason
+```
+
+无效 duplicate event 必须出现在 trace 中，但不得增加
+`executed_retrieval_rounds`、`evidence_state_version` 或 selected IDs。
+
+## 14. v4 验收标准
+
+- 每次 text/time/position 调用最多返回 1 条。
+- 同一 answer attempt 中，任何两个已执行调用不得返回相同 memory ID。
+- 所有工具合计最多返回 5 条唯一 memory，且最多执行 5 个有效 retrieval rounds。
+- 第一次重复 query 被拒绝后，controller 仍可执行一个不同的新 query；之前的结果
+  继续可见，且重复请求不消耗 round。
+- 连续重复达到配置上限后才进入 reader，不得形成无限 graph loop。
+- time 或 position 返回 memory 后，下一次 B3 text Q-RAG state 必须包含该 memory 的
+  caption 和当前新 query。
+- B2 static state 不包含此前 evidence captions，但必须应用全局 ID mask。
+- numeric calls 始终标记为 `non_qrag`；v2/v3 结果保持不变。
+
+## 15. v4 实现顺序
+
+先实现共享跨模态 ledger、top-1 和全局 mask；再把 Q-RAG state 接到共享 ledger；
+随后把 duplicate 行为改为有限次数的 re-prompt；最后扩展 trace/audit，并先用
+sequence 0 做集成验证，通过后再运行 210 题。
