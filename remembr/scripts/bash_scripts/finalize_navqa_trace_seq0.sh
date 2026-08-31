@@ -11,8 +11,8 @@ EVAL_TAG=${EVAL_TAG:-trace_seq0_nothink_256_20260828_v1}
 RUN_NAME=${RUN_NAME:-navqa-trace-seq0-20260828-v1}
 RUN_DIR=$RUNTIME_ROOT/manual_runs/$RUN_NAME
 RESULT_FILE=$RUNTIME_ROOT/eval_outs/0/human_qa/remembr+qwen3:8b__captions_VILA1.5-13b_3_secs_${EVAL_TAG}.json
-ANALYSIS_DIR=$PROJECT_ROOT/artifacts/eval_reports/sequence_0_trace_analysis_v1
-AUDIT_DIR=$PROJECT_ROOT/artifacts/eval_reports/sequence_0_audit_trace_v1
+ANALYSIS_DIR=$PROJECT_ROOT/artifacts/eval_reports/b0/v1/sequence_0_analysis
+AUDIT_DIR=$PROJECT_ROOT/artifacts/eval_reports/b0/v1/sequence_0_audit
 PYTHON=${PYTHON:-/hpc2hdd/home/yichenwang/envs/coda/bin/python}
 
 printf '[%s] Waiting for %s\n' "$(date --iso-8601=seconds)" "$RUN_DIR/exit_code"
@@ -60,10 +60,10 @@ PY
 
 mkdir -p "$AUDIT_DIR"
 if [[ ! -e "$AUDIT_DIR/frames" ]]; then
-    ln -s ../sequence_0_audit_v1/frames "$AUDIT_DIR/frames"
+    ln -s ../sequence_0_media/frames "$AUDIT_DIR/frames"
 fi
 if [[ ! -e "$AUDIT_DIR/media" ]]; then
-    ln -s ../sequence_0_audit_v1/media "$AUDIT_DIR/media"
+    ln -s ../sequence_0_media/media "$AUDIT_DIR/media"
 fi
 
 "$PYTHON" remembr/scripts/build_sequence_audit.py \

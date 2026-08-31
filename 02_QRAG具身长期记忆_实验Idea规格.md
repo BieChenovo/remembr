@@ -144,10 +144,10 @@ schema 失败外，尚不能把每个错误严格分解为 retriever 或 reader 
 
 当前审计产物：
 
-- `artifacts/eval_reports/navqa_210_error_analysis_v1/index.html`
-- `artifacts/eval_reports/navqa_210_error_analysis_v1/error_analysis.json`
-- `artifacts/eval_reports/navqa_210_error_analysis_v1/question_diagnostics.csv`
-- `artifacts/eval_reports/navqa_210_error_analysis_v1/reference_context_manifest.jsonl`
+- `artifacts/eval_reports/b0/v1/analysis/index.html`
+- `artifacts/eval_reports/b0/v1/analysis/error_analysis.json`
+- `artifacts/eval_reports/b0/v1/analysis/question_diagnostics.csv`
+- `artifacts/eval_reports/b0/v1/analysis/reference_context_manifest.jsonl`
 
 ## 3. 什么保持不变，什么被替换
 
@@ -583,7 +583,7 @@ ReMEmbR controller、Qwen reader、prompt、候选池、证据数和 evaluator �
 | encoder | `Alibaba-NLP/gte-multilingual-base`；当前 checkpoint 的实际 inference forward 输出为 768 维 |
 | GTE base/tokenizer | 已下载到本地 `third_party/`；模型文件不纳入 Git |
 | NaVQA captions | 7 序列共 3260 条，已就绪 |
-| derived support manifest | `artifacts/eval_reports/navqa_210_error_analysis_v1/reference_context_manifest.jsonl` |
+| derived support manifest | `artifacts/eval_reports/b0/v1/analysis/reference_context_manifest.jsonl` |
 
 当前 mxbai caption embeddings 是 1024 维，与 Q-RAG 的 768 维 action encoder
 不兼容，不得直接复用。必须用 checkpoint 对应的 GTE action encoder 将
@@ -818,9 +818,9 @@ gold support；19 题至少一条 reference 位于冻结候选池之外，因此
 
 outer controller 实际产生的 text-tool calls 不完全相同（B1 476、B2 517、
 B3 483），所以本轮尚不是严格等总 tool-call budget 的因果隔离实验。完整对比报告
-发布于 `docs/reports/navqa_210_retriever_comparison_v2/index.html`；新的检索命中与
+发布于 `docs/reports/comparison/v1/answer_accuracy/index.html`；新的检索命中与
 Grounded 回答报告发布于
-`docs/reports/navqa_210_grounded_accuracy_v1/index.html`。
+`docs/reports/comparison/v1/grounded/index.html`。
 
 #### 14.10.1 B2/B3 多次 call 状态审计与 v2 修复
 
@@ -869,7 +869,13 @@ correct 最好的方法。
 171 / 181 / 167 个多 text-call attempts。三组的跨-call 重复 ID、预算记账错误、
 retry episode 复用、query 缺失和 B3 step/selection 顺序错误均为 0，且每个 attempt
 最多注入 5 条唯一 text evidence。统一可视化与逐题数据见
-`docs/reports/navqa_210_question_state_v2_comparison/index.html`。
+`docs/reports/comparison/v2/index.html`。
+
+报告目录统一采用 `b0/b1/b2/b3 → v1/v2` 两级命名：`v1` 表示修复前的
+legacy `per_call + native`，`v2` 表示修复后的 question-state。每组内部只使用
+`sequences/`、`analysis/` 和 `sequence_0_audit/`；跨组结果放在
+`comparison/v1` 或 `comparison/v2`。B0 不涉及这次状态修复，因此只保留
+`b0/v1`，v2 对比复用同一份 B0。完整规则见 `artifacts/eval_reports/README.md`。
 
 ### 14.11 可直接复制给另一对话的任务
 

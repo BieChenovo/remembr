@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NaVQA 30 题聚合错误分析</title>
+<style>
+:root{--bg:#08111f;--panel:#111d30;--panel2:#17263d;--line:#2a3b55;--text:#eef5ff;--muted:#9cabc1;--blue:#55a7ff;--green:#31d18b;--red:#ff6f7d;--orange:#ffb45e;--purple:#ae91ff;--cyan:#43d8dc}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 8% 0,#173b66 0,transparent 30rem),var(--bg);color:var(--text);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}
+.wrap{width:min(1500px,calc(100% - 36px));margin:auto;padding:42px 0 70px} header{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:24px} h1{font-size:clamp(30px,5vw,54px);line-height:1.05;margin:5px 0} h2{margin:0 0 16px;font-size:20px} p{margin:6px 0} .eyebrow{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase} .muted,small{color:var(--muted)} .source{text-align:right;color:var(--muted);font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:11px;margin-bottom:18px} .card,.panel{border:1px solid var(--line);background:linear-gradient(145deg,rgba(22,38,61,.97),rgba(12,24,41,.97));border-radius:16px;box-shadow:0 18px 45px rgba(0,0,0,.16)} .card{padding:17px} .card span{display:block;color:var(--muted);font-size:11px} .card strong{display:block;font-size:25px;margin-top:5px} .panel{padding:22px;margin-bottom:18px} .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px} .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.bar-row{display:grid;grid-template-columns:90px 1fr 125px;gap:10px;align-items:center;margin:10px 0} .bar-track{height:14px;background:#091423;border-radius:99px;overflow:hidden} .bar-track i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:99px} .bar-row strong{text-align:right;font-size:12px}
+.cause{display:grid;grid-template-columns:180px 1fr 35px;gap:10px;align-items:center;margin:9px 0} .cause:has(i){position:relative} .cause i{display:block;height:12px;background:var(--red);border-radius:99px} .cause strong{text-align:right}
+.stack-row{display:grid;grid-template-columns:90px 1fr 30px;gap:10px;align-items:center;margin:12px 0} .stack{display:flex;height:27px;background:#091423;border-radius:8px;overflow:hidden} .stack span{display:flex;align-items:center;justify-content:center;color:#06101c;font-size:11px;font-weight:900} .sev-correct{background:var(--green)} .sev-near{background:#ffd166} .sev-medium{background:var(--orange)} .sev-large{background:var(--red)} .sev-invalid{background:#9ca3af}
+.callout{border-left:4px solid var(--orange);padding:13px 16px;background:#211d1d;border-radius:8px;margin:12px 0} .finding{margin:0;padding-left:21px;display:grid;gap:8px}
+.toolbar{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px} input,select{color:var(--text);background:#0a1525;border:1px solid var(--line);border-radius:9px;padding:10px 12px} input{min-width:280px;flex:1} .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px} table{border-collapse:collapse;width:100%;min-width:1450px} th,td{padding:12px;border-bottom:1px solid #25364f;text-align:left;vertical-align:top} th{position:sticky;top:0;background:#192941;color:#bbc8da;font-size:11px;letter-spacing:.06em;text-transform:uppercase;z-index:2} tbody tr:hover{background:rgba(85,167,255,.055)} td small{display:block} .wide{min-width:360px;max-width:520px} summary{cursor:pointer;font-weight:650} details p{font-size:12px;color:#cbd7e7} code{color:#acd5ff} .caption{white-space:pre-wrap;max-width:520px} .warn{color:#ffabb3} .pill{display:inline-block;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:750;white-space:nowrap} .outcome-correct{color:#64e9ac;background:#123b30} .outcome-wrong{color:#ff9faa;background:#47202a} .type-position{color:#ffc985;background:#3c2f1e} .type-time{color:#cbbcff;background:#30294e} .type-duration{color:#85eeef;background:#183e43} .type-binary{color:#9ad0ff;background:#173754} .type-text{color:#d1d7e0;background:#323b48}
+footer{color:var(--muted);font-size:12px;margin-top:16px} @media(max-width:1100px){.cards{grid-template-columns:repeat(3,1fr)}.grid2,.grid3{grid-template-columns:1fr}} @media(max-width:700px){.wrap{width:calc(100% - 22px);padding-top:24px}header{display:block}.source{text-align:left;margin-top:10px}.cards{grid-template-columns:1fr 1fr}}
+</style></head><body><main class="wrap">
+<header><div><div class="eyebrow">ReMEmbR baseline · error audit</div><h1>NaVQA 30 题聚合错误分析</h1><p class="muted">Qwen3-8B · no thinking · 256 tokens · VILA1.5-13B 3 s captions · America/Los_Angeles</p></div><div class="source">生成于 2026-08-28T02:36:00+08:00<br>JSON：remembr/artifacts/eval_reports/b0/v1/sequence_0_analysis/error_analysis.json<br>CSV：remembr/artifacts/eval_reports/b0/v1/sequence_0_analysis/question_diagnostics.csv</div></header>
+<section class="cards">
+  <article class="card"><span>严格 Overall</span><strong>53.3%</strong><small>16/30，失效按错误计</small></article>
+  <article class="card"><span>错误总数</span><strong>14</strong><small>含 1 个输出失效</small></article>
+  <article class="card"><span>有效输出覆盖</span><strong>96.7%</strong><small>29/30</small></article>
+  <article class="card"><span>参考 context 入池</span><strong>96.7%</strong><small>29/30 题全部入池</small></article>
+  <article class="card"><span>平均耗时</span><strong>10.8s</strong><small>中位数 11.4s</small></article>
+  <article class="card"><span>参考 caption 映射</span><strong>32</strong><small>30 题全部可精确映射</small></article>
+</section>
+<section class="panel"><h2>结论边界</h2><div class="callout"><b>14 个错误可按可观察现象归类；30/30 题保存了 retrieval query、top-k entry ID 与分数。</b> 只有保存了 trace 的题目才可以进一步区分 retrieval 失败和 reader 失败。</div>
+<ol class="finding"><li>按论文阈值，严格 overall 为 16/30；描述题准确率不是全题型 overall。</li><li>参考 context 共 32 条，全部能映射回 caption memory；1 条位于当前候选窗口外，影响 1 题。</li><li>参考 context 全部入池时准确率 55.2%；有 context 在池外时准确率 0.0%。</li><li>池外条目中 1 条仅差约一个到两个 3 s caption，属于边界索引问题；其余是更明显的标注窗口不一致。</li></ol></section>
+
+<section class="grid2"><article class="panel"><h2>14 个错误的可观察原因</h2><div class='cause'><span>位置误差超过 15 m</span><i style='width:71.43%'></i><strong>10</strong></div><div class='cause'><span>持续时间误差超过 2 min</span><i style='width:7.14%'></i><strong>1</strong></div><div class='cause'><span>生成/JSON 失败</span><i style='width:7.14%'></i><strong>1</strong></div><div class='cause'><span>文本语义判分错误</span><i style='width:7.14%'></i><strong>1</strong></div><div class='cause'><span>时间误差超过 2 min</span><i style='width:7.14%'></i><strong>1</strong></div></article><article class="panel"><h2>按题型严格准确率</h2>
+            <div class="bar-row">
+              <span>二元判断</span>
+              <div class="bar-track"><i style="width:100.00%"></i></div>
+              <strong>4/4 · 100.0%</strong>
+            </div>
+            <div class="bar-row">
+              <span>持续时间</span>
+              <div class="bar-track"><i style="width:50.00%"></i></div>
+              <strong>1/2 · 50.0%</strong>
+            </div>
+            <div class="bar-row">
+              <span>空间位置</span>
+              <div class="bar-track"><i style="width:8.33%"></i></div>
+              <strong>1/12 · 8.3%</strong>
+            </div>
+            <div class="bar-row">
+              <span>描述文本</span>
+              <div class="bar-track"><i style="width:80.00%"></i></div>
+              <strong>4/5 · 80.0%</strong>
+            </div>
+            <div class="bar-row">
+              <span>时间点</span>
+              <div class="bar-track"><i style="width:85.71%"></i></div>
+              <strong>6/7 · 85.7%</strong>
+            </div></article></section>
+<section class="grid3"><article class="panel"><h2>按序列</h2>
+            <div class="bar-row">
+              <span>0</span>
+              <div class="bar-track"><i style="width:53.33%"></i></div>
+              <strong>16/30 · 53.3%</strong>
+            </div></article><article class="panel"><h2>按长度</h2>
+            <div class="bar-row">
+              <span>长</span>
+              <div class="bar-track"><i style="width:30.00%"></i></div>
+              <strong>3/10 · 30.0%</strong>
+            </div>
+            <div class="bar-row">
+              <span>中</span>
+              <div class="bar-track"><i style="width:40.00%"></i></div>
+              <strong>4/10 · 40.0%</strong>
+            </div>
+            <div class="bar-row">
+              <span>短</span>
+              <div class="bar-track"><i style="width:90.00%"></i></div>
+              <strong>9/10 · 90.0%</strong>
+            </div></article><article class="panel"><h2>数值题误差分层</h2><div class='stack-row'><b>空间位置</b><div class='stack'><span class='sev-correct' style='width:8.33%' title='阈值内 1'>1</span><span class='sev-medium' style='width:33.33%' title='中度越界 4'>4</span><span class='sev-large' style='width:50.00%' title='严重越界 6'>6</span><span class='sev-invalid' style='width:8.33%' title='无有效数值 1'>1</span></div><strong>12</strong></div><div class='stack-row'><b>时间点</b><div class='stack'><span class='sev-correct' style='width:85.71%' title='阈值内 6'>6</span><span class='sev-large' style='width:14.29%' title='严重越界 1'>1</span></div><strong>7</strong></div><div class='stack-row'><b>持续时间</b><div class='stack'><span class='sev-correct' style='width:50.00%' title='阈值内 1'>1</span><span class='sev-medium' style='width:50.00%' title='中度越界 1'>1</span></div><strong>2</strong></div><p class="muted">位置：15/30/60 m；时间与持续时间：2/5/10 min 分层。</p></article></section>
+
+<section class="panel"><h2>逐题诊断</h2><div class="toolbar">
+<input id="search" type="search" placeholder="搜索问题、答案、错误或参考 caption">
+<select id="outcome"><option value="wrong" selected>仅错误</option><option value="correct">仅正确</option><option value="all">全部结果</option></select>
+<select id="status"><option value="all">全部输出状态</option><option value="invalid">仅输出失效</option><option value="valid">仅有效输出</option></select>
+<select id="type"><option value="all">全部题型</option><option value="binary">二元判断</option><option value="position">空间位置</option><option value="time">时间点</option><option value="duration">持续时间</option><option value="text">描述文本</option></select>
+<select id="sequence"><option value="all">全部序列</option><option value="0">序列 0</option><option value="3">序列 3</option><option value="4">序列 4</option><option value="6">序列 6</option><option value="16">序列 16</option><option value="21">序列 21</option><option value="22">序列 22</option></select>
+<select id="pool"><option value="all">全部候选池状态</option><option value="outside">参考 context 在池外</option><option value="inside">参考 context 全部入池</option></select>
+<span id="visible" class="muted"></span></div><div class="table-wrap"><table><thead><tr><th>题号</th><th>题型</th><th>结果</th><th>问题/真值/预测</th><th>可观察错误</th><th>参考 context 与候选池</th><th>耗时</th></tr></thead><tbody id="body">
+            <tr data-outcome="correct" data-status="valid"
+                data-type="time" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:55:32. the current time is 2023-01-16 08:03:02 and you are located at [1.42, 2.28, -0.17].
+ when did you leave the building? long_5a6cef0c-175d-4779-bfd4-f7b193fb9039 i left the building at 2023-01-16 07:55:32. 正确  the video begins with a view from inside a building, looking out through a glass door onto a concrete sidewalk. the sidewalk is bordered by a black rubber mat and leads to a grassy area with trees. the trees have green leaves and are spaced out evenly. in the distance, there are buildings with multiple windows and a clear sky above. as the video progresses, a person wearing white sneakers enters the frame from the right side and walks across the sidewalk, passing by the black mat and the grassy area. the person&#x27;s movement is casual and unhurried.">
+              <td><b>S0·Q1</b><small>long</small></td>
+              <td><span class="pill type-time">时间点</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>When did you leave the building?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:55:32. The current time is 2023-01-16 08:03:02 and you are located at [1.42, 2.28, -0.17].
+ When did you leave the building?</p>
+                <p><b>ID：</b><code>LONG_5a6cef0c-175d-4779-bfd4-f7b193fb9039</code></p>
+                <p><b>参考答案：</b>4.07</p>
+                <p><b>模型答案：</b>4.50</p>
+                <p><b>文本输出：</b>I left the building at 2023-01-16 07:55:32.</p>
+              </details></td>
+              <td><b>正确</b><small>0.43 min</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[183]</p>
+                <p><b>候选范围：</b>115–264（150 条）</p>
+                <p><b>目标词覆盖：</b>2/2；词：[&#x27;build&#x27;, &#x27;leave&#x27;]</p>
+                <p class="caption">The video begins with a view from inside a building, looking out through a glass door onto a concrete sidewalk. The sidewalk is bordered by a black rubber mat and leads to a grassy area with trees. The trees have green leaves and are spaced out evenly. In the distance, there are buildings with multiple windows and a clear sky above. As the video progresses, a person wearing white sneakers enters the frame from the right side and walks across the sidewalk, passing by the black mat and the grassy area. The person&#x27;s movement is casual and unhurried.</p>
+              </details></td>
+              <td>11.6 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="time" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:52:11. the current time is 2023-01-16 08:00:53 and you are located at [-56.28, 77.78, -2.15].
+ when did you first enter the building? long_8f32d561-e898-453c-ae99-2e53745389e1 i first entered the building at 07:56:24. 正确  the video begins with a view of a set of double glass doors with metal frames. the doors are open, revealing a spacious room with a high ceiling and large windows that let in natural light. the floor is made of light-colored tiles, and there are several rows of tables and chairs arranged neatly in the room. the walls are painted white, and there are no visible decorations or artwork. the room appears to be empty, with no people or movement visible in the video.">
+              <td><b>S0·Q2</b><small>long</small></td>
+              <td><span class="pill type-time">时间点</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>When did you first enter the building?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:52:11. The current time is 2023-01-16 08:00:53 and you are located at [-56.28, 77.78, -2.15].
+ When did you first enter the building?</p>
+                <p><b>ID：</b><code>LONG_8f32d561-e898-453c-ae99-2e53745389e1</code></p>
+                <p><b>参考答案：</b>4.33</p>
+                <p><b>模型答案：</b>4.33</p>
+                <p><b>文本输出：</b>I first entered the building at 07:56:24.</p>
+              </details></td>
+              <td><b>正确</b><small>0.00 min</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[135]</p>
+                <p><b>候选范围：</b>48–221（174 条）</p>
+                <p><b>目标词覆盖：</b>0/3；词：[&#x27;build&#x27;, &#x27;enter&#x27;, &#x27;first&#x27;]</p>
+                <p class="caption">The video begins with a view of a set of double glass doors with metal frames. The doors are open, revealing a spacious room with a high ceiling and large windows that let in natural light. The floor is made of light-colored tiles, and there are several rows of tables and chairs arranged neatly in the room. The walls are painted white, and there are no visible decorations or artwork. The room appears to be empty, with no people or movement visible in the video.</p>
+              </details></td>
+              <td>13.8 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="duration" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:51:56. the current time is 2023-01-16 08:03:21 and you are located at [-0.34, 0.06, -0.01].
+ how long were you in the building for? long_cbe5ca33-b001-47c4-9397-aca6d275e5e4 you were in the building for approximately 11.42 minutes. 持续时间误差超过 2 min  the video shows a series of images of a university building&#x27;s interior. the entrance is made of glass with metal frames, and there is a black rubber mat on the floor. inside, there are wooden staircases with metal railings, and a large open space with a high ceiling. the walls are made of glass and metal, and there are several chairs and tables scattered around. the floor is made of shiny tiles, and there is a large window that lets in natural light.
+
+the video begins with a view from inside a building, looking out through a glass door onto a concrete sidewalk. the sidewalk is bordered by a black rubber mat and leads to a grassy area with trees. the trees have green leaves and are spaced out evenly. in the distance, there are buildings with multiple windows and a clear sky above. as the video progresses, a person wearing white sneakers enters the frame from the right side and walks across the sidewalk, passing by the black mat and the grassy area. the person&#x27;s movement is casual and unhurried.">
+              <td><b>S0·Q3</b><small>long</small></td>
+              <td><span class="pill type-duration">持续时间</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>How long were you in the building for?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:51:56. The current time is 2023-01-16 08:03:21 and you are located at [-0.34, 0.06, -0.01].
+ How long were you in the building for?</p>
+                <p><b>ID：</b><code>LONG_cbe5ca33-b001-47c4-9397-aca6d275e5e4</code></p>
+                <p><b>参考答案：</b>2.30</p>
+                <p><b>模型答案：</b>11.42</p>
+                <p><b>文本输出：</b>You were in the building for approximately 11.42 minutes.</p>
+              </details></td>
+              <td><b>持续时间误差超过 2 min</b><small>9.12 min</small>
+                </td>
+              <td><details><summary>全部在池内 · 2 条</summary>
+                <p><b>entry IDs：</b>[137, 183]</p>
+                <p><b>候选范围：</b>43–270（228 条）</p>
+                <p><b>目标词覆盖：</b>1/2；词：[&#x27;build&#x27;, &#x27;long&#x27;]</p>
+                <p class="caption">The video shows a series of images of a university building&#x27;s interior. The entrance is made of glass with metal frames, and there is a black rubber mat on the floor. Inside, there are wooden staircases with metal railings, and a large open space with a high ceiling. The walls are made of glass and metal, and there are several chairs and tables scattered around. The floor is made of shiny tiles, and there is a large window that lets in natural light.
+
+The video begins with a view from inside a building, looking out through a glass door onto a concrete sidewalk. The sidewalk is bordered by a black rubber mat and leads to a grassy area with trees. The trees have green leaves and are spaced out evenly. In the distance, there are buildings with multiple windows and a clear sky above. As the video progresses, a person wearing white sneakers enters the frame from the right side and walks across the sidewalk, passing by the black mat and the grassy area. The person&#x27;s movement is casual and unhurried.</p>
+              </details></td>
+              <td>4.1 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:52:29. the current time is 2023-01-16 08:00:44 and you are located at [-55.74, 86.31, -2.11].
+ where is the closest place to sit? long_115fe136-a8ee-43f7-858d-a0a357c03fad the closest place to sit is likely the atrium with seating on the left side, located at [-94.023, 203.913, -1.919]. 位置误差超过 15 m  the video shows a spacious room with a tiled floor and white walls. there are several tables and chairs arranged in the room, with a few people sitting at them. the room is well-lit, with ceiling lights and natural light coming in from the windows. there are paintings hanging on the walls, adding a touch of color to the otherwise neutral space. the room appears to be a common area or a cafeteria, with a few individuals engaged in conversation or working on their laptops.">
+              <td><b>S0·Q4</b><small>long</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where is the closest place to sit?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:52:29. The current time is 2023-01-16 08:00:44 and you are located at [-55.74, 86.31, -2.11].
+ Where is the closest place to sit?</p>
+                <p><b>ID：</b><code>LONG_115fe136-a8ee-43f7-858d-a0a357c03fad</code></p>
+                <p><b>参考答案：</b>[-104.61440453333334, 170.2240391666667, -2.4068897999999996]</p>
+                <p><b>模型答案：</b>[-94.023, 203.913, -1.919]</p>
+                <p><b>文本输出：</b>The closest place to sit is likely the atrium with seating on the left side, located at [-94.023, 203.913, -1.919].</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>35.32 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[161]</p>
+                <p><b>候选范围：</b>54–218（165 条）</p>
+                <p><b>目标词覆盖：</b>0/3；词：[&#x27;closest&#x27;, &#x27;place&#x27;, &#x27;sit&#x27;]</p>
+                <p class="caption">The video shows a spacious room with a tiled floor and white walls. There are several tables and chairs arranged in the room, with a few people sitting at them. The room is well-lit, with ceiling lights and natural light coming in from the windows. There are paintings hanging on the walls, adding a touch of color to the otherwise neutral space. The room appears to be a common area or a cafeteria, with a few individuals engaged in conversation or working on their laptops.</p>
+              </details></td>
+              <td>12.3 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:50:05. the current time is 2023-01-16 08:02:08 and you are located at [-22.67, 37.41, -1.5].
+ where is the yellow police call pole? long_7213d1b5-0f7a-4361-b779-c6689042ae8a i do not have specific information about the location of the yellow police call pole. you may need to use a map or local resources to locate it. 位置误差超过 15 m  the video shows a concrete sidewalk with a yellow pole on the left side and a street on the right. there are trees and bushes on the left side of the sidewalk, and a large building with glass windows on the right side. the sky is overcast, and there are no people or moving objects visible in the video.">
+              <td><b>S0·Q5</b><small>long</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where is the yellow police call pole?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:50:05. The current time is 2023-01-16 08:02:08 and you are located at [-22.67, 37.41, -1.5].
+ Where is the yellow police call pole?</p>
+                <p><b>ID：</b><code>LONG_7213d1b5-0f7a-4361-b779-c6689042ae8a</code></p>
+                <p><b>参考答案：</b>[-75.76141051612903, 93.42734903225808, -2.4290613225806448]</p>
+                <p><b>模型答案：</b>[-22.67, 37.41, -1.5]</p>
+                <p><b>文本输出：</b>I do not have specific information about the location of the yellow police call pole. You may need to use a map or local resources to locate it.</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>77.18 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[200]</p>
+                <p><b>候选范围：</b>6–246（241 条）</p>
+                <p><b>目标词覆盖：</b>2/4；词：[&#x27;call&#x27;, &#x27;pole&#x27;, &#x27;police&#x27;, &#x27;yellow&#x27;]</p>
+                <p class="caption">The video shows a concrete sidewalk with a yellow pole on the left side and a street on the right. There are trees and bushes on the left side of the sidewalk, and a large building with glass windows on the right side. The sky is overcast, and there are no people or moving objects visible in the video.</p>
+              </details></td>
+              <td>3.3 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="invalid"
+                data-type="position" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:52:17. the current time is 2023-01-16 08:02:26 and you are located at [-7.12, 33.57, -0.96].
+ where is the statue in front of the bill and melinda gates computer science building? long_74167a94-2255-4d16-bb78-db37801acc0a  生成/json 失败 question failed after 2 attempts: &lt;bound method remembragent.generate of &lt;agents.remembr_agent.remembragent object at 0x7fc289360100&gt;&gt; failed after 3 attempts the video shows a concrete walkway leading to a building with large windows and a glass door. on the right side of the walkway, there is a circular structure made of white bricks. the ground is covered with brown leaves, and there are green bushes on either side of the walkway. the sky is overcast, and the building appears to be made of brick with multiple stories.">
+              <td><b>S0·Q6</b><small>long</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where is the statue in front of the Bill and Melinda Gates Computer Science building?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:52:17. The current time is 2023-01-16 08:02:26 and you are located at [-7.12, 33.57, -0.96].
+ Where is the statue in front of the Bill and Melinda Gates Computer Science building?</p>
+                <p><b>ID：</b><code>LONG_74167a94-2255-4d16-bb78-db37801acc0a</code></p>
+                <p><b>参考答案：</b>[-60.1973617419355, 196.54061870967743, -1.096614193548387]</p>
+                <p><b>模型答案：</b>—</p>
+                <p><b>文本输出：</b>—</p>
+              </details></td>
+              <td><b>生成/JSON 失败</b><small>—</small>
+                <p class="warn">Question failed after 2 attempts: &lt;bound method ReMEmbRAgent.generate of &lt;agents.remembr_agent.ReMEmbRAgent object at 0x7fc289360100&gt;&gt; failed after 3 attempts</p></td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[123]</p>
+                <p><b>候选范围：</b>50–252（203 条）</p>
+                <p><b>目标词覆盖：</b>1/8；词：[&#x27;bill&#x27;, &#x27;build&#x27;, &#x27;computer&#x27;, &#x27;front&#x27;, &#x27;gate&#x27;, &#x27;melinda&#x27;, &#x27;science&#x27;, &#x27;statue&#x27;]</p>
+                <p class="caption">The video shows a concrete walkway leading to a building with large windows and a glass door. On the right side of the walkway, there is a circular structure made of white bricks. The ground is covered with brown leaves, and there are green bushes on either side of the walkway. The sky is overcast, and the building appears to be made of brick with multiple stories.</p>
+              </details></td>
+              <td>—</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:50:35. the current time is 2023-01-16 07:59:49 and you are located at [-75.76, 93.43, -2.43].
+ where is the nearest recycling bin? long_f4661173-26c9-4939-824c-a238736d53ef the nearest recycling bin is likely near the large building with glass windows or near the trees and bushes on the left side of the sidewalk. 位置误差超过 15 m  the video shows a long, narrow hallway with beige tiled flooring and walls painted in a light yellow color. there are several closed doors on either side of the hallway, each with a small window and a sign above it. the ceiling has recessed lighting, and there are framed pictures hanging on the walls. a blue recycling bin is visible on the left side of the hallway. the hallway leads to a brightly lit area at the end, suggesting an entrance or exit.">
+              <td><b>S0·Q7</b><small>long</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where is the nearest recycling bin?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:50:35. The current time is 2023-01-16 07:59:49 and you are located at [-75.76, 93.43, -2.43].
+ Where is the nearest recycling bin?</p>
+                <p><b>ID：</b><code>LONG_f4661173-26c9-4939-824c-a238736d53ef</code></p>
+                <p><b>参考答案：</b>[-102.85481153333333, 159.09055453333335, -2.5889398]</p>
+                <p><b>模型答案：</b>[-75.76, 93.43, -2.43]</p>
+                <p><b>文本输出：</b>The nearest recycling bin is likely near the large building with glass windows or near the trees and bushes on the left side of the sidewalk.</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>71.03 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[165]</p>
+                <p><b>候选范围：</b>16–200（185 条）</p>
+                <p><b>目标词覆盖：</b>2/3；词：[&#x27;bin&#x27;, &#x27;nearest&#x27;, &#x27;recycl&#x27;]</p>
+                <p class="caption">The video shows a long, narrow hallway with beige tiled flooring and walls painted in a light yellow color. There are several closed doors on either side of the hallway, each with a small window and a sign above it. The ceiling has recessed lighting, and there are framed pictures hanging on the walls. A blue recycling bin is visible on the left side of the hallway. The hallway leads to a brightly lit area at the end, suggesting an entrance or exit.</p>
+              </details></td>
+              <td>11.3 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:52:05. the current time is 2023-01-16 08:01:47 and you are located at [-42.04, 39.9, -1.99].
+ where did you see the sculpture with the hanging boats? long_242c13b6-b47f-4022-9697-02611d770526 i do not have specific information about the sculpture with the hanging boats. however, i can confirm that the current location is at [-42.04, 39.9, -1.99]. 位置误差超过 15 m  the video shows a wide pedestrian walkway with a herringbone pattern made of beige bricks. on the left side of the walkway, there is a large, metallic, abstract sculpture with a complex, intertwined design. the sculpture is silver in color and stands out against the backdrop of the campus. in the distance, there are several buildings with a mix of modern and traditional architecture. the sky is overcast, and there are no people visible in the video.">
+              <td><b>S0·Q8</b><small>long</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where did you see the sculpture with the hanging boats?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:52:05. The current time is 2023-01-16 08:01:47 and you are located at [-42.04, 39.9, -1.99].
+ Where did you see the sculpture with the hanging boats?</p>
+                <p><b>ID：</b><code>LONG_242c13b6-b47f-4022-9697-02611d770526</code></p>
+                <p><b>参考答案：</b>[-56.08268643333333, 80.65901996666668, -2.139001066666667]</p>
+                <p><b>模型答案：</b>[-42.04, 39.9, -1.99]</p>
+                <p><b>文本输出：</b>I do not have specific information about the sculpture with the hanging boats. However, I can confirm that the current location is at [-42.04, 39.9, -1.99].</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>43.11 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[220]</p>
+                <p><b>候选范围：</b>46–239（194 条）</p>
+                <p><b>目标词覆盖：</b>1/3；词：[&#x27;boat&#x27;, &#x27;hang&#x27;, &#x27;sculpture&#x27;]</p>
+                <p class="caption">The video shows a wide pedestrian walkway with a herringbone pattern made of beige bricks. On the left side of the walkway, there is a large, metallic, abstract sculpture with a complex, intertwined design. The sculpture is silver in color and stands out against the backdrop of the campus. In the distance, there are several buildings with a mix of modern and traditional architecture. The sky is overcast, and there are no people visible in the video.</p>
+              </details></td>
+              <td>3.8 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="binary" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:53:29. the current time is 2023-01-16 08:03:24 and you are located at [-0.07, 0.06, -0.0].
+ was the brick sidewalk busy? long_82e9a231-76cf-446e-9a04-4afd6c831b2d the brick sidewalk was not busy. 正确  the video shows a series of images taken from a low angle, looking down a brick-paved sidewalk. the bricks are arranged in a herringbone pattern, and there are scattered leaves on the ground. in the background, there is a stop sign, a street lamp, and a building with large windows. the sky is overcast, and there are trees and bushes visible in the distance.">
+              <td><b>S0·Q9</b><small>long</small></td>
+              <td><span class="pill type-binary">二元判断</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>Was the brick sidewalk busy?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:53:29. The current time is 2023-01-16 08:03:24 and you are located at [-0.07, 0.06, -0.0].
+ Was the brick sidewalk busy?</p>
+                <p><b>ID：</b><code>LONG_82e9a231-76cf-446e-9a04-4afd6c831b2d</code></p>
+                <p><b>参考答案：</b>no</p>
+                <p><b>模型答案：</b>no</p>
+                <p><b>文本输出：</b>The brick sidewalk was not busy.</p>
+              </details></td>
+              <td><b>正确</b><small>1.00 </small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[206]</p>
+                <p><b>候选范围：</b>74–271（198 条）</p>
+                <p><b>目标词覆盖：</b>2/3；词：[&#x27;brick&#x27;, &#x27;busy&#x27;, &#x27;sidewalk&#x27;]</p>
+                <p class="caption">The video shows a series of images taken from a low angle, looking down a brick-paved sidewalk. The bricks are arranged in a herringbone pattern, and there are scattered leaves on the ground. In the background, there is a stop sign, a street lamp, and a building with large windows. The sky is overcast, and there are trees and bushes visible in the distance.</p>
+              </details></td>
+              <td>10.8 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="long"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:51:08. the current time is 2023-01-16 08:00:44 and you are located at [-55.74, 86.31, -2.11].
+ where are the closest elevators? long_38a496dc-1afd-4e26-b8b2-c6640cab0499 the closest elevators are not directly mentioned in the provided information. however, based on the observations, there might be elevators in the spacious lobby or hallway. you may need to check those areas for precise information. 位置误差超过 15 m  the video shows a person walking down a hallway. the person is wearing a blue jacket, beige pants, and white shoes. they are carrying a black backpack and have a white tissue in their hand. the hallway has beige tiles on the floor and walls, with a wooden trim at the bottom. there are two trash cans on the left side of the hallway, and a doorway at the end of the hallway. the person is walking towards the doorway.">
+              <td><b>S0·Q10</b><small>long</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where are the closest elevators?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:51:08. The current time is 2023-01-16 08:00:44 and you are located at [-55.74, 86.31, -2.11].
+ Where are the closest elevators?</p>
+                <p><b>ID：</b><code>LONG_38a496dc-1afd-4e26-b8b2-c6640cab0499</code></p>
+                <p><b>参考答案：</b>[-104.38796999999998, 131.73958856666667, -3.1037119666666664]</p>
+                <p><b>模型答案：</b>[-55.74, 86.31, -2.11]</p>
+                <p><b>文本输出：</b>The closest elevators are not directly mentioned in the provided information. However, based on the observations, there might be elevators in the spacious lobby or hallway. You may need to check those areas for precise information.</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>66.57 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[175]</p>
+                <p><b>候选范围：</b>27–218（192 条）</p>
+                <p><b>目标词覆盖：</b>0/2；词：[&#x27;closest&#x27;, &#x27;elevator&#x27;]</p>
+                <p class="caption">The video shows a person walking down a hallway. The person is wearing a blue jacket, beige pants, and white shoes. They are carrying a black backpack and have a white tissue in their hand. The hallway has beige tiles on the floor and walls, with a wooden trim at the bottom. There are two trash cans on the left side of the hallway, and a doorway at the end of the hallway. The person is walking towards the doorway.</p>
+              </details></td>
+              <td>12.5 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="text" data-sequence="0"
+                data-length="medium"
+                data-pool="outside"
+                data-search="you started moving at 2023-01-16 07:56:30. the current time is 2023-01-16 07:58:39 and you are located at [-104.67, 126.05, -3.19].
+ what color jacket was the person who opened the door for you wearing? medium_3373f674-4a26-465b-9a08-8ca73651a0af the person who opened the door for you was wearing a dark jacket. 文本语义判分错误  the video shows a person wearing a blue jacket and white pants standing outside a building with glass doors. the building has a sign that reads &quot;bill &amp; melinda gates computer science.&quot; the person is standing on a stone pathway with a bench on the left side that has &quot;uter school&quot; engraved on it. the person is holding a phone and appears to be either taking a photo or video of the building. the sky is overcast, and there are no other people visible in the video.">
+              <td><b>S0·Q11</b><small>medium</small></td>
+              <td><span class="pill type-text">描述文本</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>What color jacket was the person who opened the door for you wearing?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:56:30. The current time is 2023-01-16 07:58:39 and you are located at [-104.67, 126.05, -3.19].
+ What color jacket was the person who opened the door for you wearing?</p>
+                <p><b>ID：</b><code>MEDIUM_3373f674-4a26-465b-9a08-8ca73651a0af</code></p>
+                <p><b>参考答案：</b>[&quot;They were wearing a blue puffer jacket&quot;]</p>
+                <p><b>模型答案：</b>The person who opened the door for you was wearing a dark jacket.</p>
+                <p><b>文本输出：</b>The person who opened the door for you was wearing a dark jacket.</p>
+              </details></td>
+              <td><b>文本语义判分错误</b><small>0.00 </small>
+                </td>
+              <td><details><summary>有参考 context 在池外 · [{&#x27;entry_id&#x27;: 133, &#x27;direction&#x27;: &#x27;before&#x27;, &#x27;gap_seconds&#x27;: 3.001556873321533}]</summary>
+                <p><b>entry IDs：</b>[133]</p>
+                <p><b>候选范围：</b>134–177（44 条）</p>
+                <p><b>目标词覆盖：</b>4/7；词：[&#x27;color&#x27;, &#x27;door&#x27;, &#x27;jacket&#x27;, &#x27;open&#x27;, &#x27;person&#x27;, &#x27;wear&#x27;, &#x27;who&#x27;]</p>
+                <p class="caption">The video shows a person wearing a blue jacket and white pants standing outside a building with glass doors. The building has a sign that reads &quot;Bill &amp; Melinda Gates Computer Science.&quot; The person is standing on a stone pathway with a bench on the left side that has &quot;UTER SCHOOL&quot; engraved on it. The person is holding a phone and appears to be either taking a photo or video of the building. The sky is overcast, and there are no other people visible in the video.</p>
+              </details></td>
+              <td>12.1 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="medium"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:51:59. the current time is 2023-01-16 07:56:45 and you are located at [-90.33, 203.52, -1.88].
+ where is the statue in front of the bill and melinda gates computer science building? medium_28199d34-e26c-4b79-8775-943431d3a68a i do not have specific information about the location of the statue in front of the bill and melinda gates computer science building. however, i can provide the current position as a best guess if the statue is located nearby. 位置误差超过 15 m  the video shows a concrete walkway leading to a building with large windows and a glass door. on the right side of the walkway, there is a circular structure made of white bricks. the ground is covered with brown leaves, and there are green bushes on either side of the walkway. the sky is overcast, and the building appears to be made of brick with multiple stories.">
+              <td><b>S0·Q12</b><small>medium</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where is the statue in front of the Bill and Melinda Gates Computer Science building?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:51:59. The current time is 2023-01-16 07:56:45 and you are located at [-90.33, 203.52, -1.88].
+ Where is the statue in front of the Bill and Melinda Gates Computer Science building?</p>
+                <p><b>ID：</b><code>MEDIUM_28199d34-e26c-4b79-8775-943431d3a68a</code></p>
+                <p><b>参考答案：</b>[-60.1973617419355, 196.54061870967743, -1.096614193548387]</p>
+                <p><b>模型答案：</b>[-90.33, 203.52, -1.88]</p>
+                <p><b>文本输出：</b>I do not have specific information about the location of the statue in front of the Bill and Melinda Gates Computer Science building. However, I can provide the current position as a best guess if the statue is located nearby.</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>30.94 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[123]</p>
+                <p><b>候选范围：</b>44–139（96 条）</p>
+                <p><b>目标词覆盖：</b>1/8；词：[&#x27;bill&#x27;, &#x27;build&#x27;, &#x27;computer&#x27;, &#x27;front&#x27;, &#x27;gate&#x27;, &#x27;melinda&#x27;, &#x27;science&#x27;, &#x27;statue&#x27;]</p>
+                <p class="caption">The video shows a concrete walkway leading to a building with large windows and a glass door. On the right side of the walkway, there is a circular structure made of white bricks. The ground is covered with brown leaves, and there are green bushes on either side of the walkway. The sky is overcast, and the building appears to be made of brick with multiple stories.</p>
+              </details></td>
+              <td>3.5 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="text" data-sequence="0"
+                data-length="medium"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:53:29. the current time is 2023-01-16 07:57:06 and you are located at [-100.96, 201.25, -2.03].
+ what side of the brick sidewalk were you walking on? medium_afd2f89f-f0b9-4082-9136-e2122475c3cd i cannot determine the side of the brick sidewalk you were walking on based on the provided information. 正确  the video shows a brick-paved walkway with a herringbone pattern. the bricks are a mix of beige and light brown. on the right side of the walkway, there is a concrete curb. on the left side, there are trees with green leaves and a few buildings with multiple windows. the sky is overcast, and there are no people or moving objects in the video.">
+              <td><b>S0·Q13</b><small>medium</small></td>
+              <td><span class="pill type-text">描述文本</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>What side of the brick sidewalk were you walking on?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:53:29. The current time is 2023-01-16 07:57:06 and you are located at [-100.96, 201.25, -2.03].
+ What side of the brick sidewalk were you walking on?</p>
+                <p><b>ID：</b><code>MEDIUM_afd2f89f-f0b9-4082-9136-e2122475c3cd</code></p>
+                <p><b>参考答案：</b>[&quot;I was driving on the right side of the sidewalk&quot;]</p>
+                <p><b>模型答案：</b>I cannot determine the side of the brick sidewalk you were walking on based on the provided information.</p>
+                <p><b>文本输出：</b>I cannot determine the side of the brick sidewalk you were walking on based on the provided information.</p>
+              </details></td>
+              <td><b>正确</b><small>1.00 </small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[84]</p>
+                <p><b>候选范围：</b>74–146（73 条）</p>
+                <p><b>目标词覆盖：</b>1/3；词：[&#x27;brick&#x27;, &#x27;sidewalk&#x27;, &#x27;walk&#x27;]</p>
+                <p class="caption">The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of beige and light brown. On the right side of the walkway, there is a concrete curb. On the left side, there are trees with green leaves and a few buildings with multiple windows. The sky is overcast, and there are no people or moving objects in the video.</p>
+              </details></td>
+              <td>3.1 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="medium"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:54:17. the current time is 2023-01-16 08:00:47 and you are located at [-55.92, 83.52, -2.11].
+ where is the closest place to sit? medium_02da6f10-4ce1-4eb3-a416-c4522e9c8133 the closest place to sit is on the concrete sidewalk on the left side of the pedestrian walkway, near the large metal sculpture. 位置误差超过 15 m  the video shows a spacious room with a tiled floor and white walls. there are several tables and chairs arranged in the room, with a few people sitting at them. the room is well-lit, with ceiling lights and natural light coming in from the windows. there are paintings hanging on the walls, adding a touch of color to the otherwise neutral space. the room appears to be a common area or a cafeteria, with a few individuals engaged in conversation or working on their laptops.">
+              <td><b>S0·Q14</b><small>medium</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where is the closest place to sit?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:54:17. The current time is 2023-01-16 08:00:47 and you are located at [-55.92, 83.52, -2.11].
+ Where is the closest place to sit?</p>
+                <p><b>ID：</b><code>MEDIUM_02da6f10-4ce1-4eb3-a416-c4522e9c8133</code></p>
+                <p><b>参考答案：</b>[-104.61440453333334, 170.2240391666667, -2.4068897999999996]</p>
+                <p><b>模型答案：</b>[-55.92, 83.52, -2.11]</p>
+                <p><b>文本输出：</b>The closest place to sit is on the concrete sidewalk on the left side of the pedestrian walkway, near the large metal sculpture.</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>99.44 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[161]</p>
+                <p><b>候选范围：</b>90–219（130 条）</p>
+                <p><b>目标词覆盖：</b>0/3；词：[&#x27;closest&#x27;, &#x27;place&#x27;, &#x27;sit&#x27;]</p>
+                <p class="caption">The video shows a spacious room with a tiled floor and white walls. There are several tables and chairs arranged in the room, with a few people sitting at them. The room is well-lit, with ceiling lights and natural light coming in from the windows. There are paintings hanging on the walls, adding a touch of color to the otherwise neutral space. The room appears to be a common area or a cafeteria, with a few individuals engaged in conversation or working on their laptops.</p>
+              </details></td>
+              <td>26.5 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="time" data-sequence="0"
+                data-length="medium"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:55:14. the current time is 2023-01-16 08:00:26 and you are located at [-54.6, 91.01, -2.04].
+ when did you first enter the building? medium_9595c924-7840-4964-8bd0-d6e3080bcd65 i first entered the building at 2023-01-16 07:55:14. 时间误差超过 2 min  the video begins with a view of a set of double glass doors with metal frames. the doors are open, revealing a spacious room with a high ceiling and large windows that let in natural light. the floor is made of light-colored tiles, and there are several rows of tables and chairs arranged neatly in the room. the walls are painted white, and there are no visible decorations or artwork. the room appears to be empty, with no people or movement visible in the video.">
+              <td><b>S0·Q15</b><small>medium</small></td>
+              <td><span class="pill type-time">时间点</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>When did you first enter the building?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:55:14. The current time is 2023-01-16 08:00:26 and you are located at [-54.6, 91.01, -2.04].
+ When did you first enter the building?</p>
+                <p><b>ID：</b><code>MEDIUM_9595c924-7840-4964-8bd0-d6e3080bcd65</code></p>
+                <p><b>参考答案：</b>3.88</p>
+                <p><b>模型答案：</b>314.00</p>
+                <p><b>文本输出：</b>I first entered the building at 2023-01-16 07:55:14.</p>
+              </details></td>
+              <td><b>时间误差超过 2 min</b><small>310.12 min</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[135]</p>
+                <p><b>候选范围：</b>109–212（104 条）</p>
+                <p><b>目标词覆盖：</b>0/3；词：[&#x27;build&#x27;, &#x27;enter&#x27;, &#x27;first&#x27;]</p>
+                <p class="caption">The video begins with a view of a set of double glass doors with metal frames. The doors are open, revealing a spacious room with a high ceiling and large windows that let in natural light. The floor is made of light-colored tiles, and there are several rows of tables and chairs arranged neatly in the room. The walls are painted white, and there are no visible decorations or artwork. The room appears to be empty, with no people or movement visible in the video.</p>
+              </details></td>
+              <td>11.4 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="medium"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 08:00:01. the current time is 2023-01-16 08:03:11 and you are located at [-1.22, -1.41, -0.04].
+ where did you see the sculpture with the hanging boats? medium_11801608-016d-4367-8247-4a885afef25d i do not have specific information about the sculpture with the hanging boats. however, i am currently located at [-1.22, -1.41, -0.04]. 位置误差超过 15 m  the video shows a wide pedestrian walkway with a herringbone pattern made of beige bricks. on the left side of the walkway, there is a large, metallic, abstract sculpture with a complex, intertwined design. the sculpture is silver in color and stands out against the backdrop of the campus. in the distance, there are several buildings with a mix of modern and traditional architecture. the sky is overcast, and there are no people visible in the video.">
+              <td><b>S0·Q16</b><small>medium</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where did you see the sculpture with the hanging boats?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 08:00:01. The current time is 2023-01-16 08:03:11 and you are located at [-1.22, -1.41, -0.04].
+ Where did you see the sculpture with the hanging boats?</p>
+                <p><b>ID：</b><code>MEDIUM_11801608-016d-4367-8247-4a885afef25d</code></p>
+                <p><b>参考答案：</b>[-56.08268643333333, 80.65901996666668, -2.139001066666667]</p>
+                <p><b>模型答案：</b>[-1.22, -1.41, -0.04]</p>
+                <p><b>文本输出：</b>I do not have specific information about the sculpture with the hanging boats. However, I am currently located at [-1.22, -1.41, -0.04].</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>98.74 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[220]</p>
+                <p><b>候选范围：</b>204–267（64 条）</p>
+                <p><b>目标词覆盖：</b>1/3；词：[&#x27;boat&#x27;, &#x27;hang&#x27;, &#x27;sculpture&#x27;]</p>
+                <p class="caption">The video shows a wide pedestrian walkway with a herringbone pattern made of beige bricks. On the left side of the walkway, there is a large, metallic, abstract sculpture with a complex, intertwined design. The sculpture is silver in color and stands out against the backdrop of the campus. In the distance, there are several buildings with a mix of modern and traditional architecture. The sky is overcast, and there are no people visible in the video.</p>
+              </details></td>
+              <td>3.7 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="text" data-sequence="0"
+                data-length="medium"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:56:21. the current time is 2023-01-16 08:01:32 and you are located at [-55.47, 43.57, -2.26].
+ what were the color of the couches near where i entered the building? medium_022ee3b7-38a6-4a36-9f48-fa656ea3cf21 the color of the couches near where you entered the building was red. 正确  the video shows a spacious university building with a high ceiling and large windows that allow natural light to flood the interior. the floor is made of shiny tiles that reflect the light, creating a bright and airy atmosphere. there are several rows of red chairs arranged in a semicircle, suggesting a space for lectures or presentations. the walls are adorned with wooden panels and informational posters. there are no people visible in the video, indicating that the building is currently empty.">
+              <td><b>S0·Q17</b><small>medium</small></td>
+              <td><span class="pill type-text">描述文本</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>What were the color of the couches near where I entered the building?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:56:21. The current time is 2023-01-16 08:01:32 and you are located at [-55.47, 43.57, -2.26].
+ What were the color of the couches near where I entered the building?</p>
+                <p><b>ID：</b><code>MEDIUM_022ee3b7-38a6-4a36-9f48-fa656ea3cf21</code></p>
+                <p><b>参考答案：</b>[&quot;The couches were red.&quot;]</p>
+                <p><b>模型答案：</b>The color of the couches near where you entered the building was red.</p>
+                <p><b>文本输出：</b>The color of the couches near where you entered the building was red.</p>
+              </details></td>
+              <td><b>正确</b><small>1.00 </small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[143]</p>
+                <p><b>候选范围：</b>131–234（104 条）</p>
+                <p><b>目标词覆盖：</b>1/5；词：[&#x27;build&#x27;, &#x27;color&#x27;, &#x27;couche&#x27;, &#x27;enter&#x27;, &#x27;near&#x27;]</p>
+                <p class="caption">The video shows a spacious university building with a high ceiling and large windows that allow natural light to flood the interior. The floor is made of shiny tiles that reflect the light, creating a bright and airy atmosphere. There are several rows of red chairs arranged in a semicircle, suggesting a space for lectures or presentations. The walls are adorned with wooden panels and informational posters. There are no people visible in the video, indicating that the building is currently empty.</p>
+              </details></td>
+              <td>12.1 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="time" data-sequence="0"
+                data-length="medium"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:59:55. the current time is 2023-01-16 08:03:02 and you are located at [1.42, 2.28, -0.17].
+ when did you cross the brick street? medium_b5b98312-f881-422d-b2cb-4b9c5696948b you crossed the brick street approximately 3 minutes ago. 正确  the video shows a series of images taken from a low angle, looking down a brick-paved sidewalk. the bricks are arranged in a herringbone pattern, and there are scattered leaves on the ground. in the background, there is a stop sign, a street lamp, and a building with large windows. the sky is overcast, and there are trees and bushes visible in the distance.">
+              <td><b>S0·Q18</b><small>medium</small></td>
+              <td><span class="pill type-time">时间点</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>When did you cross the brick street?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:59:55. The current time is 2023-01-16 08:03:02 and you are located at [1.42, 2.28, -0.17].
+ When did you cross the brick street?</p>
+                <p><b>ID：</b><code>MEDIUM_b5b98312-f881-422d-b2cb-4b9c5696948b</code></p>
+                <p><b>参考答案：</b>2.91</p>
+                <p><b>模型答案：</b>3.00</p>
+                <p><b>文本输出：</b>You crossed the brick street approximately 3 minutes ago.</p>
+              </details></td>
+              <td><b>正确</b><small>0.09 min</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[206]</p>
+                <p><b>候选范围：</b>202–264（63 条）</p>
+                <p><b>目标词覆盖：</b>2/3；词：[&#x27;brick&#x27;, &#x27;cross&#x27;, &#x27;street&#x27;]</p>
+                <p class="caption">The video shows a series of images taken from a low angle, looking down a brick-paved sidewalk. The bricks are arranged in a herringbone pattern, and there are scattered leaves on the ground. In the background, there is a stop sign, a street lamp, and a building with large windows. The sky is overcast, and there are trees and bushes visible in the distance.</p>
+              </details></td>
+              <td>26.5 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="medium"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:58:33. the current time is 2023-01-16 08:03:14 and you are located at [-1.21, -0.9, -0.05].
+ where is the nearest bike rack that is not empty? medium_c6c87c47-04c3-44ca-a1be-053153b740c5 i do not have specific information about the locations of bike racks. however, based on the current position and the context, i will provide a best guess for the nearest bike rack that is not empty. 位置误差超过 15 m  the video shows a concrete parking lot with a white delivery truck parked on the right side. there are several bicycles parked on the left side of the lot. the buildings surrounding the lot are made of brick and have multiple windows. the sky is overcast, and there are no people visible in the video.">
+              <td><b>S0·Q19</b><small>medium</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where is the nearest bike rack that is not empty?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:58:33. The current time is 2023-01-16 08:03:14 and you are located at [-1.21, -0.9, -0.05].
+ Where is the nearest bike rack that is not empty?</p>
+                <p><b>ID：</b><code>MEDIUM_c6c87c47-04c3-44ca-a1be-053153b740c5</code></p>
+                <p><b>参考答案：</b>[-25.409017133333336, 37.77082069999999, -1.5545138]</p>
+                <p><b>模型答案：</b>[-1.21, -0.9, -0.05]</p>
+                <p><b>文本输出：</b>I do not have specific information about the locations of bike racks. However, based on the current position and the context, I will provide a best guess for the nearest bike rack that is not empty.</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>45.64 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[245]</p>
+                <p><b>候选范围：</b>175–268（94 条）</p>
+                <p><b>目标词覆盖：</b>0/5；词：[&#x27;bike&#x27;, &#x27;empty&#x27;, &#x27;nearest&#x27;, &#x27;not&#x27;, &#x27;rack&#x27;]</p>
+                <p class="caption">The video shows a concrete parking lot with a white delivery truck parked on the right side. There are several bicycles parked on the left side of the lot. The buildings surrounding the lot are made of brick and have multiple windows. The sky is overcast, and there are no people visible in the video.</p>
+              </details></td>
+              <td>3.5 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="time" data-sequence="0"
+                data-length="medium"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:56:42. the current time is 2023-01-16 07:58:46 and you are located at [-105.01, 120.24, -3.27].
+ when were you in the atrium with the red couches? medium_254c3f52-e4ed-4828-ba85-42a500ff8676 i was in the atrium with the red couches approximately 0.87 minutes ago. 正确  the video begins with a view of a large, open atrium with a high ceiling and a shiny, reflective floor. the walls are made of glass, allowing natural light to flood the space. there are several red couches and black chairs arranged in the area, providing seating options for students. the atrium is surrounded by various buildings with visible windows and doors. as the video progresses, a person enters the frame from the right side, walking across the atrium. the person is wearing a dark jacket and carrying a bag. the video ends with the person walking out of the frame.">
+              <td><b>S0·Q20</b><small>medium</small></td>
+              <td><span class="pill type-time">时间点</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>When were you in the atrium with the red couches?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:56:42. The current time is 2023-01-16 07:58:46 and you are located at [-105.01, 120.24, -3.27].
+ When were you in the atrium with the red couches?</p>
+                <p><b>ID：</b><code>MEDIUM_254c3f52-e4ed-4828-ba85-42a500ff8676</code></p>
+                <p><b>参考答案：</b>1.76</p>
+                <p><b>模型答案：</b>0.87</p>
+                <p><b>文本输出：</b>I was in the atrium with the red couches approximately 0.87 minutes ago.</p>
+              </details></td>
+              <td><b>正确</b><small>0.89 min</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[144]</p>
+                <p><b>候选范围：</b>138–179（42 条）</p>
+                <p><b>目标词覆盖：</b>3/3；词：[&#x27;atrium&#x27;, &#x27;couche&#x27;, &#x27;red&#x27;]</p>
+                <p class="caption">The video begins with a view of a large, open atrium with a high ceiling and a shiny, reflective floor. The walls are made of glass, allowing natural light to flood the space. There are several red couches and black chairs arranged in the area, providing seating options for students. The atrium is surrounded by various buildings with visible windows and doors. As the video progresses, a person enters the frame from the right side, walking across the atrium. The person is wearing a dark jacket and carrying a bag. The video ends with the person walking out of the frame.</p>
+              </details></td>
+              <td>12.3 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="duration" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:58:33. the current time is 2023-01-16 07:59:55 and you are located at [-70.33, 92.86, -2.26].
+ how long have you been outside? short_39a4eb19-b64e-4289-abcf-92ea6c3debba you have been outside for 1 minute and 22 seconds. 正确  the video begins with a view from inside a building, looking out through a glass door onto a concrete sidewalk. the sidewalk is bordered by a black rubber mat and leads to a grassy area with trees. the trees have green leaves and are spaced out evenly. in the distance, there are buildings with multiple windows and a clear sky above. as the video progresses, a person wearing white sneakers enters the frame from the right side and walks across the sidewalk, passing by the black mat and the grassy area. the person&#x27;s movement is casual and unhurried.
+
+the video shows a concrete sidewalk with a yellow pole on the left side, which has the words &quot;help&quot; written on it. the sidewalk is bordered by a grassy area with fallen leaves on the ground. in the background, there are buildings with large windows and trees with green leaves. the sky is overcast, and there are no people or moving objects visible in the video.">
+              <td><b>S0·Q21</b><small>short</small></td>
+              <td><span class="pill type-duration">持续时间</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>How long have you been outside?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:58:33. The current time is 2023-01-16 07:59:55 and you are located at [-70.33, 92.86, -2.26].
+ How long have you been outside?</p>
+                <p><b>ID：</b><code>SHORT_39a4eb19-b64e-4289-abcf-92ea6c3debba</code></p>
+                <p><b>参考答案：</b>1.00</p>
+                <p><b>模型答案：</b>1.37</p>
+                <p><b>文本输出：</b>You have been outside for 1 minute and 22 seconds.</p>
+              </details></td>
+              <td><b>正确</b><small>0.37 min</small>
+                </td>
+              <td><details><summary>全部在池内 · 2 条</summary>
+                <p><b>entry IDs：</b>[183, 201]</p>
+                <p><b>候选范围：</b>175–202（28 条）</p>
+                <p><b>目标词覆盖：</b>0/2；词：[&#x27;long&#x27;, &#x27;outside&#x27;]</p>
+                <p class="caption">The video begins with a view from inside a building, looking out through a glass door onto a concrete sidewalk. The sidewalk is bordered by a black rubber mat and leads to a grassy area with trees. The trees have green leaves and are spaced out evenly. In the distance, there are buildings with multiple windows and a clear sky above. As the video progresses, a person wearing white sneakers enters the frame from the right side and walks across the sidewalk, passing by the black mat and the grassy area. The person&#x27;s movement is casual and unhurried.
+
+The video shows a concrete sidewalk with a yellow pole on the left side, which has the words &quot;HELP&quot; written on it. The sidewalk is bordered by a grassy area with fallen leaves on the ground. In the background, there are buildings with large windows and trees with green leaves. The sky is overcast, and there are no people or moving objects visible in the video.</p>
+              </details></td>
+              <td>3.7 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="time" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:58:49. the current time is 2023-01-16 08:00:04 and you are located at [-63.15, 92.12, -2.13].
+ when did you leave the building? short_37a3097f-a357-4af3-8a84-244e1b767ddf you left the building 1.25 minutes ago. 正确  the video begins with a view from inside a building, looking out through a glass door onto a concrete sidewalk. the sidewalk is bordered by a black rubber mat and leads to a grassy area with trees. the trees have green leaves and are spaced out evenly. in the distance, there are buildings with multiple windows and a clear sky above. as the video progresses, a person wearing white sneakers enters the frame from the right side and walks across the sidewalk, passing by the black mat and the grassy area. the person&#x27;s movement is casual and unhurried.">
+              <td><b>S0·Q22</b><small>short</small></td>
+              <td><span class="pill type-time">时间点</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>When did you leave the building?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:58:49. The current time is 2023-01-16 08:00:04 and you are located at [-63.15, 92.12, -2.13].
+ When did you leave the building?</p>
+                <p><b>ID：</b><code>SHORT_37a3097f-a357-4af3-8a84-244e1b767ddf</code></p>
+                <p><b>参考答案：</b>1.11</p>
+                <p><b>模型答案：</b>1.25</p>
+                <p><b>文本输出：</b>You left the building 1.25 minutes ago.</p>
+              </details></td>
+              <td><b>正确</b><small>0.14 min</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[183]</p>
+                <p><b>候选范围：</b>180–205（26 条）</p>
+                <p><b>目标词覆盖：</b>2/2；词：[&#x27;build&#x27;, &#x27;leave&#x27;]</p>
+                <p class="caption">The video begins with a view from inside a building, looking out through a glass door onto a concrete sidewalk. The sidewalk is bordered by a black rubber mat and leads to a grassy area with trees. The trees have green leaves and are spaced out evenly. In the distance, there are buildings with multiple windows and a clear sky above. As the video progresses, a person wearing white sneakers enters the frame from the right side and walks across the sidewalk, passing by the black mat and the grassy area. The person&#x27;s movement is casual and unhurried.</p>
+              </details></td>
+              <td>3.9 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="text" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:54:38. the current time is 2023-01-16 07:55:53 and you are located at [-57.45, 195.7, -1.05].
+ what side of the street are you driving on? short_31d323c2-930f-4111-85b0-d92e960ee600 i cannot determine which side of the street i am driving on based on the provided information. 正确 256-token 输出在 duration 字段前被截断；内外重试仍生成同类长 json。 the video shows a brick-paved walkway with a herringbone pattern. the bricks are a mix of light and dark shades of brown. on the right side of the walkway, there is a concrete sidewalk with a metal railing. behind the railing, there are several trees with green leaves and a building with large windows. the sky is overcast, and there are no people or moving objects in the video.">
+              <td><b>S0·Q23</b><small>short</small></td>
+              <td><span class="pill type-text">描述文本</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>What side of the street are you driving on?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:54:38. The current time is 2023-01-16 07:55:53 and you are located at [-57.45, 195.7, -1.05].
+ What side of the street are you driving on?</p>
+                <p><b>ID：</b><code>SHORT_31d323c2-930f-4111-85b0-d92e960ee600</code></p>
+                <p><b>参考答案：</b>[&quot;I was driving on the left side of the street&quot;]</p>
+                <p><b>模型答案：</b>I cannot determine which side of the street I am driving on based on the provided information.</p>
+                <p><b>文本输出：</b>I cannot determine which side of the street I am driving on based on the provided information.</p>
+              </details></td>
+              <td><b>正确</b><small>1.00 </small>
+                <p class="warn">256-token 输出在 duration 字段前被截断；内外重试仍生成同类长 JSON。</p></td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[105]</p>
+                <p><b>候选范围：</b>97–122（26 条）</p>
+                <p><b>目标词覆盖：</b>0/2；词：[&#x27;driv&#x27;, &#x27;street&#x27;]</p>
+                <p class="caption">The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On the right side of the walkway, there is a concrete sidewalk with a metal railing. Behind the railing, there are several trees with green leaves and a building with large windows. The sky is overcast, and there are no people or moving objects in the video.</p>
+              </details></td>
+              <td>3.4 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="time" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 08:01:14. the current time is 2023-01-16 08:02:50 and you are located at [0.84, 13.73, -0.37].
+ when did you get off of the brick sidewalk? short_bbfb623d-89d7-4698-9e91-be03c2720fc8 i got off the brick sidewalk approximately 1.3 minutes ago. 正确  the video shows a view of a university campus with a focus on a brick-patterned sidewalk. the sidewalk is made up of rectangular bricks arranged in a herringbone pattern, with a mix of light and dark brown colors. the sidewalk is bordered by a concrete curb on one side and a grassy area with trees on the other. in the background, there are buildings with large windows and a few cars parked on the street. the sky is overcast, and there are no people visible in the video.">
+              <td><b>S0·Q24</b><small>short</small></td>
+              <td><span class="pill type-time">时间点</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>When did you get off of the brick sidewalk?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 08:01:14. The current time is 2023-01-16 08:02:50 and you are located at [0.84, 13.73, -0.37].
+ When did you get off of the brick sidewalk?</p>
+                <p><b>ID：</b><code>SHORT_bbfb623d-89d7-4698-9e91-be03c2720fc8</code></p>
+                <p><b>参考答案：</b>1.41</p>
+                <p><b>模型答案：</b>1.30</p>
+                <p><b>文本输出：</b>I got off the brick sidewalk approximately 1.3 minutes ago.</p>
+              </details></td>
+              <td><b>正确</b><small>0.11 min</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[232]</p>
+                <p><b>候选范围：</b>228–260（33 条）</p>
+                <p><b>目标词覆盖：</b>2/3；词：[&#x27;brick&#x27;, &#x27;off&#x27;, &#x27;sidewalk&#x27;]</p>
+                <p class="caption">The video shows a view of a university campus with a focus on a brick-patterned sidewalk. The sidewalk is made up of rectangular bricks arranged in a herringbone pattern, with a mix of light and dark brown colors. The sidewalk is bordered by a concrete curb on one side and a grassy area with trees on the other. In the background, there are buildings with large windows and a few cars parked on the street. The sky is overcast, and there are no people visible in the video.</p>
+              </details></td>
+              <td>27.3 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 08:02:14. the current time is 2023-01-16 08:03:21 and you are located at [-0.34, 0.06, -0.01].
+ where did you see a red fire hydrant? short_f20ba66d-74e4-4e2e-9a91-ac2576f16e0a the red fire hydrant was seen on the sidewalk near a brick building at 08:02:44. 正确  the video shows a large, brick building with arched windows and a green door. there is a green dumpster in front of the building and a red fire hydrant on the sidewalk. the ground is made of gray asphalt, and there are no people or moving objects in the scene. the sky is overcast, and the building appears to be a university or college building.">
+              <td><b>S0·Q25</b><small>short</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>Where did you see a red fire hydrant?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 08:02:14. The current time is 2023-01-16 08:03:21 and you are located at [-0.34, 0.06, -0.01].
+ Where did you see a red fire hydrant?</p>
+                <p><b>ID：</b><code>SHORT_f20ba66d-74e4-4e2e-9a91-ac2576f16e0a</code></p>
+                <p><b>参考答案：</b>[-0.05857329032258064, 19.54602912903226, -0.4581363870967742]</p>
+                <p><b>模型答案：</b>[-0.059, 19.546, -0.458]</p>
+                <p><b>文本输出：</b>The red fire hydrant was seen on the sidewalk near a brick building at 08:02:44.</p>
+              </details></td>
+              <td><b>正确</b><small>0.00 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[258]</p>
+                <p><b>候选范围：</b>248–270（23 条）</p>
+                <p><b>目标词覆盖：</b>3/3；词：[&#x27;fire&#x27;, &#x27;hydrant&#x27;, &#x27;red&#x27;]</p>
+                <p class="caption">The video shows a large, brick building with arched windows and a green door. There is a green dumpster in front of the building and a red fire hydrant on the sidewalk. The ground is made of gray asphalt, and there are no people or moving objects in the scene. The sky is overcast, and the building appears to be a university or college building.</p>
+              </details></td>
+              <td>12.2 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="text" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 07:58:58. the current time is 2023-01-16 07:59:55 and you are located at [-70.33, 92.86, -2.26].
+ which direction did you turn after leaving the building? short_a29d9195-acc1-46ea-a225-95816e21e802 i turned left after leaving the building. 正确  the video shows a quiet street scene with a sidewalk in the foreground. there is a street lamp on the right side of the frame, and a neatly trimmed hedge runs parallel to the sidewalk. the sidewalk is made of concrete and has a few scattered leaves on it. in the background, there are trees with green leaves, and a few buildings can be seen. the sky is overcast, and there are no people or moving vehicles in the scene.">
+              <td><b>S0·Q26</b><small>short</small></td>
+              <td><span class="pill type-text">描述文本</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>Which direction did you turn after leaving the building?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 07:58:58. The current time is 2023-01-16 07:59:55 and you are located at [-70.33, 92.86, -2.26].
+ Which direction did you turn after leaving the building?</p>
+                <p><b>ID：</b><code>SHORT_a29d9195-acc1-46ea-a225-95816e21e802</code></p>
+                <p><b>参考答案：</b>[&quot;I turned left after driving off the sidewalk&quot;]</p>
+                <p><b>模型答案：</b>I turned left after leaving the building.</p>
+                <p><b>文本输出：</b>I turned left after leaving the building.</p>
+              </details></td>
+              <td><b>正确</b><small>1.00 </small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[188]</p>
+                <p><b>候选范围：</b>183–202（20 条）</p>
+                <p><b>目标词覆盖：</b>0/5；词：[&#x27;after&#x27;, &#x27;build&#x27;, &#x27;direction&#x27;, &#x27;leav&#x27;, &#x27;turn&#x27;]</p>
+                <p class="caption">The video shows a quiet street scene with a sidewalk in the foreground. There is a street lamp on the right side of the frame, and a neatly trimmed hedge runs parallel to the sidewalk. The sidewalk is made of concrete and has a few scattered leaves on it. In the background, there are trees with green leaves, and a few buildings can be seen. The sky is overcast, and there are no people or moving vehicles in the scene.</p>
+              </details></td>
+              <td>11.1 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="binary" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 08:02:35. the current time is 2023-01-16 08:03:05 and you are located at [1.11, -0.21, -0.01].
+ did you see a red fire hydrant? short_103d708a-b002-415c-ab49-ff02f654c490 yes, i saw a red fire hydrant. 正确  the video shows a large, brick building with arched windows and a green door. there is a green dumpster in front of the building and a red fire hydrant on the sidewalk. the ground is made of gray asphalt, and there are no people or moving objects in the scene. the sky is overcast, and the building appears to be a university or college building.">
+              <td><b>S0·Q27</b><small>short</small></td>
+              <td><span class="pill type-binary">二元判断</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>Did you see a red fire hydrant?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 08:02:35. The current time is 2023-01-16 08:03:05 and you are located at [1.11, -0.21, -0.01].
+ Did you see a red fire hydrant?</p>
+                <p><b>ID：</b><code>SHORT_103d708a-b002-415c-ab49-ff02f654c490</code></p>
+                <p><b>参考答案：</b>yes</p>
+                <p><b>模型答案：</b>yes</p>
+                <p><b>文本输出：</b>Yes, I saw a red fire hydrant.</p>
+              </details></td>
+              <td><b>正确</b><small>1.00 </small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[258]</p>
+                <p><b>候选范围：</b>255–265（11 条）</p>
+                <p><b>目标词覆盖：</b>3/3；词：[&#x27;fire&#x27;, &#x27;hydrant&#x27;, &#x27;red&#x27;]</p>
+                <p class="caption">The video shows a large, brick building with arched windows and a green door. There is a green dumpster in front of the building and a red fire hydrant on the sidewalk. The ground is made of gray asphalt, and there are no people or moving objects in the scene. The sky is overcast, and the building appears to be a university or college building.</p>
+              </details></td>
+              <td>25.7 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="binary" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 08:00:23. the current time is 2023-01-16 08:01:35 and you are located at [-53.1, 42.26, -2.22].
+ did you see any bicyclists? short_426931a9-038a-48a3-a27b-0f7b12948a81 yes, i saw bicyclists during the time you mentioned. 正确  the video begins with a view of a brick-paved walkway with a herringbone pattern. the color of the bricks is a mix of light brown and beige. the walkway is surrounded by trees with green leaves, and there are buildings in the background. as the video progresses, a person on a bicycle enters the frame from the right side, riding along the walkway. the cyclist is wearing a dark-colored outfit and a helmet. the background shows more of the campus, including a large metal sculpture, more trees, and a few pedestrians walking">
+              <td><b>S0·Q28</b><small>short</small></td>
+              <td><span class="pill type-binary">二元判断</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>Did you see any bicyclists?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 08:00:23. The current time is 2023-01-16 08:01:35 and you are located at [-53.1, 42.26, -2.22].
+ Did you see any bicyclists?</p>
+                <p><b>ID：</b><code>SHORT_426931a9-038a-48a3-a27b-0f7b12948a81</code></p>
+                <p><b>参考答案：</b>yes</p>
+                <p><b>模型答案：</b>yes</p>
+                <p><b>文本输出：</b>Yes, I saw bicyclists during the time you mentioned.</p>
+              </details></td>
+              <td><b>正确</b><small>1.00 </small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[216]</p>
+                <p><b>候选范围：</b>211–235（25 条）</p>
+                <p><b>目标词覆盖：</b>0/2；词：[&#x27;any&#x27;, &#x27;bicyclist&#x27;]</p>
+                <p class="caption">The video begins with a view of a brick-paved walkway with a herringbone pattern. The color of the bricks is a mix of light brown and beige. The walkway is surrounded by trees with green leaves, and there are buildings in the background. As the video progresses, a person on a bicycle enters the frame from the right side, riding along the walkway. The cyclist is wearing a dark-colored outfit and a helmet. The background shows more of the campus, including a large metal sculpture, more trees, and a few pedestrians walking</p>
+              </details></td>
+              <td>12.6 s</td>
+            </tr>
+            <tr data-outcome="wrong" data-status="valid"
+                data-type="position" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 08:00:38. the current time is 2023-01-16 08:02:17 and you are located at [-14.58, 36.58, -1.31].
+ where did you see the sculpture with the hanging boats? short_b928a4aa-a1fb-4161-ad8c-78e6f1e78eca i do not have specific information about the sculpture with the hanging boats. however, i can provide my current position and time as a reference. 位置误差超过 15 m  the video shows a wide pedestrian walkway with a herringbone pattern made of beige bricks. on the left side of the walkway, there is a large, metallic, abstract sculpture with a complex, intertwined design. the sculpture is silver in color and stands out against the backdrop of the campus. in the distance, there are several buildings with a mix of modern and traditional architecture. the sky is overcast, and there are no people visible in the video.">
+              <td><b>S0·Q29</b><small>short</small></td>
+              <td><span class="pill type-position">空间位置</span></td>
+              <td><span class="pill outcome-wrong">错误</span></td>
+              <td class="wide"><details><summary>Where did you see the sculpture with the hanging boats?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 08:00:38. The current time is 2023-01-16 08:02:17 and you are located at [-14.58, 36.58, -1.31].
+ Where did you see the sculpture with the hanging boats?</p>
+                <p><b>ID：</b><code>SHORT_b928a4aa-a1fb-4161-ad8c-78e6f1e78eca</code></p>
+                <p><b>参考答案：</b>[-56.08268643333333, 80.65901996666668, -2.139001066666667]</p>
+                <p><b>模型答案：</b>[-14.58, 36.58, -1.31]</p>
+                <p><b>文本输出：</b>I do not have specific information about the sculpture with the hanging boats. However, I can provide my current position and time as a reference.</p>
+              </details></td>
+              <td><b>位置误差超过 15 m</b><small>60.55 m</small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[220]</p>
+                <p><b>候选范围：</b>216–249（34 条）</p>
+                <p><b>目标词覆盖：</b>1/3；词：[&#x27;boat&#x27;, &#x27;hang&#x27;, &#x27;sculpture&#x27;]</p>
+                <p class="caption">The video shows a wide pedestrian walkway with a herringbone pattern made of beige bricks. On the left side of the walkway, there is a large, metallic, abstract sculpture with a complex, intertwined design. The sculpture is silver in color and stands out against the backdrop of the campus. In the distance, there are several buildings with a mix of modern and traditional architecture. The sky is overcast, and there are no people visible in the video.</p>
+              </details></td>
+              <td>3.7 s</td>
+            </tr>
+            <tr data-outcome="correct" data-status="valid"
+                data-type="binary" data-sequence="0"
+                data-length="short"
+                data-pool="inside"
+                data-search="you started moving at 2023-01-16 08:02:47. the current time is 2023-01-16 08:03:24 and you are located at [-0.07, 0.06, -0.0].
+ are you stopped in a loading zone right now? short_21548fa5-15ca-4f06-923e-a99b0fb2253a based on the current position and surrounding environment, it is likely that you are stopped in a loading zone. 正确  the video begins with a view of a concrete sidewalk with two manhole covers. the sidewalk is in front of a brick building with two windows. a sign on the building reads &quot;loading zone no parking at all times.&quot; the camera pans to the right, revealing a metal railing and a closed garage door. the video ends with the camera pointing towards the building.">
+              <td><b>S0·Q30</b><small>short</small></td>
+              <td><span class="pill type-binary">二元判断</span></td>
+              <td><span class="pill outcome-correct">正确</span></td>
+              <td class="wide"><details><summary>Are you stopped in a loading zone right now?</summary>
+                <p><b>完整问题：</b>You started moving at 2023-01-16 08:02:47. The current time is 2023-01-16 08:03:24 and you are located at [-0.07, 0.06, -0.0].
+ Are you stopped in a loading zone right now?</p>
+                <p><b>ID：</b><code>SHORT_21548fa5-15ca-4f06-923e-a99b0fb2253a</code></p>
+                <p><b>参考答案：</b>yes</p>
+                <p><b>模型答案：</b>yes</p>
+                <p><b>文本输出：</b>Based on the current position and surrounding environment, it is likely that you are stopped in a loading zone.</p>
+              </details></td>
+              <td><b>正确</b><small>1.00 </small>
+                </td>
+              <td><details><summary>全部在池内 · 1 条</summary>
+                <p><b>entry IDs：</b>[265]</p>
+                <p><b>候选范围：</b>259–271（13 条）</p>
+                <p><b>目标词覆盖：</b>3/5；词：[&#x27;load&#x27;, &#x27;now&#x27;, &#x27;right&#x27;, &#x27;stopp&#x27;, &#x27;zone&#x27;]</p>
+                <p class="caption">The video begins with a view of a concrete sidewalk with two manhole covers. The sidewalk is in front of a brick building with two windows. A sign on the building reads &quot;LOADING ZONE NO PARKING AT ALL TIMES.&quot; The camera pans to the right, revealing a metal railing and a closed garage door. The video ends with the camera pointing towards the building.</p>
+              </details></td>
+              <td>12.0 s</td>
+            </tr></tbody></table></div></section>
+<footer>参考 context 是数据文件自带、可映射到 caption 的证据候选；在完成数据来源审计前，本报告不把它称为穷尽式 gold support。词覆盖仅作 caption 信息缺失代理指标。</footer>
+</main><script>
+const controls=['search','outcome','status','type','sequence','pool'].map(id=>document.getElementById(id));
+const rows=[...document.querySelectorAll('#body tr')], visible=document.getElementById('visible');
+function filter(){const q=controls[0].value.trim().toLowerCase(), outcome=controls[1].value,status=controls[2].value,type=controls[3].value,seq=controls[4].value,pool=controls[5].value;let n=0;rows.forEach(r=>{const ok=(!q||r.dataset.search.includes(q))&&(outcome==='all'||r.dataset.outcome===outcome)&&(status==='all'||r.dataset.status===status)&&(type==='all'||r.dataset.type===type)&&(seq==='all'||r.dataset.sequence===seq)&&(pool==='all'||r.dataset.pool===pool);r.hidden=!ok;if(ok)n++});visible.textContent=`显示 ${n} / ${rows.length} 题`}
+controls.forEach(c=>c.addEventListener('input',filter));filter();
+</script></body></html>

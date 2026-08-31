@@ -29,6 +29,7 @@ QRAG_EPISODE_MODE=${QRAG_EPISODE_MODE:-question}
 QRAG_QUESTION_EVIDENCE_BUDGET=${QRAG_QUESTION_EVIDENCE_BUDGET:-5}
 TEXT_EPISODE_MODE=${TEXT_EPISODE_MODE:-question}
 QUESTION_TEXT_EVIDENCE_BUDGET=${QUESTION_TEXT_EVIDENCE_BUDGET:-5}
+REPORT_VERSION=${REPORT_VERSION:-v2}
 GPU_COUNT=${GPU_COUNT:-4}
 GPU_IDS=${GPU_IDS:-}
 BASE_PORT=${BASE_PORT:-12434}
@@ -40,7 +41,13 @@ RUN_DIR="$RUNTIME_ROOT/retriever_210/$RUN_TAG"
 LOG_DIR="$RUN_DIR/logs"
 STATUS_FILE="$RUN_DIR/status.txt"
 CACHE_DIR=${CACHE_DIR:-$RUNTIME_ROOT/embedding_cache/$RUN_TAG}
-REPORT_DIR=${REPORT_DIR:-$PROJECT_ROOT/artifacts/eval_reports/$RUN_TAG}
+case "$TEXT_RETRIEVER" in
+    gte_dense) REPORT_GROUP=b1 ;;
+    qrag_static) REPORT_GROUP=b2 ;;
+    qrag) REPORT_GROUP=b3 ;;
+    *) REPORT_GROUP="$TEXT_RETRIEVER" ;;
+esac
+REPORT_DIR=${REPORT_DIR:-$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/sequences}
 mkdir -p "$LOG_DIR" "$CACHE_DIR" "$REPORT_DIR" "$RESULT_ROOT"
 
 timestamp() {
@@ -79,6 +86,10 @@ trap on_error ERR
 
 [[ "$TEXT_RETRIEVER" == gte_dense || "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]] || {
     printf 'TEXT_RETRIEVER must be gte_dense, qrag_static, or qrag; got %s\n' "$TEXT_RETRIEVER" >&2
+    exit 2
+}
+[[ "$REPORT_VERSION" == v1 || "$REPORT_VERSION" == v2 ]] || {
+    printf 'REPORT_VERSION must be v1 or v2; got %s\n' "$REPORT_VERSION" >&2
     exit 2
 }
 [[ "$TEXT_EPISODE_MODE" == per_call || "$TEXT_EPISODE_MODE" == question ]] || {

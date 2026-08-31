@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NaVQA 报告目录 · B0–B3 / v1–v2</title>
+  <style>
+    :root { color-scheme: dark; --bg:#07111f; --panel:#0d1b2d; --line:#263b54; --text:#e8f2ff; --muted:#91a7bf; --cyan:#4fd1c5; --purple:#a78bfa; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at top right,#14284a 0,var(--bg) 40%); color:var(--text); font:15px/1.6 Inter,system-ui,sans-serif; }
+    main { width:min(1120px,calc(100% - 32px)); margin:auto; padding:52px 0 72px; }
+    h1 { margin:0 0 10px; font-size:clamp(32px,5vw,58px); line-height:1.05; }
+    h2 { margin:0 0 14px; font-size:21px; }
+    p { color:var(--muted); }
+    code { color:var(--cyan); }
+    .back { color:var(--cyan); text-decoration:none; }
+    .legend,.group,.comparisons { margin-top:24px; padding:22px; border:1px solid var(--line); border-radius:16px; background:rgba(13,27,45,.86); }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .version { padding:16px; border:1px solid var(--line); border-radius:12px; background:#091625; }
+    .tag { display:inline-block; margin-bottom:8px; padding:2px 9px; border-radius:999px; color:#07111f; background:var(--cyan); font-size:12px; font-weight:800; }
+    .tag.v1 { background:#9fb3c8; }
+    .links { display:flex; flex-wrap:wrap; gap:8px; }
+    .links a { color:var(--text); text-decoration:none; border:1px solid #395574; border-radius:8px; padding:6px 10px; }
+    .links a:hover { border-color:var(--purple); }
+    .empty { color:#60758c; }
+    @media (max-width:680px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <a class="back" href="../">← 返回实验总览</a>
+  <h1>B0–B3 × v1–v2</h1>
+  <p>统一报告目录。<code>v1</code> 是修复前的 legacy <code>per_call + native</code>；<code>v2</code> 是修复后的 question-state。每个版本只使用 sequences、analysis 和 sequence_0_audit 三类入口。</p>
+
+  <section class="legend">
+    <h2>版本规则</h2>
+    <p>B0 是固定的 mxbai baseline，不涉及 Q-RAG question-state 修复，所以只保留 B0/v1；comparison/v2 继续复用该结果。所有深度审计页面共享 B0/v1 下的视频与 273 张 contact sheets。</p>
+  </section>
+
+  <section class="group">
+    <h2>B0 · mxbai dense baseline</h2>
+    <div class="grid">
+      <div class="version"><span class="tag v1">v1</span><div class="links"><a href="b0/v1/analysis/">analysis</a><a href="b0/v1/sequence_0_analysis/">sequence 0 analysis</a><a href="b0/v1/sequence_0_audit/">sequence 0 audit</a><a href="b0/v1/sequence_0_media/">shared media</a></div></div>
+      <div class="version"><span class="tag">v2</span><p class="empty">无需单独重跑；复用固定 B0/v1。</p></div>
+    </div>
+  </section>
+
+  <section class="group">
+    <h2>B1 · GTE dense</h2>
+    <div class="grid">
+      <div class="version"><span class="tag v1">v1 · 修复前</span><div class="links"><a href="b1/v1/sequences/sequence_0.html">sequences</a><a href="b1/v1/analysis/">analysis</a><a href="b1/v1/sequence_0_audit/">sequence 0 audit</a></div></div>
+      <div class="version"><span class="tag">v2 · 修复后</span><div class="links"><a href="b1/v2/sequences/sequence_0.html">sequences</a><a href="b1/v2/analysis/">analysis</a><a href="b1/v2/sequence_0_audit/">sequence 0 audit</a></div></div>
+    </div>
+  </section>
+
+  <section class="group">
+    <h2>B2 · Q-RAG static</h2>
+    <div class="grid">
+      <div class="version"><span class="tag v1">v1 · 修复前</span><div class="links"><a href="b2/v1/sequences/sequence_0.html">sequences</a><a href="b2/v1/analysis/">analysis</a><a href="b2/v1/sequence_0_audit/">sequence 0 audit</a></div></div>
+      <div class="version"><span class="tag">v2 · 修复后</span><div class="links"><a href="b2/v2/sequences/sequence_0.html">sequences</a><a href="b2/v2/analysis/">analysis</a><a href="b2/v2/sequence_0_audit/">sequence 0 audit</a></div></div>
+    </div>
+  </section>
+
+  <section class="group">
+    <h2>B3 · Q-RAG sequential</h2>
+    <div class="grid">
+      <div class="version"><span class="tag v1">v1 · 修复前</span><div class="links"><a href="b3/v1/sequences/sequence_0.html">sequences</a><a href="b3/v1/analysis/">analysis</a><a href="b3/v1/sequence_0_audit/">sequence 0 audit</a></div></div>
+      <div class="version"><span class="tag">v2 · 修复后</span><div class="links"><a href="b3/v2/sequences/sequence_0.html">sequences</a><a href="b3/v2/analysis/">analysis</a><a href="b3/v2/sequence_0_audit/">sequence 0 audit</a></div></div>
+    </div>
+  </section>
+
+  <section class="comparisons">
+    <h2>跨组对比</h2>
+    <div class="links"><a href="comparison/v1/answer_accuracy/">v1 · answer accuracy</a><a href="comparison/v1/grounded/">v1 · grounded</a><a href="comparison/v1/early_partial/">v1 · early partial</a><a href="comparison/v2/">v2 · unified comparison</a></div>
+  </section>
+</main>
+</body>
+</html>

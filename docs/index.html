@@ -105,7 +105,7 @@
         <h2>以“检索到正确记忆”为标准的新报告</h2>
         <p>B1/B2/B3 的检索命中率分别为 39.0% / 25.2% / 25.2%，Grounded 正确率为 26.2% / 13.3% / 17.6%；同时标出答对但未命中与 reader failure。</p>
       </div>
-      <a class="button" href="reports/navqa_210_question_state_v2_comparison/">打开检索命中报告 →</a>
+      <a class="button" href="reports/comparison/v2/">打开检索命中报告 →</a>
     </section>
 
     <section class="panel primary">
@@ -113,16 +113,16 @@
         <h2>原答案准确率四组逐题对比</h2>
         <p>查看原 NaVQA 判分、分组表现、B0–B3 逐题变化和 B2/B3 state-update 差异。</p>
       </div>
-      <a class="button" href="reports/navqa_210_question_state_v2_comparison/">打开主报告 →</a>
+      <a class="button" href="reports/comparison/v2/">打开主报告 →</a>
     </section>
 
     <section class="panel">
       <h2>各方法错误分析</h2>
       <div class="report-grid">
-        <a class="report" href="reports/navqa_210_error_analysis_v1/">B0 · mxbai dense<span>题型、时间跨度与 reference-context 诊断</span></a>
-        <a class="report" href="reports/gte_dense_210_question_state_v2_analysis/">B1 · GTE dense v2<span>题级唯一 evidence budget 的 dense 对照</span></a>
-        <a class="report" href="reports/qrag_static_210_question_state_v2_analysis/">B2 · Q-RAG static v2<span>query-aware static scorer 与题级全局 mask</span></a>
-        <a class="report" href="reports/qrag_210_question_state_v2_analysis/">B3 · Q-RAG sequential v2<span>五步 state update 与题级全局 mask</span></a>
+        <a class="report" href="reports/b0/v1/analysis/">B0 · mxbai dense · v1<span>题型、时间跨度与 reference-context 诊断</span></a>
+        <a class="report" href="reports/b1/v2/analysis/">B1 · GTE dense · v2<span>题级唯一 evidence budget 的 dense 对照</span></a>
+        <a class="report" href="reports/b2/v2/analysis/">B2 · Q-RAG static · v2<span>query-aware static scorer 与题级全局 mask</span></a>
+        <a class="report" href="reports/b3/v2/analysis/">B3 · Q-RAG sequential · v2<span>五步 state update 与题级全局 mask</span></a>
       </div>
     </section>
 
@@ -130,24 +130,23 @@
       <h2>Sequence 0 完整视频与逐帧审计</h2>
       <p class="section-copy">每套界面均可查看问题、答案、候选池、retrieval trace、caption contact sheet，并在 13:41 的完整视频时间轴中定位证据。视频与 273 张 contact sheets 由所有方法共享。</p>
       <div class="report-grid">
-        <a class="report" href="reports/sequence_0_audit_v1/">Caption / video provenance<span>完整视频、caption 生成窗口与六帧采样来源</span></a>
-        <a class="report" href="reports/sequence_0_audit_trace_v1/">B0 · mxbai dense trace audit<span>sequence 0 补跑的完整 controller 与 retrieval trace</span></a>
-        <a class="report" href="reports/sequence_0_audit_gte_dense_question_state_v2/">B1 · GTE dense v2 audit<span>题级预算、各次 call 与最终答案</span></a>
-        <a class="report" href="reports/sequence_0_audit_qrag_static_question_state_v2/">B2 · Q-RAG static v2 audit<span>query state、全局 mask、排名与返回证据</span></a>
-        <a class="report" href="reports/sequence_0_audit_qrag_question_state_v2/">B3 · Q-RAG sequential v2 audit<span>逐步 state components、排名与最终答案</span></a>
-        <a class="report" href="reports/sequence_0_audit_gte_dense_v1/">B1 · preliminary trace<span>早期 GTE 运行，保留用于复现实验演进</span></a>
+        <a class="report" href="reports/b0/v1/sequence_0_media/">共享 Caption / video<span>完整视频、caption 窗口与六帧采样来源</span></a>
+        <a class="report" href="reports/b0/v1/sequence_0_audit/">B0 · mxbai dense · v1<span>sequence 0 controller 与 retrieval trace</span></a>
+        <a class="report" href="reports/b1/v2/sequence_0_audit/">B1 · GTE dense · v2<span>题级预算、各次 call 与最终答案</span></a>
+        <a class="report" href="reports/b2/v2/sequence_0_audit/">B2 · Q-RAG static · v2<span>query state、全局 mask、排名与返回证据</span></a>
+        <a class="report" href="reports/b3/v2/sequence_0_audit/">B3 · Q-RAG sequential · v2<span>逐步 state components、排名与最终答案</span></a>
       </div>
       <p class="note">网页发布版视频为 720×602、10 FPS、H.264，时长和帧顺序与 154MB 本地原视频一致；压缩后约 68MB，以满足 GitHub 单文件限制。</p>
     </section>
 
     <section class="panel">
-      <h2>补充与历史分析</h2>
+      <h2>v1 / v2 版本归档</h2>
+      <p class="section-copy">目录只按 B0–B3 和实现版本组织：v1 是修复前的 <code>per_call + native</code>，v2 是修复后的 question-state。B0 未受本次修复影响，只保留 v1。</p>
       <div class="report-grid">
-        <a class="report" href="reports/sequence_0_trace_analysis_v1/">B0 · sequence 0 trace analysis<span>序列级错误与检索行为诊断</span></a>
-        <a class="report" href="reports/sequence_0_gte_dense_analysis_v1/">B1 · sequence 0 analysis<span>GTE dense 序列级错误分析</span></a>
-        <a class="report" href="reports/navqa_210_grounded_accuracy_v1/">Legacy grounded comparison<span>旧版 per-call native B1/B2/B3 检索命中结果</span></a>
-        <a class="report" href="reports/navqa_210_retriever_comparison_v2/">Legacy B0–B3 comparison<span>旧版 per-call native 答案准确率对比</span></a>
-        <a class="report" href="reports/navqa_210_retriever_comparison_v1/">Retriever comparison v1<span>保留第一版 B0/B1/B3 对比供结果追溯</span></a>
+        <a class="report" href="reports/">报告目录<span>B0–B3 × v1/v2 的完整导航与命名说明</span></a>
+        <a class="report" href="reports/comparison/v1/answer_accuracy/">Comparison · v1<span>修复前 B0–B3 答案准确率</span></a>
+        <a class="report" href="reports/comparison/v1/grounded/">Grounded · v1<span>修复前 retrieval-hit 与 Grounded 指标</span></a>
+        <a class="report" href="reports/comparison/v2/">Comparison · v2<span>修复后答案、检索命中和 question-state 审计</span></a>
       </div>
     </section>
 
@@ -156,15 +155,15 @@
       <div class="sequences">
         <div class="seq-label">B1 · GTE dense</div>
         <div class="seq-links">
-          <a href="reports/gte_dense_210_question_state_v2/sequence_0.html">seq 0</a><a href="reports/gte_dense_210_question_state_v2/sequence_3.html">seq 3</a><a href="reports/gte_dense_210_question_state_v2/sequence_4.html">seq 4</a><a href="reports/gte_dense_210_question_state_v2/sequence_6.html">seq 6</a><a href="reports/gte_dense_210_question_state_v2/sequence_16.html">seq 16</a><a href="reports/gte_dense_210_question_state_v2/sequence_21.html">seq 21</a><a href="reports/gte_dense_210_question_state_v2/sequence_22.html">seq 22</a>
+          <a href="reports/b1/v2/sequences/sequence_0.html">seq 0</a><a href="reports/b1/v2/sequences/sequence_3.html">seq 3</a><a href="reports/b1/v2/sequences/sequence_4.html">seq 4</a><a href="reports/b1/v2/sequences/sequence_6.html">seq 6</a><a href="reports/b1/v2/sequences/sequence_16.html">seq 16</a><a href="reports/b1/v2/sequences/sequence_21.html">seq 21</a><a href="reports/b1/v2/sequences/sequence_22.html">seq 22</a>
         </div>
         <div class="seq-label">B2 · Q-RAG static</div>
         <div class="seq-links">
-          <a href="reports/qrag_static_210_question_state_v2/sequence_0.html">seq 0</a><a href="reports/qrag_static_210_question_state_v2/sequence_3.html">seq 3</a><a href="reports/qrag_static_210_question_state_v2/sequence_4.html">seq 4</a><a href="reports/qrag_static_210_question_state_v2/sequence_6.html">seq 6</a><a href="reports/qrag_static_210_question_state_v2/sequence_16.html">seq 16</a><a href="reports/qrag_static_210_question_state_v2/sequence_21.html">seq 21</a><a href="reports/qrag_static_210_question_state_v2/sequence_22.html">seq 22</a>
+          <a href="reports/b2/v2/sequences/sequence_0.html">seq 0</a><a href="reports/b2/v2/sequences/sequence_3.html">seq 3</a><a href="reports/b2/v2/sequences/sequence_4.html">seq 4</a><a href="reports/b2/v2/sequences/sequence_6.html">seq 6</a><a href="reports/b2/v2/sequences/sequence_16.html">seq 16</a><a href="reports/b2/v2/sequences/sequence_21.html">seq 21</a><a href="reports/b2/v2/sequences/sequence_22.html">seq 22</a>
         </div>
         <div class="seq-label">B3 · Q-RAG sequential</div>
         <div class="seq-links">
-          <a href="reports/qrag_210_question_state_v2/sequence_0.html">seq 0</a><a href="reports/qrag_210_question_state_v2/sequence_3.html">seq 3</a><a href="reports/qrag_210_question_state_v2/sequence_4.html">seq 4</a><a href="reports/qrag_210_question_state_v2/sequence_6.html">seq 6</a><a href="reports/qrag_210_question_state_v2/sequence_16.html">seq 16</a><a href="reports/qrag_210_question_state_v2/sequence_21.html">seq 21</a><a href="reports/qrag_210_question_state_v2/sequence_22.html">seq 22</a>
+          <a href="reports/b3/v2/sequences/sequence_0.html">seq 0</a><a href="reports/b3/v2/sequences/sequence_3.html">seq 3</a><a href="reports/b3/v2/sequences/sequence_4.html">seq 4</a><a href="reports/b3/v2/sequences/sequence_6.html">seq 6</a><a href="reports/b3/v2/sequences/sequence_16.html">seq 16</a><a href="reports/b3/v2/sequences/sequence_21.html">seq 21</a><a href="reports/b3/v2/sequences/sequence_22.html">seq 22</a>
         </div>
       </div>
       <p class="note">所有当前生成的可视化界面、分析 JSON/CSV、sequence 0 深度审计和网页媒体资源都已列入本入口。</p>

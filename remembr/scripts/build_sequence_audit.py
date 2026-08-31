@@ -408,7 +408,11 @@ def main() -> None:
     parser.add_argument("--captions", type=Path)
     parser.add_argument("--questions", type=Path)
     parser.add_argument("--result", type=Path)
-    parser.add_argument("--analysis", type=Path, default=Path("artifacts/eval_reports/navqa_210_error_analysis_v1/error_analysis.json"))
+    parser.add_argument(
+        "--analysis",
+        type=Path,
+        default=Path("artifacts/eval_reports/b0/v1/analysis/error_analysis.json"),
+    )
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--result-root", type=Path, default=DEFAULT_RESULT_ROOT)
     parser.add_argument("--result-tag", default=DEFAULT_RESULT_TAG)
@@ -431,7 +435,9 @@ def main() -> None:
         / "human_qa"
         / f"remembr+qwen3:8b__{CAPTION_STEM}_{args.result_tag}.json"
     )
-    args.output_dir = args.output_dir or Path(f"artifacts/eval_reports/sequence_{sequence}_audit_v1")
+    args.output_dir = args.output_dir or Path(
+        f"artifacts/eval_reports/b0/v1/sequence_{sequence}_media"
+    )
 
     coda_dir = args.coda_root / str(sequence)
     frame_paths = sorted(coda_dir.glob("*.pkl"), key=timestamp_from_path)
