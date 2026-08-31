@@ -30,6 +30,7 @@ QRAG_QUESTION_EVIDENCE_BUDGET=${QRAG_QUESTION_EVIDENCE_BUDGET:-5}
 TEXT_EPISODE_MODE=${TEXT_EPISODE_MODE:-question}
 QUESTION_TEXT_EVIDENCE_BUDGET=${QUESTION_TEXT_EVIDENCE_BUDGET:-5}
 GPU_COUNT=${GPU_COUNT:-4}
+GPU_IDS=${GPU_IDS:-}
 BASE_PORT=${BASE_PORT:-12434}
 NAVQA_TIMEZONE=${NAVQA_TIMEZONE:-America/Los_Angeles}
 
@@ -148,6 +149,33 @@ if ((${#visible_gpus[@]} < GPU_COUNT)); then
     exit 1
 fi
 
+gpu_ids=()
+if [[ -n "$GPU_IDS" ]]; then
+    read -r -a gpu_ids <<<"$GPU_IDS"
+else
+    for ((slot = 0; slot < GPU_COUNT; slot++)); do
+        gpu_ids+=("$slot")
+    done
+fi
+if ((${#gpu_ids[@]} != GPU_COUNT)); then
+    printf 'GPU_IDS must contain exactly %d IDs; got %d\n' \
+        "$GPU_COUNT" "${#gpu_ids[@]}" >&2
+    exit 1
+fi
+declare -A seen_gpu_ids=()
+for gpu_id in "${gpu_ids[@]}"; do
+    if ! [[ "$gpu_id" =~ ^[0-9]+$ ]] || ((gpu_id >= ${#visible_gpus[@]})); then
+        printf 'Invalid GPU ID %s; visible GPU count is %d\n' \
+            "$gpu_id" "${#visible_gpus[@]}" >&2
+        exit 1
+    fi
+    if [[ -n "${seen_gpu_ids[$gpu_id]:-}" ]]; then
+        printf 'GPU_IDS contains duplicate ID %s\n' "$gpu_id" >&2
+        exit 1
+    fi
+    seen_gpu_ids[$gpu_id]=1
+done
+
 set_status "starting retriever=$TEXT_RETRIEVER sequences=$SEQUENCES"
 step "Run tag: $RUN_TAG"
 step "Retriever: $TEXT_RETRIEVER"
@@ -156,10 +184,12 @@ if [[ "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]]; then
     step "Q-RAG state: $QRAG_STATE_FORMAT, episode: $QRAG_EPISODE_MODE, per-call max: $QRAG_STEPS, question budget: $QRAG_QUESTION_EVIDENCE_BUDGET"
 fi
 step "Visible GPUs: ${visible_gpus[*]}"
+step "Selected GPU IDs: ${gpu_ids[*]}"
 
 step "Starting $GPU_COUNT GPU-pinned Ollama servers"
-for ((gpu = 0; gpu < GPU_COUNT; gpu++)); do
-    port=$((BASE_PORT + gpu))
+for ((slot = 0; slot < GPU_COUNT; slot++)); do
+    gpu=${gpu_ids[$slot]}
+    port=$((BASE_PORT + slot))
     env \
         CUDA_VISIBLE_DEVICES="$gpu" \
         OLLAMA_HOST="127.0.0.1:$port" \
@@ -171,8 +201,9 @@ for ((gpu = 0; gpu < GPU_COUNT; gpu++)); do
     server_pids+=("$!")
 done
 
-for ((gpu = 0; gpu < GPU_COUNT; gpu++)); do
-    port=$((BASE_PORT + gpu))
+for ((slot = 0; slot < GPU_COUNT; slot++)); do
+    gpu=${gpu_ids[$slot]}
+    port=$((BASE_PORT + slot))
     ready=0
     for _ in $(seq 1 90); do
         if curl --noproxy '*' --silent --fail --connect-timeout 2 --max-time 5 \
@@ -191,8 +222,9 @@ done
 
 step "Warming Qwen on all GPUs"
 warmup_pids=()
-for ((gpu = 0; gpu < GPU_COUNT; gpu++)); do
-    port=$((BASE_PORT + gpu))
+for ((slot = 0; slot < GPU_COUNT; slot++)); do
+    gpu=${gpu_ids[$slot]}
+    port=$((BASE_PORT + slot))
     curl --noproxy '*' --silent --show-error --fail \
         "http://127.0.0.1:$port/api/generate" \
         -H 'Content-Type: application/json' \
@@ -209,8 +241,9 @@ set_status "running 0/${#sequence_array[@]} sequences retriever=$TEXT_RETRIEVER"
 step "Launching ${#sequence_array[@]} sequence workers"
 for ordinal in "${!sequence_array[@]}"; do
     sequence=${sequence_array[$ordinal]}
-    gpu=$((ordinal % GPU_COUNT))
-    port=$((BASE_PORT + gpu))
+    slot=$((ordinal % GPU_COUNT))
+    gpu=${gpu_ids[$slot]}
+    port=$((BASE_PORT + slot))
     (
         cd "$REMEMBR_ROOT/scripts"
         extra_args=(
@@ -287,8 +320,9 @@ for sequence in "${sequence_array[@]}"; do
         --output "$REPORT_DIR/sequence_${sequence}.html"
 done
 
-set_status "complete retriever=$TEXT_RETRIEVER questions=210"
+question_count=$((30 * ${#sequence_array[@]}))
+set_status "complete retriever=$TEXT_RETRIEVER questions=$question_count"
 trap - ERR
-step "Complete: $TEXT_RETRIEVER on 210 questions"
+step "Complete: $TEXT_RETRIEVER on $question_count questions"
 step "Results: $RESULT_ROOT"
 step "Reports: $REPORT_DIR"

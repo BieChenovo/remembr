@@ -6,7 +6,7 @@
 >
 > 目标读者：负责数据、模型和实验实现的 Agent
 >
-> 当前状态：**B0–B3 的旧版 210 题 zero-shot 全量实验均已完成；审计发现旧 B2/B3 是 per-call native episode，会忽略 tool query 并在多次 call 中重复同一批证据。question-state v2 修复已实现并通过测试，B1/B2/B3 v2 尚待重跑。**
+> 当前状态：**B0–B3 的旧版 210 题 zero-shot 实验已保留；question-state v2 修复后的 B1/B2/B3 也已于 2026-08-31 全量重跑。三组共 630 题，跨-call ID 去重、题级预算、query state 和 retry episode 审计均为 0 个错误。**
 
 ## 0. 一分钟版本
 
@@ -671,8 +671,10 @@ state = original_question [SEP] current_tool_query
    ReMEmbR controller。
 
 同一 answer attempt 的多次 text-tool call 属于同一个 question episode；达到题级
-唯一 evidence budget 后，controller 不再暴露 text tool；若并发/直接调用仍触发，
-retriever 明确返回 budget exhausted，不重复注入旧证据。
+唯一 evidence budget 后仍保留固定的 tool schema，但 retriever 明确返回空结果及
+`budget_exhausted=true`，不重复注入旧证据。这里保留 schema 是必要的：实测在回答
+过程中动态移除 text tool 会让 Qwen 继续生成该函数调用，并被 strict function
+parser 判为失败；固定 schema 加后端预算约束可避免这种非检索因素干扰准确率。
 结构化输出失败后的 evaluator retry 会开启新 episode，但旧 trace 继续保留用于审计。
 `per_call + native` 只保留用于复现旧结果。本轮仍不让 Q-RAG 自己决定是否继续发起
 tool call。
@@ -839,18 +841,39 @@ statefulness。v2 已实施以下修复：
 - B3 state 跨 call 继承已选 captions，并全局 mask 已返回 IDs；
 - B2 保持 static scorer，但同样使用 query、全局 ID mask 和题级预算；
 - dense/GTE 对照也支持相同的题级唯一 evidence budget；
-- text budget 用尽后从 controller 的可用工具中移除 text tool；
+- text tool schema 在一次 answer attempt 内保持固定；budget 用尽后由 retriever
+  返回显式空结果和 `budget_exhausted=true`；
 - 每次 evaluator retry 重置 episode budget/mask，但不清除历史 trace；
 - trace 新增 episode ID、call index、有效请求数、预算前后余额、全局 IDs 和
   `budget_exhausted`。
 
 默认全量脚本使用新的 `*_210_question_state_v2` tag，防止 `--resume` 误读旧结果。
-旧结果可用 `--qrag_state_format native --qrag_episode_mode per_call` 精确复现。v2
-必须重新跑 B1/B2/B3 后再报告数字；不能把 14.10 的旧结果当成修复后结果。
+旧结果可用 `--qrag_state_format native --qrag_episode_mode per_call` 精确复现。
+
+**question-state v2 全量实测（2026-08-31）：**
+
+| 组别 | Strict answer accuracy | Retrieval hit | Grounded correct | 生成失败 | 平均延迟 |
+|---|---:|---:|---:|---:|---:|
+| B1 · GTE dense | 113 / 210（53.8%） | 82 / 210（39.0%） | 55 / 210（26.2%） | 11 | 38.04 s |
+| B2 · Q-RAG static | 87 / 210（41.4%） | 53 / 210（25.2%） | 28 / 210（13.3%） | 17 | 39.29 s |
+| B3 · Q-RAG sequential | 104 / 210（49.5%） | 53 / 210（25.2%） | 37 / 210（17.6%） | 12 | 38.09 s |
+
+这里的 Retrieval hit 表示最终用于回答的 attempt 检索到至少一个 reference-memory
+ID；Grounded correct 要求答案按 NaVQA 阈值判对且同时 retrieval hit。B3 相比 B2
+严格答案净增 17 题（31 题改善、14 题退化），Grounded correct 增加 9 题；但两者
+retrieval hit 都是 53 题，说明 sequential update 改变了证据组合及 reader 可用性，
+尚未提高 support-ID 的总体覆盖。B1 仍是 v2 三组中 retrieval hit 与 Grounded
+correct 最好的方法。
+
+全量 trace 审计覆盖 B1/B2/B3 的 515 / 537 / 504 次 text calls；分别有
+171 / 181 / 167 个多 text-call attempts。三组的跨-call 重复 ID、预算记账错误、
+retry episode 复用、query 缺失和 B3 step/selection 顺序错误均为 0，且每个 attempt
+最多注入 5 条唯一 text evidence。统一可视化与逐题数据见
+`docs/reports/navqa_210_question_state_v2_comparison/index.html`。
 
 ### 14.11 可直接复制给另一对话的任务
 
-> 请在项目根目录完整阅读 `02_QRAG具身长期记忆_实验Idea规格.md`，重点执行第 14.10.1 节。使用 question-state v2 重跑 B1/B2/B3：Q-RAG 使用 `state_format=controller`、`episode_mode=question`，同一 answer attempt 跨 text calls 继承 evidence state、全局 mask 已返回的 text IDs，并按题级唯一 evidence budget 截止；dense/GTE 使用同一题级预算。evaluator retry 必须重置 episode 但保留 trace，旧 `per_call + native` 结果只作历史对照。先跑 sequence 0 的 30 题并验证没有跨-call 重复 IDs、不同 query 进入 state、budget exhausted 后 text tool 不再暴露，再扩展到 210 题。不得读取答案或 support IDs 参与推理。完成后生成严格准确率、retrieval-hit、Grounded accuracy 和逐题 trace 可视化。
+> 请在项目根目录完整阅读 `02_QRAG具身长期记忆_实验Idea规格.md`，重点执行第 14.10.1 节。使用 question-state v2 重跑 B1/B2/B3：Q-RAG 使用 `state_format=controller`、`episode_mode=question`，同一 answer attempt 跨 text calls 继承 evidence state、全局 mask 已返回的 text IDs，并按题级唯一 evidence budget 截止；dense/GTE 使用同一题级预算。evaluator retry 必须重置 episode 但保留 trace，旧 `per_call + native` 结果只作历史对照。先跑 sequence 0 的 30 题并验证没有跨-call 重复 IDs、不同 query 进入 state、budget exhausted 后后端返回显式空结果且不重复旧证据，再扩展到 210 题。不得读取答案或 support IDs 参与推理。完成后生成严格准确率、retrieval-hit、Grounded accuracy 和逐题 trace 可视化。
 
 ## 15. 后续路线图
 

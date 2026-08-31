@@ -1,0 +1,13 @@
+{
+  "qrag_static": {
+    "questions": 210,
+    "attempts": 240,
+    "retry_questions": 30,
+    "text_calls": 537,
+    "multi_text_attempts": 181,
+    "empty_exhausted_calls": 336,
+    "max_unique_evidence_per_attempt": 5,
+    "errors": [],
+    "error_count": 0
+  }
+}

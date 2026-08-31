@@ -1,0 +1,13 @@
+{
+  "gte_dense": {
+    "questions": 210,
+    "attempts": 233,
+    "retry_questions": 23,
+    "text_calls": 515,
+    "multi_text_attempts": 171,
+    "empty_exhausted_calls": 315,
+    "max_unique_evidence_per_attempt": 5,
+    "errors": [],
+    "error_count": 0
+  }
+}

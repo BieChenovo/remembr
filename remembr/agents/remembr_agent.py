@@ -372,20 +372,13 @@ class ReMEmbRAgent(Agent):
         model = self.chat
 
 
-        # Limit the outer controller to three calls and stop advertising text
-        # retrieval after its question-level unique-evidence budget is spent.
+        # Keep every tool schema bound for the lifetime of an answer attempt.
+        # Some local models may repeat a tool chosen earlier even after its
+        # evidence budget is exhausted; removing that schema makes an otherwise
+        # valid call fail strict function parsing.  The memory backend enforces
+        # the question-level budget and returns an explicit empty result instead.
         if self.agent_call_count < 3:
-            text_available = getattr(
-                self.memory,
-                "text_retrieval_available",
-                lambda: True,
-            )()
-            available_tool_definitions = [
-                definition
-                for tool, definition in zip(self.tool_list, self.tool_definitions)
-                if text_available or tool.name != "retrieve_from_text"
-            ]
-            model = model.bind_tools(tools=available_tool_definitions)
+            model = model.bind_tools(tools=self.tool_definitions)
             prompt = self.agent_prompt
         else:
             prompt = self.agent_gen_only_prompt
