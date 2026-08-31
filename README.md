@@ -148,6 +148,8 @@ Please check the [nova_carter_demo](./examples/nova_carter_demo) folder for deta
 
 If you are interested in the NaVQA dataset and evaluating on it, please check the [evaluation](./eval.md) readme for more information.
 
+The proposed controller-interleaved Q-RAG retrieval behavior and its acceptance criteria are documented in the [Q-RAG retrieval fix specification](./docs/QRAG_RETRIEVAL_FIX_SPEC.md).
+
 <a id="notice"></a>
 ## Usage Notice!
 
