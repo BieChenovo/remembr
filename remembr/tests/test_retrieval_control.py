@@ -55,6 +55,20 @@ class RetrievalControlTest(unittest.TestCase):
             gate.commit(signature, [115, 116])
         self.assertEqual(gate.round_count, 1)
 
+    def test_duplicate_replans_are_bounded_and_reset_by_success(self):
+        gate = RetrievalCallGate(max_rounds=3, duplicate_replan_limit=2)
+        _, first = tool_call_signature("retrieve_from_text", {"x": "door"})
+        _, second = tool_call_signature("retrieve_from_text", {"x": "hall"})
+        gate.commit(first, [115])
+
+        self.assertEqual(gate.record_duplicate(), (1, False))
+        self.assertEqual(gate.round_count, 1)
+        gate.commit(second, [116])
+        self.assertEqual(gate.consecutive_duplicate_replans, 0)
+        self.assertEqual(gate.record_duplicate(), (1, False))
+        self.assertEqual(gate.record_duplicate(), (2, True))
+        self.assertEqual(gate.round_count, 2)
+
     def test_trace_merge_proves_second_turn_saw_first_result(self):
         memory_trace = [
             {"call_index": 1, "selected": [{"entry_id": 115}]},

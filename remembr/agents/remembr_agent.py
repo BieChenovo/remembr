@@ -186,10 +186,13 @@ class ReMEmbRAgent(Agent):
         num_predict=2048,
         disable_thinking=False,
         max_retrieval_rounds=5,
+        duplicate_replan_limit=2,
     ):
 
         if int(max_retrieval_rounds) < 1:
             raise ValueError("max_retrieval_rounds must be positive")
+        if int(duplicate_replan_limit) < 1:
+            raise ValueError("duplicate_replan_limit must be positive")
 
         # Wrapper that handles everything
         llm = self.llm_selector(
@@ -206,6 +209,7 @@ class ReMEmbRAgent(Agent):
         self.num_predict = num_predict
         self.disable_thinking = disable_thinking
         self.max_retrieval_rounds = int(max_retrieval_rounds)
+        self.duplicate_replan_limit = int(duplicate_replan_limit)
 
         self.chat = chat
         self.llm_type = llm_type
@@ -221,7 +225,10 @@ class ReMEmbRAgent(Agent):
         self.answer_attempt_count = 0
         self.answer_attempt_id = None
         self.controller_turn_id = 0
-        self.retrieval_gate = RetrievalCallGate(self.max_retrieval_rounds)
+        self.retrieval_gate = RetrievalCallGate(
+            self.max_retrieval_rounds,
+            self.duplicate_replan_limit,
+        )
         self.retrieval_control_trace = []
         self.force_reader = False
 
@@ -310,7 +317,10 @@ class ReMEmbRAgent(Agent):
         self.answer_attempt_count = 0
         self.answer_attempt_id = None
         self.controller_turn_id = 0
-        self.retrieval_gate = RetrievalCallGate(self.max_retrieval_rounds)
+        self.retrieval_gate = RetrievalCallGate(
+            self.max_retrieval_rounds,
+            self.duplicate_replan_limit,
+        )
         self.retrieval_control_trace = []
         self.force_reader = False
         self.chat_history = ChatMessageHistory()
@@ -467,6 +477,38 @@ class ReMEmbRAgent(Agent):
         )
 
     @staticmethod
+    def _invalid_retrieval_payload(
+        tool_call_id,
+        tool_name,
+        raw_query,
+        executed_retrieval_rounds,
+        duplicate_replan_count,
+        duplicate_replan_limit,
+        forced_stop,
+    ):
+        return json.dumps(
+            {
+                "type": "invalid_retrieval_request",
+                "reason": "duplicate_query",
+                "tool_call_id": tool_call_id,
+                "tool": tool_name,
+                "query": raw_query,
+                "retrieval_executed": False,
+                "executed_retrieval_rounds": executed_retrieval_rounds,
+                "duplicate_replan_count": duplicate_replan_count,
+                "duplicate_replan_limit": duplicate_replan_limit,
+                "forced_stop": bool(forced_stop),
+                "instruction": (
+                    "Use the visible result to answer, switch modality, or "
+                    "formulate a semantically different query. Do not make an "
+                    "unsupported cosmetic change merely to bypass deduplication."
+                ),
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+
+    @staticmethod
     def _retrieval_kind(tool_name, memory_record):
         if tool_name in {"retrieve_from_time", "retrieve_from_position"}:
             return "non_qrag"
@@ -486,6 +528,46 @@ class ReMEmbRAgent(Agent):
                 MessagesPlaceholder("chat_history"),
                 ("human", "{question}"),
             ]
+        )
+
+    def _controller_ledger(self):
+        """Describe the attempt state and exact signatures that are disabled."""
+
+        return "RETRIEVAL_CONTROLLER_LEDGER\n" + json.dumps(
+            {
+                "type": "retrieval_controller_ledger",
+                "executed_retrieval_rounds": self.retrieval_gate.round_count,
+                "max_executed_retrieval_rounds": self.retrieval_gate.max_rounds,
+                "disabled_signatures": sorted(
+                    self.retrieval_gate.executed_signatures
+                ),
+                "disabled_requests": [
+                    {
+                        "tool": event.get("tool"),
+                        "normalized_query": event.get("normalized_query"),
+                        "signature": event.get("tool_signature"),
+                    }
+                    for event in self.retrieval_control_trace
+                    if event.get("answer_attempt_id") == self.answer_attempt_id
+                    and event.get("retrieval_executed") is True
+                ],
+                "visible_result_ids": list(
+                    self.retrieval_gate.visible_result_ids
+                ),
+                "consecutive_duplicate_replans": (
+                    self.retrieval_gate.consecutive_duplicate_replans
+                ),
+                "duplicate_replan_limit": (
+                    self.retrieval_gate.duplicate_replan_limit
+                ),
+                "instruction": (
+                    "Do not repeat a disabled signature. Answer, switch modality, "
+                    "or formulate a semantically different evidence query. Do not "
+                    "make unsupported cosmetic changes to time, coordinates, or text."
+                ),
+            },
+            ensure_ascii=False,
+            sort_keys=True,
         )
 
     def agent(self, state):
@@ -520,7 +602,7 @@ class ReMEmbRAgent(Agent):
         # JSON-encoded tool arguments) look like undeclared template variables.
         agent_prompt = self._controller_chat_prompt(
             prompt,
-            self.previous_tool_requests,
+            self._controller_ledger(),
         )
         model = agent_prompt | model
         question = self.generation_directive(
@@ -543,12 +625,6 @@ class ReMEmbRAgent(Agent):
             tool_call = response.tool_calls[0]
             if tool_call["name"] not in RETRIEVAL_TOOL_NAMES:
                 raise ValueError(f"Unsupported retrieval tool: {tool_call['name']}")
-            arguments = copy.deepcopy(tool_call.get("args") or {})
-            self.previous_tool_requests += (
-                f"Controller turn {self.controller_turn_id} used "
-                f"{tool_call['name']} with arguments "
-                f"{json.dumps(arguments, ensure_ascii=False, sort_keys=True)}.\n"
-            )
 
         return {"messages": [response]}
 
@@ -568,6 +644,18 @@ class ReMEmbRAgent(Agent):
         normalized_query, signature = tool_call_signature(tool_name, arguments)
         tool_call_id = tool_call.get("id")
         turn_id = self.controller_turn_id
+        evidence_ledger_getter = getattr(self.memory, "get_evidence_ledger", None)
+        evidence_ledger = (
+            evidence_ledger_getter() if evidence_ledger_getter is not None else []
+        )
+        global_entry_ids = [
+            source.get("entry_id")
+            for source in evidence_ledger
+            if isinstance(source, dict) and source.get("entry_id") is not None
+        ]
+        evidence_state_version = int(
+            getattr(self.memory, "_evidence_state_version", 0)
+        )
         event = {
             "answer_attempt_id": self.answer_attempt_id,
             "controller_turn_id": turn_id,
@@ -580,6 +668,19 @@ class ReMEmbRAgent(Agent):
             "normalized_query": normalized_query,
             "tool_signature": signature,
             "duplicate_blocked": False,
+            "retrieval_executed": False,
+            "duplicate_reprompted": False,
+            "duplicate_replan_count": (
+                self.retrieval_gate.consecutive_duplicate_replans
+            ),
+            "duplicate_replan_limit": self.retrieval_gate.duplicate_replan_limit,
+            "executed_retrieval_rounds": self.retrieval_gate.round_count,
+            "forced_stop_reason": None,
+            "evidence_state_version_before": evidence_state_version,
+            "evidence_state_version": evidence_state_version,
+            "global_selected_entry_ids_before": list(global_entry_ids),
+            "global_selected_entry_ids_after": list(global_entry_ids),
+            "prior_evidence_sources": evidence_ledger,
             "prior_result_ids_visible_to_controller": list(
                 self.retrieval_gate.visible_result_ids
             ),
@@ -588,13 +689,28 @@ class ReMEmbRAgent(Agent):
         }
 
         if self.retrieval_gate.is_duplicate(signature):
-            reason = (
-                "Duplicate retrieval blocked: this tool and normalized query "
-                "already executed in the current answer attempt."
+            duplicate_count, reached_limit = self.retrieval_gate.record_duplicate()
+            reason = self._invalid_retrieval_payload(
+                tool_call_id,
+                tool_name,
+                raw_query,
+                self.retrieval_gate.round_count,
+                duplicate_count,
+                self.retrieval_gate.duplicate_replan_limit,
+                reached_limit,
             )
             event.update(
                 {
                     "duplicate_blocked": True,
+                    "duplicate_reprompted": not reached_limit,
+                    "duplicate_replan_count": duplicate_count,
+                    "duplicate_replan_limit": (
+                        self.retrieval_gate.duplicate_replan_limit
+                    ),
+                    "executed_retrieval_rounds": self.retrieval_gate.round_count,
+                    "forced_stop_reason": (
+                        "duplicate_replan_limit" if reached_limit else None
+                    ),
                     "blocked_reason": reason,
                     "retrieval_kind": (
                         "non_qrag"
@@ -609,20 +725,14 @@ class ReMEmbRAgent(Agent):
                 }
             )
             self.retrieval_control_trace.append(event)
-            # A deterministic local controller will usually emit the same call
-            # again.  End retrieval and let the reader use prior valid evidence.
-            self.force_reader = True
+            # Let the controller use the structured correction to answer,
+            # switch modality, or formulate a genuinely different query.  A
+            # finite consecutive-error limit prevents deterministic loops.
+            self.force_reader = reached_limit
             return {
                 "messages": [
                     ToolMessage(
-                        content=self._tool_result_payload(
-                            tool_call_id,
-                            tool_name,
-                            raw_query,
-                            [],
-                            reason,
-                            duplicate_blocked=True,
-                        ),
+                        content=reason,
                         tool_call_id=tool_call_id,
                         name=tool_name,
                     )
@@ -651,6 +761,10 @@ class ReMEmbRAgent(Agent):
             {
                 "memory_trace_index": memory_trace_index,
                 "retrieval_round_id": retrieval_round_id,
+                "retrieval_executed": True,
+                "duplicate_reprompted": False,
+                "duplicate_replan_count": 0,
+                "executed_retrieval_rounds": self.retrieval_gate.round_count,
                 "selected_ids": returned_ids,
                 "qrag_state_components": qrag_state_components(memory_record),
                 "retrieval_kind": self._retrieval_kind(
@@ -659,9 +773,19 @@ class ReMEmbRAgent(Agent):
                 ),
             }
         )
+        for key in (
+            "evidence_state_version",
+            "evidence_state_version_before",
+            "global_selected_entry_ids_before",
+            "global_selected_entry_ids_after",
+            "prior_evidence_sources",
+        ):
+            if key in memory_record:
+                event[key] = copy.deepcopy(memory_record[key])
         self.retrieval_control_trace.append(event)
         if not self.retrieval_gate.can_retrieve:
             self.force_reader = True
+            event["forced_stop_reason"] = "retrieval_round_limit"
 
         return {
             "messages": [

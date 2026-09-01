@@ -25,7 +25,12 @@ class FakeEmbedder:
         return vectors[query]
 
 
-def make_memory(text_episode_mode="per_call", question_text_evidence_budget=2):
+def make_memory(
+    text_episode_mode="per_call",
+    question_text_evidence_budget=2,
+    unified_evidence_ledger=False,
+    question_evidence_budget=3,
+):
     memory = LocalVectorMemory.__new__(LocalVectorMemory)
     memory.embedder = FakeEmbedder()
     memory.time_offset = 1_672_000_000
@@ -33,6 +38,8 @@ def make_memory(text_episode_mode="per_call", question_text_evidence_budget=2):
     memory.numeric_k = 2
     memory.text_episode_mode = text_episode_mode
     memory.question_text_evidence_budget = question_text_evidence_budget
+    memory.unified_evidence_ledger = unified_evidence_ledger
+    memory.question_evidence_budget = question_evidence_budget
     memory.reset()
     memory.set_candidate_pool_metadata(
         {"sequence_id": 0, "start_index": 115, "end_index": 117, "count": 3}
@@ -126,6 +133,35 @@ class LocalVectorMemoryTraceTest(unittest.TestCase):
             [row["entry_id"] for row in retry["selected"]],
             [117, 116],
         )
+
+    def test_unified_top1_masks_ids_across_text_position_and_time(self):
+        memory = make_memory(unified_evidence_ledger=True)
+        memory.begin_retrieval_episode()
+
+        memory.search_by_position((2.0, 0.0, 0.0))
+        memory.search_by_text("door")
+        requested_clock = __import__("time").strftime(
+            "%H:%M:%S", __import__("time").localtime(1_672_000_020)
+        )
+        memory.search_by_time(requested_clock)
+        traces = memory.get_retrieval_trace()
+
+        self.assertEqual(
+            [trace["selected"][0]["entry_id"] for trace in traces],
+            [117, 115, 116],
+        )
+        self.assertTrue(all(trace["returned_count"] == 1 for trace in traces))
+        self.assertEqual(traces[1]["global_selected_entry_ids_before"], [117])
+        self.assertEqual(
+            traces[2]["global_selected_entry_ids_after"],
+            [117, 115, 116],
+        )
+        self.assertEqual(traces[2]["evidence_state_version"], 3)
+        self.assertEqual(
+            [source["tool"] for source in traces[2]["prior_evidence_sources"]],
+            ["retrieve_from_position", "retrieve_from_text"],
+        )
+        self.assertTrue(traces[2]["budget_exhausted"])
 
 
 if __name__ == "__main__":

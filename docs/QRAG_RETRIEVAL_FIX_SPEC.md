@@ -1,8 +1,8 @@
 # Q-RAG 检索控制器修正规格
 
-- 状态：v3 已实现并完成 210 题；v4 修正方案待实现
-- 已完成实验：`question_state_v3_interleaved`
-- 下一实验标签：`question_state_v4_unified_top1`
+- 状态：v3 和 v4 均已实现并完成 210 题；v4 的实现审计为 0 错误
+- 已完成实验：`question_state_v3_interleaved`、`question_state_v4_unified_top1`
+- 最新实验标签：`question_state_v4_unified_top1`
 - 适用范围：ReMEmbR controller、工具调用封装、Q-RAG text retrieval、retrieval trace
 - 历史结果：保留 `question_state_v2` 和 v3，v4 不得覆盖或改写已有产物
 
@@ -265,3 +265,30 @@ prior_evidence_sources, forced_stop_reason
 先实现共享跨模态 ledger、top-1 和全局 mask；再把 Q-RAG state 接到共享 ledger；
 随后把 duplicate 行为改为有限次数的 re-prompt；最后扩展 trace/audit，并先用
 sequence 0 做集成验证，通过后再运行 210 题。
+
+## 16. v4 当前实现结果
+
+- `LocalVectorMemory`、GTE 与 Q-RAG memory 已支持显式
+  `unified_evidence_ledger`；三类工具共享题级 ID mask、top-1、五条 evidence budget
+  和按返回顺序记录的跨模态 provenance。
+- B3 sequential state 会读取共享 ledger 中此前 text/time/position 返回的 caption；
+  B2 static 只使用 original question + 当前 query，但应用相同的全局 ID mask。
+- controller ledger 显式列出已执行的 tool、normalized query 与 signature；duplicate
+  返回 `invalid_retrieval_request`，不执行 memory、不增加 round/version/IDs。成功
+  re-plan 会清零连续错误计数，连续两次 duplicate 才强制进入 reader。
+- evaluator、全量运行脚本、trace audit 与 sequence audit 页面已接入 v4 参数和字段；
+  默认新标签为 `question_state_v4_unified_top1`，报告写入独立的
+  `v4_unified_top1/` 子目录。
+- 30 项单元测试已通过，覆盖跨模态 top-1/mask、numeric caption 进入 B3 state、
+  B2 static state 隔离以及 duplicate re-prompt 上限。
+
+## 17. v4 全量实验结果
+
+- 7 个 sequence 共 210 题已全部完成；93 题答对，strict accuracy 为
+  44.3%，4 个无效输出按错误计入分母。
+- reference-memory hit 为 10/210（4.8%），Grounded accuracy 为
+  10/210（4.8%）。相比 v3，24 题改善、24 题退化，答案准确率净变化为 0。
+- question-state audit 覆盖 218 个 answer attempts：148 次 duplicate 被拦截，
+  95 次触发 replan，top-1、预算、全局 mask、跨模态 state 和终止上限错误均为 0。
+- 完整报告发布于 `docs/reports/b3/v2/v4_unified_top1/`，跨版本对比发布于
+  `docs/reports/comparison/v4_unified_top1/`。

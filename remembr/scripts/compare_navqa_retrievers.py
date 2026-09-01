@@ -200,10 +200,13 @@ def summarize_run(args, run, aligned, sequences=SEQUENCES):
         complete_hit = bool(references) and references.issubset(selected_ids)
         text_hit = bool(text_selected_ids & references)
         if key in {"qrag_static", "qrag"}:
-            expected_method = (
-                "qrag_static_topk_zero_shot"
+            expected_methods = (
+                {"qrag_static_topk_zero_shot"}
                 if key == "qrag_static"
-                else "qrag_sequential_zero_shot"
+                else {
+                    "qrag_sequential_zero_shot",
+                    "qrag_interleaved_top1_zero_shot",
+                }
             )
             for call in text_calls:
                 expected_steps = int(
@@ -225,7 +228,7 @@ def summarize_run(args, run, aligned, sequences=SEQUENCES):
                     else bool(call.get("steps"))
                 )
                 if (
-                    call.get("retrieval_method") != expected_method
+                    call.get("retrieval_method") not in expected_methods
                     or invalid_steps
                     or len(selected) != expected_steps
                     or len(selected) != len(set(selected))

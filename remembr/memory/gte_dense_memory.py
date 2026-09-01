@@ -99,6 +99,8 @@ class GteDenseMemory(LocalVectorMemory):
         numeric_k=4,
         text_episode_mode="per_call",
         question_text_evidence_budget=None,
+        unified_evidence_ledger=False,
+        question_evidence_budget=None,
         device="cpu",
         batch_size=16,
     ):
@@ -111,6 +113,8 @@ class GteDenseMemory(LocalVectorMemory):
             and int(question_text_evidence_budget) < 1
         ):
             raise ValueError("Question text evidence budget must be positive")
+        if question_evidence_budget is not None and int(question_evidence_budget) < 1:
+            raise ValueError("Question evidence budget must be positive")
         self.encoder = GteDenseEncoder(
             model_name=model_name,
             device=device,
@@ -126,6 +130,12 @@ class GteDenseMemory(LocalVectorMemory):
             question_text_evidence_budget
             if question_text_evidence_budget is not None
             else text_k
+        )
+        self.unified_evidence_ledger = bool(unified_evidence_ledger)
+        self.question_evidence_budget = int(
+            question_evidence_budget
+            if question_evidence_budget is not None
+            else self.question_text_evidence_budget
         )
         self.reset()
 

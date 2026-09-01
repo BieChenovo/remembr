@@ -23,16 +23,20 @@ class ControllerToolChoiceError(ValueError):
 class RetrievalCallGate:
     """Attempt-scoped budget, signature set, and visible-result ledger."""
 
-    def __init__(self, max_rounds: int):
+    def __init__(self, max_rounds: int, duplicate_replan_limit: int = 2):
         if int(max_rounds) < 1:
             raise ValueError("max_rounds must be positive")
+        if int(duplicate_replan_limit) < 1:
+            raise ValueError("duplicate_replan_limit must be positive")
         self.max_rounds = int(max_rounds)
+        self.duplicate_replan_limit = int(duplicate_replan_limit)
         self.reset()
 
     def reset(self) -> None:
         self.round_count = 0
         self.executed_signatures = set()
         self.visible_result_ids = []
+        self.consecutive_duplicate_replans = 0
 
     @property
     def can_retrieve(self) -> bool:
@@ -41,6 +45,15 @@ class RetrievalCallGate:
     def is_duplicate(self, signature: str) -> bool:
         return signature in self.executed_signatures
 
+    def record_duplicate(self) -> Tuple[int, bool]:
+        """Record one blocked replan without consuming an executed round."""
+
+        self.consecutive_duplicate_replans += 1
+        return (
+            self.consecutive_duplicate_replans,
+            self.consecutive_duplicate_replans >= self.duplicate_replan_limit,
+        )
+
     def commit(self, signature: str, selected_ids: Sequence[Any]) -> int:
         if self.is_duplicate(signature):
             raise ValueError("Duplicate retrieval signatures cannot be committed")
@@ -48,6 +61,7 @@ class RetrievalCallGate:
             raise ValueError("Retrieval round limit reached")
         self.executed_signatures.add(signature)
         self.round_count += 1
+        self.consecutive_duplicate_replans = 0
         for entry_id in selected_ids:
             if entry_id not in self.visible_result_ids:
                 self.visible_result_ids.append(entry_id)

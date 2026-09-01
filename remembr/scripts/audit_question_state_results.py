@@ -37,6 +37,7 @@ def audit_run(
         "multi_text_attempts": 0,
         "empty_exhausted_calls": 0,
         "duplicate_blocked_calls": 0,
+        "duplicate_reprompted_calls": 0,
         "interleaved_attempts": 0,
         "max_unique_evidence_per_attempt": 0,
         "errors": [],
@@ -52,6 +53,9 @@ def audit_run(
             == "interleaved_single_call"
         )
         max_retrieval_rounds = int(config.get("max_retrieval_rounds", 5))
+        unified = bool(config.get("unified_evidence_ledger", False))
+        question_evidence_budget = int(config.get("question_evidence_budget", 5))
+        duplicate_replan_limit = int(config.get("duplicate_replan_limit", 2))
         responses = result.get("responses", [])
         if len(responses) != 30 or result.get("in_progress", True):
             add_error(
@@ -86,6 +90,9 @@ def audit_run(
                     visible_ids: list[int] = []
                     executed_signatures: set[str] = set()
                     executed_count = 0
+                    global_selected_ids: list[int] = []
+                    evidence_state_version = 0
+                    consecutive_duplicates = 0
                     for call_index, call in enumerate(all_calls, start=1):
                         call_location = f"{location}C{call_index}"
                         turn = call.get("controller_turn_id")
@@ -125,6 +132,7 @@ def audit_run(
                         signature = call.get("tool_signature")
                         if call.get("duplicate_blocked"):
                             stats["duplicate_blocked_calls"] += 1
+                            consecutive_duplicates += 1
                             if signature not in executed_signatures:
                                 add_error(
                                     errors,
@@ -137,7 +145,17 @@ def audit_run(
                                     call_location,
                                     "blocked duplicate returned memories",
                                 )
+                            if unified:
+                                if call.get("retrieval_executed") is not False:
+                                    add_error(errors, call_location, "duplicate marked executed")
+                                if call.get("duplicate_replan_count") != consecutive_duplicates:
+                                    add_error(errors, call_location, "incorrect duplicate replan count")
+                                expected_reprompt = consecutive_duplicates < duplicate_replan_limit
+                                if call.get("duplicate_reprompted") != expected_reprompt:
+                                    add_error(errors, call_location, "incorrect duplicate reprompt flag")
+                                stats["duplicate_reprompted_calls"] += expected_reprompt
                         else:
+                            consecutive_duplicates = 0
                             executed_count += 1
                             if not signature:
                                 add_error(errors, call_location, "missing tool signature")
@@ -152,6 +170,35 @@ def audit_run(
                             for entry_id in selected_ids:
                                 if entry_id not in visible_ids:
                                     visible_ids.append(entry_id)
+                            if unified and call.get("retrieval_executed") is not True:
+                                add_error(errors, call_location, "valid call not marked executed")
+                        if unified:
+                            if len(selected_ids) > 1:
+                                add_error(errors, call_location, "unified call returned more than one item")
+                            before_global = call.get("global_selected_entry_ids_before")
+                            after_global = call.get("global_selected_entry_ids_after")
+                            if before_global != global_selected_ids:
+                                add_error(errors, call_location, "incorrect global IDs before call")
+                            expected_global_after = (
+                                global_selected_ids
+                                if call.get("duplicate_blocked")
+                                else global_selected_ids + selected_ids
+                            )
+                            if after_global != expected_global_after:
+                                add_error(errors, call_location, "incorrect global IDs after call")
+                            if len(expected_global_after) != len(set(expected_global_after)):
+                                add_error(errors, call_location, "global evidence ID repeated")
+                            expected_version = evidence_state_version + (
+                                0 if call.get("duplicate_blocked") else len(selected_ids)
+                            )
+                            if call.get("evidence_state_version_before") != evidence_state_version:
+                                add_error(errors, call_location, "incorrect evidence version before call")
+                            if call.get("evidence_state_version") != expected_version:
+                                add_error(errors, call_location, "incorrect evidence version after call")
+                            if call.get("executed_retrieval_rounds") != executed_count:
+                                add_error(errors, call_location, "incorrect executed round count")
+                            global_selected_ids = list(expected_global_after)
+                            evidence_state_version = expected_version
                         if call.get("tool") in {
                             "retrieve_from_time",
                             "retrieve_from_position",
@@ -167,6 +214,8 @@ def audit_run(
                             location,
                             "executed retrieval calls exceed controller limit",
                         )
+                    if unified and len(global_selected_ids) > question_evidence_budget:
+                        add_error(errors, location, "global evidence exceeds question budget")
                 text_calls = [
                     call
                     for call in all_calls
@@ -203,13 +252,14 @@ def audit_run(
                             f"repeated IDs across calls: {sorted(overlap)}",
                         )
 
-                    before_ids = call.get("episode_selected_entry_ids_before")
-                    after_ids = call.get("episode_selected_entry_ids_after")
-                    if before_ids != selected_so_far:
-                        add_error(errors, call_location, "incorrect episode IDs before call")
                     expected_after = selected_so_far + selected
-                    if after_ids != expected_after:
-                        add_error(errors, call_location, "incorrect episode IDs after call")
+                    if not unified:
+                        before_ids = call.get("episode_selected_entry_ids_before")
+                        after_ids = call.get("episode_selected_entry_ids_after")
+                        if before_ids != selected_so_far:
+                            add_error(errors, call_location, "incorrect episode IDs before call")
+                        if after_ids != expected_after:
+                            add_error(errors, call_location, "incorrect episode IDs after call")
 
                     budget = call.get("question_evidence_budget")
                     before = call.get("question_budget_remaining_before")
@@ -217,7 +267,12 @@ def audit_run(
                     if not all(isinstance(value, int) for value in (budget, before, after)):
                         add_error(errors, call_location, "missing integer budget fields")
                     else:
-                        expected_before = max(0, budget - len(selected_so_far))
+                        prior_count = (
+                            len(call.get("global_selected_entry_ids_before", []))
+                            if unified
+                            else len(selected_so_far)
+                        )
+                        expected_before = max(0, budget - prior_count)
                         expected_remaining = max(0, before - len(selected))
                         if before != expected_before or after != expected_remaining:
                             add_error(errors, call_location, "inconsistent budget accounting")
@@ -261,7 +316,12 @@ def audit_run(
                             add_error(errors, call_location, "step count differs from selection count")
                         for step_index, step in enumerate(steps):
                             components = step.get("state_components", [])
-                            expected_length = 2 + len(selected_so_far) + step_index
+                            prior_count = (
+                                len(call.get("global_selected_entry_ids_before", []))
+                                if unified
+                                else len(selected_so_far)
+                            )
+                            expected_length = 2 + prior_count + step_index
                             if len(components) != expected_length:
                                 add_error(errors, call_location, "incorrect sequential state length")
                             elif components[1] != call.get("query"):
@@ -279,7 +339,8 @@ def audit_run(
                         add_error(errors, location, "retry reused the previous episode ID")
                     previous_episode_id = episode_id
                 stats["max_unique_evidence_per_attempt"] = max(
-                    stats["max_unique_evidence_per_attempt"], len(selected_so_far)
+                    stats["max_unique_evidence_per_attempt"],
+                    len(global_selected_ids) if unified and interleaved else len(selected_so_far),
                 )
 
     stats["error_count"] = len(errors)

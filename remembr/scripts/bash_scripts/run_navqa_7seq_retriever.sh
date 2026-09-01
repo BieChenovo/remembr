@@ -8,6 +8,7 @@ REMEMBR_ROOT="$PROJECT_ROOT/remembr"
 INPUT_ROOT=${INPUT_ROOT:-$PROJECT_ROOT/artifacts}
 RESULT_ROOT=${RESULT_ROOT:-$PROJECT_ROOT/artifacts/eval_outs}
 RUNTIME_ROOT=${RUNTIME_ROOT:-/hpc2ssd/JH_DATA/spooler/yichenwang/projects/remembr/artifacts}
+CODA_DIR=${CODA_DIR:-$REMEMBR_ROOT/coda_data}
 VENV_ROOT=${VENV_ROOT:-/hpc2hdd/home/yichenwang/.venvs/remembr-eval}
 CUDA_TORCH_ROOT=${CUDA_TORCH_ROOT:-/opt/miniconda3/envs/pytorch/lib/python3.10/site-packages}
 CUDA_TORCH_SHIM=${CUDA_TORCH_SHIM:-/tmp/remembr_cuda_torch}
@@ -19,13 +20,13 @@ CAPTION_FILE=${CAPTION_FILE:-captions_VILA1.5-13b_3_secs}
 SEQUENCES=${SEQUENCES:-"0 3 4 6 16 21 22"}
 TEXT_RETRIEVER=${TEXT_RETRIEVER:-gte_dense}
 if [[ -z "${RUN_TAG:-}" ]]; then
-    RUN_TAG="${TEXT_RETRIEVER}_210_question_state_v3_interleaved"
+    RUN_TAG="${TEXT_RETRIEVER}_210_question_state_v4_unified_top1"
 fi
 GTE_MODEL=${GTE_MODEL:-$PROJECT_ROOT/third_party/gte-models/gte-multilingual-base}
 QRAG_CHECKPOINT=${QRAG_CHECKPOINT:-$PROJECT_ROOT/third_party/qrag-models/qrag-ft-gte-on-hotpotqa_musique/model_best.pt}
 QRAG_INFERENCE_CHECKPOINT=${QRAG_INFERENCE_CHECKPOINT:-$PROJECT_ROOT/third_party/qrag-models/qrag-ft-gte-on-hotpotqa_musique/qrag_inference.pt}
 if [[ -z "${QRAG_STEPS:-}" ]]; then
-    if [[ "$TEXT_RETRIEVER" == qrag ]]; then
+    if [[ "$RUN_TAG" == *question_state_v4_unified_top1* || "$TEXT_RETRIEVER" == qrag ]]; then
         QRAG_STEPS=1
     else
         QRAG_STEPS=5
@@ -36,7 +37,30 @@ QRAG_EPISODE_MODE=${QRAG_EPISODE_MODE:-question}
 QRAG_QUESTION_EVIDENCE_BUDGET=${QRAG_QUESTION_EVIDENCE_BUDGET:-5}
 TEXT_EPISODE_MODE=${TEXT_EPISODE_MODE:-question}
 QUESTION_TEXT_EVIDENCE_BUDGET=${QUESTION_TEXT_EVIDENCE_BUDGET:-5}
+if [[ -z "${UNIFIED_EVIDENCE_LEDGER:-}" ]]; then
+    if [[ "$RUN_TAG" == *question_state_v4_unified_top1* ]]; then
+        UNIFIED_EVIDENCE_LEDGER=1
+    else
+        UNIFIED_EVIDENCE_LEDGER=0
+    fi
+fi
+if [[ -z "${NUMERIC_K:-}" ]]; then
+    if [[ "$UNIFIED_EVIDENCE_LEDGER" == 1 ]]; then
+        NUMERIC_K=1
+    else
+        NUMERIC_K=4
+    fi
+fi
+QUESTION_EVIDENCE_BUDGET=${QUESTION_EVIDENCE_BUDGET:-5}
 MAX_RETRIEVAL_ROUNDS=${MAX_RETRIEVAL_ROUNDS:-5}
+if [[ -z "${DUPLICATE_REPLAN_LIMIT:-}" ]]; then
+    if [[ "$RUN_TAG" == *question_state_v4_unified_top1* ]]; then
+        DUPLICATE_REPLAN_LIMIT=2
+    else
+        # One blocked duplicate reproduces v3's immediate reader fallback.
+        DUPLICATE_REPLAN_LIMIT=1
+    fi
+fi
 REPORT_VERSION=${REPORT_VERSION:-v2}
 GPU_COUNT=${GPU_COUNT:-4}
 GPU_IDS=${GPU_IDS:-}
@@ -50,6 +74,7 @@ LOG_DIR="$RUN_DIR/logs"
 STATUS_FILE="$RUN_DIR/status.txt"
 CACHE_DIR=${CACHE_DIR:-$RUNTIME_ROOT/embedding_cache/$RUN_TAG}
 case "$TEXT_RETRIEVER" in
+    dense) REPORT_GROUP=b0 ;;
     gte_dense) REPORT_GROUP=b1 ;;
     qrag_static) REPORT_GROUP=b2 ;;
     qrag) REPORT_GROUP=b3 ;;
@@ -60,6 +85,8 @@ esac
 if [[ -z "${REPORT_DIR:-}" ]]; then
     if [[ "$RUN_TAG" == *question_state_v3_interleaved* ]]; then
         REPORT_DIR="$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/v3_interleaved/sequences"
+    elif [[ "$RUN_TAG" == *question_state_v4_unified_top1* ]]; then
+        REPORT_DIR="$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/v4_unified_top1/sequences"
     else
         REPORT_DIR="$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/sequences"
     fi
@@ -100,8 +127,8 @@ on_error() {
 trap cleanup EXIT INT TERM
 trap on_error ERR
 
-[[ "$TEXT_RETRIEVER" == gte_dense || "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]] || {
-    printf 'TEXT_RETRIEVER must be gte_dense, qrag_static, or qrag; got %s\n' "$TEXT_RETRIEVER" >&2
+[[ "$TEXT_RETRIEVER" == dense || "$TEXT_RETRIEVER" == gte_dense || "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]] || {
+    printf 'TEXT_RETRIEVER must be dense, gte_dense, qrag_static, or qrag; got %s\n' "$TEXT_RETRIEVER" >&2
     exit 2
 }
 [[ "$REPORT_VERSION" == v1 || "$REPORT_VERSION" == v2 ]] || {
@@ -123,6 +150,11 @@ trap on_error ERR
         "$QRAG_EPISODE_MODE" >&2
     exit 2
 }
+[[ "$UNIFIED_EVIDENCE_LEDGER" == 0 || "$UNIFIED_EVIDENCE_LEDGER" == 1 ]] || {
+    printf 'UNIFIED_EVIDENCE_LEDGER must be 0 or 1; got %s\n' \
+        "$UNIFIED_EVIDENCE_LEDGER" >&2
+    exit 2
+}
 [[ "$QRAG_STEPS" == 1 || "$QRAG_STEPS" == 3 || "$QRAG_STEPS" == 5 ]] || {
     printf 'QRAG_STEPS must be 1, 3, or 5; got %s\n' "$QRAG_STEPS" >&2
     exit 2
@@ -137,6 +169,22 @@ if [[ "$RUN_TAG" == *question_state_v3_interleaved* ]]; then
         printf 'B2 v3 static requires QRAG_STEPS=5; got %s\n' \
             "$QRAG_STEPS" >&2
         exit 2
+    fi
+fi
+if [[ "$RUN_TAG" == *question_state_v4_unified_top1* ]]; then
+    [[ "$UNIFIED_EVIDENCE_LEDGER" == 1 ]] || {
+        printf 'v4 unified top-1 requires UNIFIED_EVIDENCE_LEDGER=1\n' >&2
+        exit 2
+    }
+    [[ "$NUMERIC_K" == 1 ]] || {
+        printf 'v4 unified top-1 requires NUMERIC_K=1; got %s\n' "$NUMERIC_K" >&2
+        exit 2
+    }
+    if [[ "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]]; then
+        [[ "$QRAG_STEPS" == 1 ]] || {
+            printf 'v4 unified top-1 requires QRAG_STEPS=1; got %s\n' "$QRAG_STEPS" >&2
+            exit 2
+        }
     fi
 fi
 [[ "$MAX_RETRIEVAL_ROUNDS" =~ ^[1-9][0-9]*$ ]] || {
@@ -158,9 +206,25 @@ fi
         "$QRAG_QUESTION_EVIDENCE_BUDGET" >&2
     exit 2
 }
+[[ "$NUMERIC_K" =~ ^[1-9][0-9]*$ ]] || {
+    printf 'NUMERIC_K must be positive; got %s\n' "$NUMERIC_K" >&2
+    exit 2
+}
+[[ "$QUESTION_EVIDENCE_BUDGET" =~ ^[1-9][0-9]*$ ]] || {
+    printf 'QUESTION_EVIDENCE_BUDGET must be positive; got %s\n' \
+        "$QUESTION_EVIDENCE_BUDGET" >&2
+    exit 2
+}
+[[ "$DUPLICATE_REPLAN_LIMIT" =~ ^[1-9][0-9]*$ ]] || {
+    printf 'DUPLICATE_REPLAN_LIMIT must be positive; got %s\n' \
+        "$DUPLICATE_REPLAN_LIMIT" >&2
+    exit 2
+}
 [[ -x "$PYTHON" ]] || { printf 'Missing Python: %s\n' "$PYTHON" >&2; exit 1; }
 [[ -x "$OLLAMA_BIN" ]] || { printf 'Missing Ollama: %s\n' "$OLLAMA_BIN" >&2; exit 1; }
-[[ -d "$GTE_MODEL" ]] || { printf 'Missing GTE model: %s\n' "$GTE_MODEL" >&2; exit 1; }
+if [[ "$TEXT_RETRIEVER" != dense ]]; then
+    [[ -d "$GTE_MODEL" ]] || { printf 'Missing GTE model: %s\n' "$GTE_MODEL" >&2; exit 1; }
+fi
 if [[ "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]]; then
     [[ -f "$QRAG_CHECKPOINT" ]] || {
         printf 'Missing Q-RAG checkpoint: %s\n' "$QRAG_CHECKPOINT" >&2
@@ -228,8 +292,10 @@ set_status "starting retriever=$TEXT_RETRIEVER sequences=$SEQUENCES"
 step "Run tag: $RUN_TAG"
 step "Retriever: $TEXT_RETRIEVER"
 step "Controller: interleaved single-call, max rounds: $MAX_RETRIEVAL_ROUNDS"
+step "Duplicate replans: $DUPLICATE_REPLAN_LIMIT"
 step "Controller/reader output budget: $NUM_PREDICT tokens"
 step "Dense/GTE text episode: $TEXT_EPISODE_MODE, question budget: $QUESTION_TEXT_EVIDENCE_BUDGET"
+step "Unified evidence ledger: $UNIFIED_EVIDENCE_LEDGER, numeric k: $NUMERIC_K, global budget: $QUESTION_EVIDENCE_BUDGET"
 if [[ "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]]; then
     step "Q-RAG state: $QRAG_STATE_FORMAT, episode: $QRAG_EPISODE_MODE, per-call max: $QRAG_STEPS, question budget: $QRAG_QUESTION_EVIDENCE_BUDGET"
 fi
@@ -304,7 +370,12 @@ for ordinal in "${!sequence_array[@]}"; do
             --embedding_cache_dir "$CACHE_DIR"
             --text_episode_mode "$TEXT_EPISODE_MODE"
             --question_text_evidence_budget "$QUESTION_TEXT_EVIDENCE_BUDGET"
+            --numeric_k "$NUMERIC_K"
+            --question_evidence_budget "$QUESTION_EVIDENCE_BUDGET"
         )
+        if [[ "$UNIFIED_EVIDENCE_LEDGER" == 1 ]]; then
+            extra_args+=(--unified_evidence_ledger)
+        fi
         if [[ "$TEXT_RETRIEVER" == qrag_static || "$TEXT_RETRIEVER" == qrag ]]; then
             extra_args+=(
                 --qrag_checkpoint "$QRAG_CHECKPOINT"
@@ -324,7 +395,7 @@ for ordinal in "${!sequence_array[@]}"; do
                 --memory_backend local \
                 --captions_dir "$INPUT_ROOT/captions" \
                 --questions_dir "$INPUT_ROOT/questions" \
-                --coda_dir "$PROJECT_ROOT/CODa" \
+                --coda_dir "$CODA_DIR" \
                 --caption_file "$CAPTION_FILE" \
                 --timezone "$NAVQA_TIMEZONE" \
                 --out_dir "$RESULT_ROOT" \
@@ -333,6 +404,7 @@ for ordinal in "${!sequence_array[@]}"; do
                 --num_predict "$NUM_PREDICT" \
                 --disable_thinking \
                 --max_retrieval_rounds "$MAX_RETRIEVAL_ROUNDS" \
+                --duplicate_replan_limit "$DUPLICATE_REPLAN_LIMIT" \
                 --text_judge_model "$MODEL" \
                 --text_judge_host "127.0.0.1:$port" \
                 --text_judge_num_predict 96 \

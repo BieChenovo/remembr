@@ -1,5 +1,6 @@
 """ReMEmbR local memory with Q-RAG sequential text retrieval."""
 
+import copy
 import fcntl
 import hashlib
 import json
@@ -35,6 +36,7 @@ class QragLocalMemory(LocalVectorMemory):
         retrieval_mode="sequential",
         episode_mode="question",
         question_evidence_budget=None,
+        unified_evidence_ledger=False,
         device="cpu",
         batch_size=16,
     ):
@@ -57,7 +59,7 @@ class QragLocalMemory(LocalVectorMemory):
             batch_size=batch_size,
         )
         self.time_offset = time_offset
-        self.text_k = int(evidence_budget)
+        self.text_k = 1 if unified_evidence_ledger else int(evidence_budget)
         self.numeric_k = int(numeric_k)
         self.state_format = state_format
         self.retrieval_mode = retrieval_mode
@@ -67,6 +69,13 @@ class QragLocalMemory(LocalVectorMemory):
             if question_evidence_budget is not None
             else evidence_budget
         )
+        self.unified_evidence_ledger = bool(unified_evidence_ledger)
+        # LocalVectorMemory's legacy text fields remain populated for v2/v3
+        # trace compatibility.  v4 selection uses the shared evidence fields.
+        self.text_episode_mode = (
+            "question" if self.unified_evidence_ledger else episode_mode
+        )
+        self.question_text_evidence_budget = self.question_evidence_budget
         self.original_question = None
         self.reset()
 
@@ -79,6 +88,8 @@ class QragLocalMemory(LocalVectorMemory):
     def begin_retrieval_episode(self):
         """Start an independent answer attempt without discarding trace history."""
 
+        if getattr(self, "unified_evidence_ledger", False):
+            LocalVectorMemory.begin_retrieval_episode(self)
         self._qrag_episode_id += 1
         self._qrag_text_call_count = 0
         self._qrag_episode_selected_indices = []
@@ -88,6 +99,11 @@ class QragLocalMemory(LocalVectorMemory):
             return False
         if self.episode_mode != "question":
             return True
+        if getattr(self, "unified_evidence_ledger", False):
+            return (
+                len(self._evidence_selected_indices) < self.question_evidence_budget
+                and len(self._evidence_selected_indices) < len(self.items)
+            )
         return (
             len(self._qrag_episode_selected_indices) < self.question_evidence_budget
             and len(self._qrag_episode_selected_indices) < len(self.items)
@@ -243,6 +259,8 @@ class QragLocalMemory(LocalVectorMemory):
     def _episode_prior_indices(self):
         if self.episode_mode != "question":
             return []
+        if getattr(self, "unified_evidence_ledger", False):
+            return list(self._evidence_selected_indices)
         return list(self._qrag_episode_selected_indices)
 
     def _remaining_question_budget(self, prior_indices):
@@ -279,8 +297,15 @@ class QragLocalMemory(LocalVectorMemory):
         components.extend(self.items[index].caption for index in evidence_indices)
         return components
 
-    def _commit_episode_selection(self, selected_indices):
+    def _commit_episode_selection(self, selected_indices, query=None):
         if self.episode_mode != "question":
+            return
+        if getattr(self, "unified_evidence_ledger", False):
+            self._commit_evidence_selection(
+                selected_indices,
+                tool="retrieve_from_text",
+                query=query,
+            )
             return
         seen = set(self._qrag_episode_selected_indices)
         for index in selected_indices:
@@ -288,7 +313,14 @@ class QragLocalMemory(LocalVectorMemory):
                 self._qrag_episode_selected_indices.append(index)
                 seen.add(index)
 
-    def _episode_trace_fields(self, prior_indices, selected_indices):
+    def _episode_trace_fields(
+        self,
+        prior_indices,
+        selected_indices,
+        *,
+        prior_evidence_sources=None,
+        evidence_state_version_before=0,
+    ):
         after_indices = list(prior_indices)
         after_seen = set(after_indices)
         for index in selected_indices:
@@ -297,7 +329,7 @@ class QragLocalMemory(LocalVectorMemory):
                 after_seen.add(index)
         remaining_before = self._remaining_question_budget(prior_indices)
         remaining_after = self._remaining_question_budget(after_indices)
-        return {
+        fields = {
             "qrag_episode_mode": self.episode_mode,
             "qrag_episode_id": self._qrag_episode_id,
             "qrag_text_call_index": self._qrag_text_call_count,
@@ -320,6 +352,27 @@ class QragLocalMemory(LocalVectorMemory):
                 remaining_after == 0 if remaining_after is not None else False
             ),
         }
+        if getattr(self, "unified_evidence_ledger", False):
+            fields.update(
+                {
+                    "evidence_episode_mode": "unified_top1",
+                    "evidence_episode_id": self._evidence_episode_id,
+                    "global_selected_entry_ids_before": [
+                        getattr(self.items[index], "entry_id", None)
+                        for index in prior_indices
+                    ],
+                    "global_selected_entry_ids_after": [
+                        getattr(self.items[index], "entry_id", None)
+                        for index in after_indices
+                    ],
+                    "prior_evidence_sources": copy.deepcopy(
+                        prior_evidence_sources or []
+                    ),
+                    "evidence_state_version_before": evidence_state_version_before,
+                    "evidence_state_version": self._evidence_state_version,
+                }
+            )
+        return fields
 
     @staticmethod
     def _empty_result_context(budget_exhausted):
@@ -334,6 +387,12 @@ class QragLocalMemory(LocalVectorMemory):
         candidate_count = len(self.items)
         self._qrag_text_call_count += 1
         prior_indices = self._episode_prior_indices()
+        prior_evidence_sources = (
+            self.get_evidence_ledger()
+            if getattr(self, "unified_evidence_ledger", False)
+            else []
+        )
+        evidence_state_version_before = getattr(self, "_evidence_state_version", 0)
         requested, _ = self._requested_count(candidate_count, prior_indices)
         components = self._state_components(
             query,
@@ -377,10 +436,12 @@ class QragLocalMemory(LocalVectorMemory):
 
         selected = [self.items[index] for index in selected_indices]
         self.working_memory.extend(selected)
-        self._commit_episode_selection(selected_indices)
+        self._commit_episode_selection(selected_indices, query=query)
         episode_fields = self._episode_trace_fields(
             prior_indices,
             selected_indices,
+            prior_evidence_sources=prior_evidence_sources,
+            evidence_state_version_before=evidence_state_version_before,
         )
         trace = {
             "call_index": len(self.retrieval_trace) + 1,
@@ -427,6 +488,12 @@ class QragLocalMemory(LocalVectorMemory):
         candidate_count = len(self.items)
         self._qrag_text_call_count += 1
         prior_indices = self._episode_prior_indices()
+        prior_evidence_sources = (
+            self.get_evidence_ledger()
+            if getattr(self, "unified_evidence_ledger", False)
+            else []
+        )
+        evidence_state_version_before = getattr(self, "_evidence_state_version", 0)
         requested, _ = self._requested_count(candidate_count, prior_indices)
         action_embeddings = np.asarray(self.text_embeddings, dtype=np.float32)
         available = np.ones(candidate_count, dtype=bool)
@@ -505,10 +572,12 @@ class QragLocalMemory(LocalVectorMemory):
 
         selected = [self.items[index] for index in selected_indices]
         self.working_memory.extend(selected)
-        self._commit_episode_selection(selected_indices)
+        self._commit_episode_selection(selected_indices, query=query)
         episode_fields = self._episode_trace_fields(
             prior_indices,
             selected_indices,
+            prior_evidence_sources=prior_evidence_sources,
+            evidence_state_version_before=evidence_state_version_before,
         )
         trace = {
             "call_index": len(self.retrieval_trace) + 1,

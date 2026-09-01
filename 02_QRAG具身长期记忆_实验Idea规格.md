@@ -6,7 +6,7 @@
 >
 > 目标读者：负责数据、模型和实验实现的 Agent
 >
-> 当前状态：**B0–B3 的旧版和 question-state v2 结果均已保留；controller-interleaved B3 v3 已完成 210 题。下一步按 `question_state_v4_unified_top1` 统一三类工具的单条返回、跨模态 mask/state，并将重复 query 改为有限次数的重新规划。**
+> 当前状态：**B0–B3 的旧版和 question-state v2 结果均已保留；controller-interleaved B3 v3 与 unified top-1 B3 v4 均已完成 210 题。v4 答案准确率为 44.3%（93/210），question-state 审计为 0 错误。**
 
 ## 0. 一分钟版本
 
@@ -921,9 +921,16 @@ v4 决策如下：
   modality，或根据已有证据生成语义不同的新 query；
 - 新实验标签为 `question_state_v4_unified_top1`，v2/v3 产物保持不可变。
 
+v4 已完成 7 个 sequence 共 210 题：答案准确率 93/210（44.3%），
+reference-memory hit 与 Grounded accuracy 均为 10/210（4.8%）。218 个
+answer attempts 的 top-1、全局 mask、跨模态 state、duplicate replan 和预算
+审计错误均为 0。完整报告位于
+`docs/reports/b3/v2/v4_unified_top1/`，对比报告位于
+`docs/reports/comparison/v4_unified_top1/`。
+
 ### 14.11 可直接复制给另一对话的任务
 
-> 请在项目根目录完整阅读 `docs/QRAG_RETRIEVAL_FIX_SPEC.md` 的 v4 章节和本文第 14.10.3 节。实现 `question_state_v4_unified_top1`：text/time/position 每次只返回 1 条，三类工具共享题级 5 条唯一 evidence 的 ID mask；重复 query 不执行且不消耗 round，应返回纠错并允许 controller 生成新 query，连续两次失败后才进入 reader；time/position 返回的 caption 必须进入下一次 B3 text Q-RAG state。先用 sequence 0 验证跨模态 state、全局 mask、re-prompt 和终止上限，再扩展到 210 题。不得覆盖 v2/v3，也不得读取答案或 support IDs 参与推理。
+> 请在项目根目录完整阅读 `docs/QRAG_RETRIEVAL_FIX_SPEC.md` 的 v4 章节和本文第 14.10.3 节。`question_state_v4_unified_top1` 代码、单元测试、sequence 0 审计和 210 题全量实验均已完成；后续实验必须保留 v2/v3/v4 产物，不得读取答案或 support IDs 参与推理。
 
 ## 15. 后续路线图
 

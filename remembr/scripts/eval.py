@@ -337,6 +337,7 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
                 inference_checkpoint=args.qrag_inference_checkpoint,
                 time_offset=start_time,
                 evidence_budget=args.qrag_evidence_budget,
+                numeric_k=args.numeric_k,
                 state_format=args.qrag_state_format,
                 retrieval_mode=(
                     'static'
@@ -344,7 +345,12 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
                     else 'sequential'
                 ),
                 episode_mode=args.qrag_episode_mode,
-                question_evidence_budget=args.qrag_question_evidence_budget,
+                question_evidence_budget=(
+                    args.question_evidence_budget
+                    if args.unified_evidence_ledger
+                    else args.qrag_question_evidence_budget
+                ),
+                unified_evidence_ledger=args.unified_evidence_ledger,
                 device=args.embedding_device,
                 batch_size=args.embedding_batch_size,
             )
@@ -352,8 +358,11 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
             memory = GteDenseMemory(
                 model_name=args.gte_model,
                 time_offset=start_time,
+                numeric_k=args.numeric_k,
                 text_episode_mode=args.text_episode_mode,
                 question_text_evidence_budget=args.question_text_evidence_budget,
+                unified_evidence_ledger=args.unified_evidence_ledger,
+                question_evidence_budget=args.question_evidence_budget,
                 device=args.embedding_device,
                 batch_size=args.embedding_batch_size,
             )
@@ -361,8 +370,11 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
             memory = LocalVectorMemory(
                 embedding_model=args.embedding_model,
                 time_offset=start_time,
+                numeric_k=args.numeric_k,
                 text_episode_mode=args.text_episode_mode,
                 question_text_evidence_budget=args.question_text_evidence_budget,
+                unified_evidence_ledger=args.unified_evidence_ledger,
+                question_evidence_budget=args.question_evidence_budget,
             )
     elif 'vlm' in args.model:
         memory = VideoMemory()
@@ -474,6 +486,9 @@ def load_memory(args, qa_instance, use_milvus=True, use_optimal_context=False, i
                     if args.text_retriever in {'qrag_static', 'qrag'}
                     else args.question_text_evidence_budget
                 ),
+                'numeric_k': args.numeric_k,
+                'unified_evidence_ledger': args.unified_evidence_ledger,
+                'question_evidence_budget': args.question_evidence_budget,
                 'embedding_model': (
                     args.gte_model
                     if args.text_retriever in {'gte_dense', 'qrag_static', 'qrag'}
@@ -497,6 +512,23 @@ def main(args):
 
     if args.qrag_evidence_budget is None:
         args.qrag_evidence_budget = 1 if args.text_retriever == 'qrag' else 5
+    for name in (
+        'numeric_k',
+        'question_evidence_budget',
+        'duplicate_replan_limit',
+    ):
+        if int(getattr(args, name)) < 1:
+            raise ValueError(f'--{name} must be positive')
+    if args.unified_evidence_ledger and args.numeric_k != 1:
+        raise ValueError('--unified_evidence_ledger requires --numeric_k 1')
+    if (
+        args.unified_evidence_ledger
+        and args.text_retriever in {'qrag_static', 'qrag'}
+        and args.qrag_episode_mode != 'question'
+    ):
+        raise ValueError(
+            '--unified_evidence_ledger requires --qrag_episode_mode question'
+        )
 
     # Questions contain human-readable clock times and the time-search tool
     # parses clock strings back into Unix timestamps.  Pin both operations to
@@ -524,6 +556,7 @@ def main(args):
             num_predict=args.num_predict,
             disable_thinking=args.disable_thinking,
             max_retrieval_rounds=args.max_retrieval_rounds,
+            duplicate_replan_limit=args.duplicate_replan_limit,
         )
         use_milvus = True
 
@@ -681,6 +714,10 @@ def main(args):
                 "retrieval_trace": args.memory_backend == 'local',
                 "controller_retrieval_mode": "interleaved_single_call",
                 "max_retrieval_rounds": args.max_retrieval_rounds,
+                "duplicate_replan_limit": args.duplicate_replan_limit,
+                "numeric_k": args.numeric_k,
+                "unified_evidence_ledger": args.unified_evidence_ledger,
+                "question_evidence_budget": args.question_evidence_budget,
                 "text_retriever": args.text_retriever,
                 "embedding_model": (
                     args.gte_model
@@ -942,6 +979,26 @@ if __name__ == "__main__":
         help="Maximum unique dense/GTE text memories per answer attempt",
     )
     parser.add_argument(
+        "--numeric_k",
+        type=int,
+        default=4,
+        help="Maximum memories returned by one time/position retrieval call",
+    )
+    parser.add_argument(
+        "--unified_evidence_ledger",
+        action="store_true",
+        help=(
+            "Enable v4 cross-modal top-1 selection, shared ID masking, and a "
+            "single question-level evidence budget"
+        ),
+    )
+    parser.add_argument(
+        "--question_evidence_budget",
+        type=int,
+        default=5,
+        help="Maximum unique memories across text, time, and position in v4",
+    )
+    parser.add_argument(
         "--qrag_checkpoint",
         type=str,
         default=None,
@@ -1004,6 +1061,15 @@ if __name__ == "__main__":
         help=(
             "Maximum executed retrieval calls per answer attempt; controller "
             "turns are interleaved so every call sees the previous result"
+        ),
+    )
+    parser.add_argument(
+        "--duplicate_replan_limit",
+        type=int,
+        default=2,
+        help=(
+            "Maximum consecutive duplicate retrieval corrections before the "
+            "controller is forced to the reader"
         ),
     )
     parser.add_argument("--resume", action="store_true")

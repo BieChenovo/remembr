@@ -37,6 +37,7 @@ def make_memory(
     episode_mode="per_call",
     question_evidence_budget=2,
     text_k=2,
+    unified_evidence_ledger=False,
 ):
     memory = QragLocalMemory.__new__(QragLocalMemory)
     memory.encoder = FakeQragEncoder()
@@ -51,6 +52,11 @@ def make_memory(
     memory.retrieval_mode = retrieval_mode
     memory.episode_mode = episode_mode
     memory.question_evidence_budget = question_evidence_budget
+    memory.unified_evidence_ledger = unified_evidence_ledger
+    memory.text_episode_mode = (
+        "question" if unified_evidence_ledger else episode_mode
+    )
+    memory.question_text_evidence_budget = question_evidence_budget
     memory.original_question = None
     memory.reset()
     memory.set_qrag_context("Which evidence answers the question?")
@@ -259,6 +265,59 @@ class QragLocalMemoryTest(unittest.TestCase):
             ["Which evidence answers the question?", "second query"],
         )
         self.assertEqual(traces[1]["episode_selected_entry_ids_before"], [102, 101])
+
+    def test_unified_state_carries_numeric_caption_into_next_text_call(self):
+        memory = make_memory(
+            state_format="controller",
+            episode_mode="question",
+            question_evidence_budget=3,
+            text_k=1,
+            unified_evidence_ledger=True,
+        )
+        memory.begin_retrieval_episode()
+
+        memory.search_by_position((0.0, 0.0, 0.0))
+        memory.search_by_text("different evidence after the position result")
+        traces = memory.get_retrieval_trace()
+
+        self.assertEqual(traces[0]["selected"][0]["entry_id"], 100)
+        self.assertEqual(traces[0]["tool"], "retrieve_from_position")
+        self.assertEqual(
+            traces[1]["qrag_state_components"],
+            [
+                "Which evidence answers the question?",
+                "different evidence after the position result",
+                "caption 0",
+            ],
+        )
+        self.assertNotEqual(traces[1]["selected"][0]["entry_id"], 100)
+        self.assertEqual(traces[1]["global_selected_entry_ids_before"], [100])
+        self.assertEqual(
+            traces[1]["prior_evidence_sources"][0]["tool"],
+            "retrieve_from_position",
+        )
+
+    def test_unified_static_masks_numeric_id_without_adding_caption_to_state(self):
+        memory = make_memory(
+            state_format="controller",
+            retrieval_mode="static",
+            episode_mode="question",
+            question_evidence_budget=3,
+            text_k=1,
+            unified_evidence_ledger=True,
+        )
+        memory.begin_retrieval_episode()
+
+        memory.search_by_position((0.0, 0.0, 0.0))
+        memory.search_by_text("static query")
+        text_trace = memory.get_retrieval_trace()[1]
+
+        self.assertEqual(
+            text_trace["state_components"],
+            ["Which evidence answers the question?", "static query"],
+        )
+        self.assertNotEqual(text_trace["selected"][0]["entry_id"], 100)
+        self.assertEqual(text_trace["global_selected_entry_ids_before"], [100])
 
 
 if __name__ == "__main__":

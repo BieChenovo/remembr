@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>B3 v4 · Unified top-1 Q-RAG</title>
+  <style>
+    :root { color-scheme:dark; --bg:#07111f; --panel:#0d1b2d; --line:#29415c; --text:#e9f2ff; --muted:#9db1c8; --cyan:#63d7ff; --violet:#b8a1ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 85% 0,rgba(184,161,255,.16),transparent 34rem),var(--bg); color:var(--text); font:15px/1.6 Inter,system-ui,sans-serif; }
+    main { width:min(1040px,calc(100% - 32px)); margin:auto; padding:52px 0 70px; }
+    a { color:var(--cyan); }
+    h1 { margin:8px 0 12px; font-size:clamp(32px,5vw,54px); line-height:1.05; }
+    h2 { margin:0 0 12px; font-size:21px; }
+    p { color:var(--muted); }
+    .eyebrow { color:var(--violet); font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:28px 0; }
+    .card,.panel { border:1px solid var(--line); border-radius:15px; background:rgba(13,27,45,.9); }
+    .card { padding:18px; }
+    .card span { display:block; color:var(--muted); font-size:13px; }
+    .card strong { display:block; margin-top:4px; color:var(--violet); font-size:28px; }
+    .panel { margin-top:16px; padding:22px; }
+    .links { display:flex; flex-wrap:wrap; gap:9px; }
+    .links a { padding:7px 11px; border:1px solid #3a5879; border-radius:9px; color:var(--text); text-decoration:none; }
+    .links a:hover { border-color:var(--cyan); }
+    .finding { border-color:rgba(255,200,117,.48); }
+    code { color:var(--cyan); }
+    @media(max-width:720px){.cards{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<main>
+  <a href="../../../">← 返回报告目录</a>
+  <div class="eyebrow">B3 · v4 unified top-1 · 210 questions</div>
+  <h1>Unified top-1 Q-RAG</h1>
+  <p>文本、时间和位置检索统一为每次 top-1，共享题级 evidence ledger、ID mask 与 5 条唯一证据预算；数值检索结果也会进入下一轮 Q-RAG 状态。重复工具调用最多触发两次 controller replan。</p>
+
+  <section class="cards">
+    <article class="card"><span>答案准确率</span><strong>44.3%</strong><span>93 / 210</span></article>
+    <article class="card"><span>Reference-memory hit</span><strong>4.8%</strong><span>10 / 210</span></article>
+    <article class="card"><span>Grounded 正确率</span><strong>4.8%</strong><span>10 / 210</span></article>
+    <article class="card"><span>实现审计错误</span><strong>0</strong><span>218 attempts</span></article>
+  </section>
+
+  <section class="panel finding">
+    <h2>主要观察</h2>
+    <p>v4 的闭环状态审计通过，但答案准确率与 v3 同为 44.3%：逐题比较有 24 题改善、24 题退化。Reference-memory hit 从 v3 的 9.0% 降至 4.8%。218 次回答尝试中，148 次重复调用被拦截、95 次触发 replan；每次尝试最多积累 4 条唯一证据，未用满 5 条全局预算。结果说明统一 top-1 已按设计工作，但当前 controller 查询策略和证据覆盖仍是主要瓶颈。</p>
+  </section>
+
+  <section class="panel">
+    <h2>报告入口</h2>
+    <div class="links">
+      <a href="../../../comparison/v4_unified_top1/">B0–B3 / v2–v4 对比</a>
+      <a href="analysis/">210 题错误分析</a>
+      <a href="sequence_0_audit/">Sequence 0 深度审计</a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>逐序列轨迹</h2>
+    <div class="links">
+      <a href="sequences/sequence_0.html">seq 0</a><a href="sequences/sequence_3.html">seq 3</a><a href="sequences/sequence_4.html">seq 4</a><a href="sequences/sequence_6.html">seq 6</a><a href="sequences/sequence_16.html">seq 16</a><a href="sequences/sequence_21.html">seq 21</a><a href="sequences/sequence_22.html">seq 22</a>
+    </div>
+  </section>
+</main>
+</body>
+</html>
