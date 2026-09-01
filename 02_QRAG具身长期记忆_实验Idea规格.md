@@ -899,8 +899,8 @@ v3 已完成以下代码修复：
 - trace 新增 controller turn、batch、call ID、raw/normalized query、duplicate flag、
   controller 已看到的 prior IDs、selected IDs、Q-RAG state components；numeric
   retrieval 明确标记为 `non_qrag`；
-- 新 run tag 为 `question_state_v3_interleaved`，不会覆盖 v2 数据。报告仍沿用
-  `v2 = 修复后` 的目录命名，新结果写入各组 `v2/v3_interleaved/` 子目录。
+- 新 run tag 为 `question_state_v3_interleaved`，不会覆盖 v2 数据。报告作为
+  独立实现版本写入 `b3/v3/`，与 `b3/v2/` 并列。
 
 完整问题分析、trace contract 和验收标准见
 `docs/QRAG_RETRIEVAL_FIX_SPEC.md`。
@@ -925,8 +925,8 @@ v4 已完成 7 个 sequence 共 210 题：答案准确率 93/210（44.3%），
 reference-memory hit 与 Grounded accuracy 均为 10/210（4.8%）。218 个
 answer attempts 的 top-1、全局 mask、跨模态 state、duplicate replan 和预算
 审计错误均为 0。完整报告位于
-`docs/reports/b3/v2/v4_unified_top1/`，对比报告位于
-`docs/reports/comparison/v4_unified_top1/`。
+`docs/reports/b3/v4/`，对比报告位于
+`docs/reports/comparison/v4/`。
 
 ### 14.11 可直接复制给另一对话的任务
 

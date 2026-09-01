@@ -7,7 +7,7 @@
     "captions": "artifacts/captions/0/captions/captions_VILA1.5-13b_3_secs.json",
     "questions": "artifacts/questions/0/human_qa.json",
     "result": "artifacts/eval_outs/0/human_qa/remembr+qwen3:8b__captions_VILA1.5-13b_3_secs__qrag_qrag_210_question_state_v3_interleaved.json",
-    "analysis": "artifacts/eval_reports/b3/v2/v3_interleaved/analysis/error_analysis.json"
+    "analysis": "artifacts/eval_reports/b3/v3/analysis/error_analysis.json"
   },
   "caption_sampling": {
     "seconds_per_caption": 3,
@@ -15,7 +15,7 @@
     "method": "uniform linspace including both ends"
   },
   "video": {
-    "path": "../../../../b0/v1/sequence_0_media/media/sequence_0_full.mp4",
+    "path": "../../../b0/v1/sequence_0_media/media/sequence_0_full.mp4",
     "frame_count": 8212,
     "fps": 9.9991383625453,
     "duration_seconds": 821.170755147934,
@@ -44,7 +44,7 @@
         -4.819999999999999e-05
       ],
       "caption": "The video shows a concrete sidewalk with a metal bike rack on the right side. There is a green dumpster in the background and a building with windows on the left side. The sky is overcast, and there are no people or moving objects in the scene. The bike rack is empty, and there are no bikes parked. The sidewalk is clean, and there are no visible litter or debris. The building appears to be made of brick, and there are no visible signs or markings.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0000.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0000.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -119,7 +119,7 @@
         0.0028077
       ],
       "caption": "The video shows a concrete sidewalk with a metal bike rack on the right side. There is a large green dumpster in the background, and a building with windows on the right. A person is seen walking away from the camera, wearing a yellow shirt and dark pants. The sky is overcast, and there are no other people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0001.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0001.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -194,7 +194,7 @@
         0.015308033333333334
       ],
       "caption": "The video shows a concrete sidewalk with a metal bike rack on the right side. There is a large green electrical box on the left side of the sidewalk. The sky is overcast, and the buildings in the background are made of brick. There is a person walking away from the camera in the distance. The person is wearing a yellow shirt and dark pants. The sidewalk is clean, and there are no visible cracks or debris.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0002.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0002.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -269,7 +269,7 @@
         -0.01810003333333333
       ],
       "caption": "The video begins with a view of a large green electrical box situated on a concrete surface. The box is rectangular and appears to be made of metal. The surrounding area is a paved lot with visible tire marks, indicating recent vehicle movement. The lot is bordered by a concrete wall on one side and a building with multiple windows on the other. There are no people or moving objects in the scene. The sky is overcast, suggesting it may be a cloudy day.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0003.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0003.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -344,7 +344,7 @@
         -0.14147790000000002
       ],
       "caption": "The video begins with a view of a large, empty parking lot with visible tire marks on the ground. The lot is surrounded by buildings with brick facades and large windows. There are no cars or people in the lot. The sky is overcast, and the ground appears wet, suggesting recent rain. As the video progresses, the camera pans to the right, revealing a red fire hydrant and a green dumpster. The buildings in the background have multiple stories, and there are staircases leading to different levels. The video ends with the camera pointing towards a set of stairs leading up to a building",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0004.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0004.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -419,7 +419,7 @@
         -0.2324716333333333
       ],
       "caption": "The video shows a large, empty parking lot with a concrete surface. The lot is surrounded by buildings with multiple windows. There are tire marks on the ground, indicating frequent vehicle movement. In the center of the lot, there is a red fire hydrant. The sky is overcast, and the overall color palette of the scene is muted with grays, reds, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0005.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0005.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -494,7 +494,7 @@
         -0.2865489666666666
       ],
       "caption": "The video shows a series of images of a large, empty parking lot with a red curb and a fire hydrant on the left side. The ground is made of concrete with visible tire marks. In the background, there is a large brick building with multiple windows. The sky is overcast, and there are no people or vehicles in sight.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0006.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0006.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -569,7 +569,7 @@
         -0.32487646666666664
       ],
       "caption": "The video shows a large, empty parking lot with a grey concrete surface. There are visible tire marks on the ground, indicating recent vehicle movement. The parking lot is surrounded by a large brick building with multiple windows. There is a metal railing on one side of the lot, and a white cylindrical structure on the other side. The sky is overcast, and there are no people or vehicles in sight.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0007.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0007.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -644,7 +644,7 @@
         -0.3586330333333334
       ],
       "caption": "The video shows a large, empty parking lot with a grey concrete surface. There are visible cracks and patches on the ground. In the background, there is a large brick building with multiple windows. The building has a white door at the center and a set of stairs leading up to it. There is a metal railing on the right side of the building. The sky is overcast, and there are no people or vehicles in sight.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0008.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0008.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -719,7 +719,7 @@
         -0.3886472333333334
       ],
       "caption": "The video shows a large, empty parking lot with a grey asphalt surface. The lot is surrounded by a multi-story brick building with numerous windows. There are no visible cars or people in the lot. The building has a large garage door at the center, and there is a set of stairs leading up to the entrance. The sky is overcast, and the overall color palette of the scene is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0009.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0009.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -794,7 +794,7 @@
         -0.42268186666666685
       ],
       "caption": "The video shows a large, empty parking lot with a grey asphalt surface. The lot is surrounded by a multi-story brick building with numerous windows. There are no visible cars or people in the lot. The sky is overcast, and the overall color palette of the scene is muted with greys, browns, and reds from the bricks.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0010.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0010.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -869,7 +869,7 @@
         -0.4540026666666667
       ],
       "caption": "The video shows a large, empty parking lot with a concrete surface. The lot is surrounded by a brick building with multiple windows. There are no visible people or vehicles in the lot. The sky is overcast, and the overall color palette of the scene is muted with grays, browns, and reds. The parking lot has a few visible markings, including a red curb and a manhole cover. There is a set of stairs leading up to the building, and a metal fence can be seen on the right side of the frame.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0011.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0011.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -944,7 +944,7 @@
         -0.49098349999999985
       ],
       "caption": "The video shows a concrete parking lot with a large building in the background. The building has multiple windows and a garage door at the center. There are a few bicycles parked against the wall on the left side of the frame. The parking lot has a red curb on the right side and a manhole cover in the center. The sky is overcast, and the ground is dry.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0012.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0012.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1019,7 +1019,7 @@
         -0.5450466000000002
       ],
       "caption": "The video shows a concrete parking lot with a large building in the background. The building has multiple windows and a garage door. There are several bicycles parked against the wall of the building. The parking lot has a few visible manhole covers. The ground is mostly empty, with no cars or people in sight. The sky is overcast, and the overall color scheme is muted with grays, browns, and the red of the bicycles.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0013.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0013.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1094,7 +1094,7 @@
         -0.6331367000000001
       ],
       "caption": "The video shows a concrete parking lot with a few leaves scattered on the ground. There is a red line painted on the ground, possibly indicating parking spaces. The lot is empty except for a few bicycles parked against a wall. The wall is part of a larger building with windows and a door. The sky is overcast, and the overall color palette of the video is muted with grays, browns, and reds.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0014.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0014.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1169,7 +1169,7 @@
         -0.7163859000000001
       ],
       "caption": "The video shows a concrete parking lot with a red line painted on the ground. There are several bicycles parked against a wall of a building with a white facade and windows. The building has a door and a vent on the wall. There is a yellow pole with a sign on it, and a tree can be seen in the background. The sky is overcast, and the ground appears to be dry.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0015.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0015.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1244,7 +1244,7 @@
         -0.815621866666667
       ],
       "caption": "The video shows a concrete ground with a red line painted on it. There are several bicycles parked against a wall of a building. The building has a white door and a window with a grill. There is a trash can next to the door. The sky is overcast, and there are trees and another building in the background.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0016.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0016.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1319,7 +1319,7 @@
         -0.9636452999999999
       ],
       "caption": "The video shows a concrete pathway leading to a building with a white exterior. There are several bicycles parked against the wall of the building. The bicycles are of different colors, including blue, black, and white. The building has a large window and a door with a red frame. There are no people visible in the video. The sky is overcast, and there are trees and other buildings in the background.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0017.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0017.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1394,7 +1394,7 @@
         -1.1010394333333335
       ],
       "caption": "The video shows a concrete pathway leading towards a building with a large glass window. On the right side of the pathway, there is a row of bicycles parked against a metal railing. The bicycles vary in color, with some being blue, black, and white. The pathway is bordered by red curbs, and there are several concrete pillars along the pathway. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0018.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0018.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1469,7 +1469,7 @@
         -1.2409575666666663
       ],
       "caption": "The video shows a concrete pathway with a white line down the middle, leading towards a building in the distance. On the left side of the pathway, there is a white delivery truck parked next to a building. On the right side, there are several bicycles parked in a row. The buildings on either side of the pathway are made of concrete and have large windows. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0019.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0019.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1544,7 +1544,7 @@
         -1.3295727333333331
       ],
       "caption": "The video shows a concrete pathway with a white line down the middle, leading towards a building in the distance. On the left side of the pathway, there is a white delivery truck parked with a logo on its side. On the right side, there are several bicycles parked in a rack. The buildings on either side of the pathway are made of brick and concrete, and there are trees visible in the background. The sky is overcast, and the overall color scheme of the video is muted with greys, browns, and greens.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0020.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0020.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1619,7 +1619,7 @@
         -1.3938710333333333
       ],
       "caption": "The video shows a concrete pathway with a white line down the middle, leading towards a building with a glass facade. On the right side of the pathway, there are several bicycles parked against a metal rack. The bicycles are of various colors, including white, black, and blue. The building in the background has a modern design with large windows and a flat roof. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0021.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0021.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1694,7 +1694,7 @@
         -1.460873033333333
       ],
       "caption": "The video shows a concrete pathway leading towards a building with a glass facade. On the right side of the pathway, there are several bicycles parked against a metal railing. The bicycles are of various colors, including black, white, and blue. The pathway is lined with concrete bollards, and there are trees and bushes visible in the background. The sky is overcast, and the overall color palette of the scene is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0022.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0022.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1769,7 +1769,7 @@
         -1.5084040333333337
       ],
       "caption": "The video shows a concrete pathway leading through a university campus. The pathway is lined with short concrete barriers on either side. There are several buildings visible in the background, including a tall brick building and a modern glass building. The sky is overcast, and there are no people or moving objects in the scene. The colors in the video are muted, with the grey of the concrete and the red of the brick building being the most prominent.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0023.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0023.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1844,7 +1844,7 @@
         -1.5588144
       ],
       "caption": "The video shows a concrete pathway leading through a university campus. The pathway is lined with concrete bollards on either side. There are several buildings visible in the background, including a tall brick building and a modern glass building. The sky is overcast, and there are no people or moving objects in the scene. The colors in the video are muted, with the grey of the concrete and the red of the brick building being the most prominent.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0024.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0024.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1919,7 +1919,7 @@
         -1.6165778333333336
       ],
       "caption": "The video shows a wide, empty street with a concrete surface. On either side of the street, there are buildings with multiple windows and a few trees with green leaves. The sky is overcast, and there are no visible people or moving objects in the scene. The buildings are primarily beige and gray, with some red brickwork. The trees are scattered sparsely along the sidewalk.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0025.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0025.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -1994,7 +1994,7 @@
         -1.6708494999999999
       ],
       "caption": "The video shows a wide, open concrete area with a few trees and buildings in the background. There are several concrete bollards placed at regular intervals along the sides of the area. The sky is overcast, and the overall color palette of the scene is muted with greys, greens, and browns. A person is seen in the distance, walking towards the camera. They are wearing dark clothing and appear to be alone. As the person gets closer, they continue to walk at a steady pace, and their features become more discernible.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0026.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0026.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2069,7 +2069,7 @@
         -1.7236212666666664
       ],
       "caption": "The video shows a wide, open concrete area with a few trees and buildings in the background. The sky is overcast. A person is seen in the distance, walking towards the camera. They are wearing dark clothing and appear to be carrying a backpack. As the person gets closer, they continue to walk at a steady pace. There are no other people or moving objects in the frame.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0027.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0027.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2144,7 +2144,7 @@
         -1.7644923999999993
       ],
       "caption": "The video shows a person walking across a concrete plaza. The plaza is surrounded by trees and buildings. The person is wearing dark clothing and is walking at a steady pace. The sky is overcast, and there are no other people visible in the video. The buildings in the background are multi-storied and appear to be part of a university campus.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0028.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0028.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2219,7 +2219,7 @@
         -1.8456995999999999
       ],
       "caption": "The video shows a concrete area with a red line painted on the ground. There are trees and buildings in the background. A person is walking on the left side of the frame. The sky is overcast, and there are no visible shadows.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0029.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0029.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2294,7 +2294,7 @@
         -1.9298636666666666
       ],
       "caption": "The video shows a concrete sidewalk with a red line painted on it. There are trees and a building in the background. The sky is overcast, and there are no people or moving objects visible in the video. The sidewalk appears to be empty and there are no signs of activity.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0030.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0030.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2369,7 +2369,7 @@
         -2.0251815999999994
       ],
       "caption": "The video shows a wide, empty concrete area with a red curb on the right side. There are several trees and buildings in the background. The sky is overcast, and the area appears to be devoid of people. The concrete has some small cracks and patches of dirt. There are no visible signs or banners.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0031.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0031.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2444,7 +2444,7 @@
         -2.0936161
       ],
       "caption": "The video shows a wide, empty concrete plaza surrounded by buildings. The plaza is devoid of people, and there are no visible activities taking place. The buildings are of various heights, with the tallest one being a modern glass structure. There are trees scattered around the plaza, and a few parked cars can be seen in the distance. The sky is overcast, and the overall color palette of the scene is muted with greys, greens, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0032.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0032.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2519,7 +2519,7 @@
         -2.116351566666667
       ],
       "caption": "The video shows a concrete sidewalk with a few leaves scattered on it. There is a street lamp on the right side of the frame. In the background, there are buildings with windows and a tree with green leaves. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0033.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0033.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2594,7 +2594,7 @@
         -2.1847462
       ],
       "caption": "The video shows a concrete sidewalk with a metal grate on the ground. There are trees and buildings in the background. The sky is overcast, and there are no people or moving objects visible in the video. The colors are muted, with the grey of the concrete and the green of the trees being the most prominent.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0034.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0034.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2669,7 +2669,7 @@
         -2.2394226
       ],
       "caption": "The video shows a series of images of a university campus. The campus is empty with no people visible. The ground is covered with yellow and brown patterned tiles. There are several trees with green leaves scattered around the area. There are buildings with different architectural styles in the background. The sky is overcast, and the overall color scheme of the video is muted with greys, browns, and greens.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0035.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0035.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2744,7 +2744,7 @@
         -2.2480085333333335
       ],
       "caption": "The video shows a series of images of a university campus. The ground is covered with a herringbone pattern of tan and brown bricks. There are several yellow and silver bollards placed at intervals along the pathway. In the background, there are trees and buildings with large windows. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0036.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0036.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2819,7 +2819,7 @@
         -2.269831933333333
       ],
       "caption": "The video shows a series of images of a university campus. The ground is covered with a herringbone pattern of beige and brown bricks. There are several yellow and silver bollards placed at intervals along the pathway. In the background, there are trees, a building with a red flag, and a metal sculpture. The sky is overcast, and there are no people visible in the images.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0037.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0037.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2894,7 +2894,7 @@
         -2.269267166666667
       ],
       "caption": "The video shows a wide, empty brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On the right side of the walkway, there is a metal sculpture with multiple curved elements, and a sign with red and white colors is attached to it. In the background, there are trees, a building, and a few street lamps. The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0038.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0038.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -2969,7 +2969,7 @@
         -2.2601840999999996
       ],
       "caption": "The video shows a series of images of a university campus. The ground is covered with a herringbone pattern of beige and brown bricks. There are several trees with green leaves and a few with orange leaves, indicating a change in season. There are buildings with large windows and a few street lamps. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0039.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0039.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3044,7 +3044,7 @@
         -2.2468871666666668
       ],
       "caption": "The video shows a wide, empty pedestrian walkway with a herringbone pattern made of beige and brown bricks. The walkway is flanked by green bushes and trees, and there are buildings visible in the background. The sky is overcast, and there are no people or moving objects in the scene. The walkway leads towards a metal structure that appears to be a part of a modern building.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0040.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0040.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3119,7 +3119,7 @@
         -2.232979666666667
       ],
       "caption": "The video shows a wide, empty pedestrian walkway with a herringbone pattern of beige and brown bricks. The walkway is flanked by green bushes and trees, and there are buildings visible in the background. The sky is overcast, and there are no people or moving objects in the scene. The walkway leads towards a set of stairs and a metal structure that appears to be part of a modern building.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0041.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0041.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3194,7 +3194,7 @@
         -2.2182195000000005
       ],
       "caption": "The video shows a wide, empty pedestrian pathway made of brick with a herringbone pattern. The pathway is surrounded by trees and buildings, suggesting it is located on a university campus. The sky is overcast, and the lighting is soft, indicating either early morning or late afternoon. There are no people or moving objects in the frame, and the scene is static. The buildings in the background have a traditional architectural style with multiple windows and brick facades. The trees are lush and green, suggesting it is either spring or summer.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0042.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0042.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3269,7 +3269,7 @@
         -2.213908466666667
       ],
       "caption": "The video shows a wide, empty pedestrian walkway with a herringbone pattern of beige and brown bricks. The walkway is flanked by green trees and a series of buildings with brick facades. There are street lamps and a trash can visible on the side. The sky is overcast, and the overall color palette is muted. A person wearing dark clothing is seen walking away from the camera, and there is a small white object on the ground near the center of the walkway.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0043.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0043.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3344,7 +3344,7 @@
         -2.2000224333333334
       ],
       "caption": "The video shows a wide, empty pedestrian walkway with a herringbone pattern made of beige and brown bricks. On the left side of the walkway, there is a person wearing a black jacket and blue jeans, walking away from the camera. On the right side, there is a trash can and a few trees with green leaves. The sky is overcast, and the buildings in the background have a brick facade.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0044.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0044.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3419,7 +3419,7 @@
         -2.179459966666667
       ],
       "caption": "The video shows a wide, empty pedestrian walkway made of brick with a herringbone pattern. The walkway is flanked by trees and buildings on both sides. The sky is overcast, and the lighting is soft. There are no people or moving objects in the scene. The colors are muted, with the brick walkway being a light brown, the trees a dark green, and the buildings a mix of beige and gray. There are no visible signs or distinctive landmarks.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0045.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0045.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3494,7 +3494,7 @@
         -2.1657284
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a brick-paved walkway that has a herringbone pattern. The bricks are a mix of light and dark brown. On either side of the walkway, there are trees with green leaves, and buildings with windows and doors. There are no people or moving objects visible in the video. The sky is overcast, and the overall color palette is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0046.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0046.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3569,7 +3569,7 @@
         -2.1513812333333333
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a brick-paved walkway that has a herringbone pattern. The bricks are a mix of light and dark shades of brown. On either side of the walkway, there are trees with green leaves, and buildings with windows and doors. There are no people or moving objects visible in the video. The sky is overcast, and the overall color palette is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0047.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0047.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3644,7 +3644,7 @@
         -2.1293110333333334
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a brick-paved walkway that has a herringbone pattern. The bricks are a mix of light and dark brown, and the walkway is lined with trees on both sides. There are buildings visible in the background, and a few people can be seen walking in the distance. The sky is overcast, and there are no visible shadows on the ground.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0048.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0048.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3719,7 +3719,7 @@
         -2.113613966666667
       ],
       "caption": "The video shows a wide, empty brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On either side of the walkway, there are large trees with green leaves, and the sky is overcast. There are buildings visible in the background, and a few people can be seen walking in the distance. A red banner with white text hangs from a lamppost on the right side of the walkway.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0049.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0049.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3794,7 +3794,7 @@
         -2.0978500666666666
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On the right side of the walkway, there is a red banner with white text hanging from a metal pole. The banner is partially obscured by a tree. On the left side, there is a sidewalk with a metal railing. In the background, there are trees with green leaves and a building with white walls and windows. A few people can be seen walking in the distance.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0050.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0050.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3869,7 +3869,7 @@
         -2.0576661666666665
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark brown. On the right side of the walkway, there is a grassy area with a few trees and a red banner hanging from a pole. On the left side, there is a sidewalk with a few people walking. The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0051.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0051.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -3944,7 +3944,7 @@
         -2.0278503
       ],
       "caption": "The video shows a pedestrian pathway with a herringbone pattern made of bricks. The pathway is bordered by a concrete sidewalk on one side and a grassy area with bushes on the other. There are large trees with green leaves on both sides of the pathway. A person is seen walking away from the camera down the pathway. The sky is overcast, and the overall color palette of the video is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0052.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0052.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4019,7 +4019,7 @@
         -2.0251237666666677
       ],
       "caption": "The video begins with a view of a brick-paved walkway with a herringbone pattern, flanked by a concrete sidewalk on the right and a grassy area with bushes on the left. A street lamp stands on the right side of the frame. In the background, there are trees and a building with large windows. A person is seen walking away from the camera, wearing a dark jacket and light-colored pants. As the video progresses, another person enters the frame from the right, wearing a blue jacket, beige pants, and white sneakers, holding",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0053.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0053.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4094,7 +4094,7 @@
         -2.0419386666666663
       ],
       "caption": "The video shows a person walking away from the camera down a brick-paved pathway. The pathway is lined with trees and bushes on both sides. The person is wearing dark clothing and appears to be walking at a steady pace. The sky is overcast, and there are no other people visible in the video. The buildings in the background have a traditional architectural style with large windows and columns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0054.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0054.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4169,7 +4169,7 @@
         -2.021695838709678
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a sidewalk that has a herringbone pattern and a smooth, grey concrete surface. There is a street lamp with a round base and a tall, slender pole. The lamp is not illuminated. To the right of the lamp, there is a small garden area with a neatly trimmed hedge and a few scattered leaves on the ground. In the background, there are large trees with green leaves and a building with multiple windows. A few people can be seen walking in the distance. The sky is overcast, and the overall",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0055.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0055.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4244,7 +4244,7 @@
         -2.0028162000000003
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a pathway that is made of brick and concrete. There is a large tree with a thick trunk and sprawling branches on the left side of the pathway. The tree has green leaves and is surrounded by a small patch of grass and shrubs. There is a street lamp with a gray base and a black top on the right side of the pathway. The sky is overcast, and the overall color palette of the video is muted with greens, grays, and browns. There are a few people walking in the",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0056.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0056.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4319,7 +4319,7 @@
         -2.011813766666666
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. On the right side of the walkway, there is a concrete curb. On the left side, there is a grassy area with a few bushes and a street lamp. In the distance, there are several people walking away from the camera. The buildings in the background have a classic architectural style with large windows and columns. The sky is overcast, and the overall color palette of the video is muted with greens, grays, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0057.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0057.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4394,7 +4394,7 @@
         -2.011746033333333
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. On the right side of the walkway, there is a concrete curb. To the right of the curb, there is a small garden area with a bush and a lamp post. In the background, there are trees and buildings that appear to be part of a university campus. A few people can be seen walking in the distance. The sky is overcast, and the overall color palette of the video is muted with greys, browns, and greens.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0058.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0058.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4469,7 +4469,7 @@
         -2.0110658333333333
       ],
       "caption": "The video shows a sidewalk made of brick with a herringbone pattern. The sidewalk is bordered by a concrete curb on one side and a grassy area with bushes on the other. There are trees with green leaves lining the sidewalk, and a street lamp is visible on the right side. Two people are walking away from the camera, one wearing a dark jacket and the other in a lighter jacket. The sky is overcast, and the overall color palette of the video is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0059.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0059.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4544,7 +4544,7 @@
         -2.010382933333333
       ],
       "caption": "The video shows a sidewalk with a herringbone pattern made of bricks. There are two people walking away from the camera, one wearing a dark suit and the other in a lighter colored outfit. The sidewalk is bordered by a concrete curb on one side and a grassy area with bushes on the other. There are trees with green leaves in the background, and a building can be seen in the distance. The sky is overcast, and the overall color palette of the video is muted with greens, grays, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0060.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0060.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4619,7 +4619,7 @@
         -2.0096769666666665
       ],
       "caption": "The video shows a sidewalk with a herringbone pattern made of bricks. There are two people walking away from the camera, one wearing a black jacket and the other in a blue jacket. The sidewalk is bordered by a concrete curb on one side and a grassy area with bushes on the other. There are trees with green leaves in the background, and a building can be seen in the distance. The sky is overcast, and the overall color palette of the video is muted with greens, grays, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0061.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0061.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4694,7 +4694,7 @@
         -2.0083855333333336
       ],
       "caption": "The video shows a sidewalk with a herringbone pattern made of bricks. The sidewalk is bordered by a concrete curb on one side and a grassy area with bushes on the other. There are trees with green leaves lining the sidewalk, and a building can be seen in the background. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0062.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0062.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4769,7 +4769,7 @@
         -2.0068181
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick and is lined with trees on both sides. The trees have green leaves and are tall, providing shade over the pathway. The sky is overcast, and the lighting is soft. There are no people or moving objects in the video. The buildings in the background are made of brick and have multiple windows. The video does not show any movement or action.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0063.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0063.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4844,7 +4844,7 @@
         -2.0052396
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick and is lined with trees on both sides. The trees have green leaves and are tall, providing shade over the pathway. The sky is overcast, and the lighting is soft. There are no people or moving objects in the video. The buildings in the background are made of brick and have multiple windows. The video does not show any movement or action.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0064.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0064.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4919,7 +4919,7 @@
         -2.0146864666666664
       ],
       "caption": "The video shows a series of images of a university campus. The pathway is made of brick with a herringbone pattern and is bordered by a concrete sidewalk. There are large trees with green leaves on either side of the pathway, and the buildings in the background have a traditional architectural style with white walls and dark roofs. There are a few people visible in the distance, walking along the pathway. The sky is overcast, and the overall color palette of the video is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0065.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0065.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -4994,7 +4994,7 @@
         -2.0282854333333336
       ],
       "caption": "The video shows a wide, empty brick-paved walkway with a herringbone pattern. The walkway is lined with large, mature trees that provide shade. On the left side of the walkway, there are buildings with white facades and dark windows. On the right side, there is a grassy area with a few scattered leaves. In the distance, a person can be seen walking away from the camera. The sky is overcast, and the overall color palette of the scene is muted with earthy tones.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0066.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0066.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5069,7 +5069,7 @@
         -2.033580066666667
       ],
       "caption": "The video shows a person walking away from the camera down a brick-paved pathway. The pathway is lined with trees on both sides, and there are buildings visible in the background. The person is wearing a red shirt and dark pants. The sky is overcast, and there are no other people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0067.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0067.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5144,7 +5144,7 @@
         -2.0444877000000004
       ],
       "caption": "The video shows a person walking away from the camera down a brick-paved pathway. The pathway is lined with trees on both sides, and there are buildings visible in the background. The person is wearing a red shirt and dark pants. There are no other people visible in the video. The sky is clear, and it appears to be daytime.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0068.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0068.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5219,7 +5219,7 @@
         -2.0350099666666663
       ],
       "caption": "The video shows a man walking on a brick-paved pathway. The pathway is lined with trees and has a few manhole covers. The man is wearing a red shirt and dark pants. He is walking towards the camera and appears to be in a relaxed mood. The sky is clear, and the weather seems to be pleasant.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0069.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0069.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5294,7 +5294,7 @@
         -2.0223383333333333
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark brown. On either side of the walkway, there are large trees with green leaves. The trees have thick trunks and are spaced evenly along the walkway. There are white buildings with red roofs in the background. The sky is clear and blue. There are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0070.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0070.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5369,7 +5369,7 @@
         -2.0069850333333332
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark brown. On either side of the walkway, there are large trees with green leaves. The trees have thick trunks and are spaced evenly along the walkway. There are buildings visible in the background, with white walls and windows. The sky is overcast, and there are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0071.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0071.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5444,7 +5444,7 @@
         -1.9824577096774194
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On either side of the walkway, there are large trees with green leaves. The trees have thick trunks and are spaced evenly along the walkway. There are buildings visible in the background, with white walls and windows. The sky is overcast, and there are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0072.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0072.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5519,7 +5519,7 @@
         -1.9657848333333332
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of beige and light brown. On either side of the walkway, there are large trees with green leaves. The trees have thick trunks and are spaced evenly along the walkway. There are also white buildings with multiple windows and red flags hanging from the lampposts. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0073.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0073.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5594,7 +5594,7 @@
         -1.9447729032258063
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a brick-paved walkway that has a herringbone pattern. The bricks are a mix of light and dark shades of brown. On either side of the walkway, there are large trees with green leaves, providing shade. The buildings in the background are white with red accents and have multiple windows. There are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0074.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0074.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5669,7 +5669,7 @@
         -1.9171207096774192
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark brown. On either side of the walkway, there are trees with green leaves. The trees have thick trunks and are spaced evenly along the walkway. There are buildings visible in the background, with white walls and windows. The sky is overcast, and the lighting is soft. There are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0075.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0075.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5744,7 +5744,7 @@
         -1.8976558333333338
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is a brick-paved walkway that leads through the center of the frame. The bricks are arranged in a herringbone pattern, creating a visually appealing design. On either side of the walkway, there are large trees with lush green leaves, providing shade and a natural border. The trees have thick trunks and are spaced evenly along the walkway. In the background, there are buildings with white walls and large windows, typical of university architecture. A few people can be seen walking in the distance, but they are",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0076.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0076.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5819,7 +5819,7 @@
         -1.8949094
       ],
       "caption": "The video shows a person walking on a brick-patterned sidewalk. The sidewalk is lined with trees and buildings on either side. The person is wearing a white shirt and dark pants. The sky is overcast, and there are no other people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0077.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0077.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5894,7 +5894,7 @@
         -1.8809175000000002
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On either side of the walkway, there are trees with green leaves, and buildings with white and beige facades. There are no people or moving objects in the video. The sky is overcast, and the overall color palette is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0078.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0078.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -5969,7 +5969,7 @@
         -1.8651036451612901
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a brick-paved walkway that has a herringbone pattern. The bricks are a mix of light and dark shades of brown. On either side of the walkway, there are trees with green leaves, and buildings with white walls and windows. There are no people or moving objects visible in the video. The sky is overcast, and the overall color palette is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0079.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0079.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6044,7 +6044,7 @@
         -1.8274891935483872
       ],
       "caption": "The video shows a brick-paved walkway leading towards a building with arched windows and a staircase. The walkway is empty, and there are no people visible in the frame. The bricks are arranged in a herringbone pattern, and the color of the bricks is a mix of red and brown. The building in the background has a white facade with arched windows and a staircase leading up to the entrance. There are trees on either side of the walkway, and the sky is overcast.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0080.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0080.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6119,7 +6119,7 @@
         -1.8030300333333336
       ],
       "caption": "The video shows a brick-paved walkway leading towards a building with a set of stairs. The walkway is empty, and there are no people visible in the frame. The bricks are arranged in a herringbone pattern, and the color of the bricks is a mix of beige and brown. The building in the background has a white facade with arched windows and a red banner hanging from one of the windows. There are trees on either side of the walkway, and the sky is overcast.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0081.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0081.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6194,7 +6194,7 @@
         -1.7866142666666665
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The walkway is flanked by trees and buildings on both sides. There are no people visible in the video. The buildings are multi-storied with large windows and appear to be made of brick. The trees are lush and green, suggesting it might be spring or summer. The sky is overcast, and there are no shadows visible on the ground.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0082.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0082.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6269,7 +6269,7 @@
         -1.7699743999999997
       ],
       "caption": "The video shows a wide, empty brick-paved walkway with a herringbone pattern. The walkway is flanked by green grass on one side and a concrete sidewalk on the other. There are trees with green leaves on both sides of the walkway, and a few buildings can be seen in the background. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0083.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0083.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6344,7 +6344,7 @@
         -1.7266395333333333
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of beige and light brown. On the right side of the walkway, there is a concrete curb. On the left side, there are trees with green leaves and a few buildings with multiple windows. The sky is overcast, and there are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0084.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0084.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6419,7 +6419,7 @@
         -1.7119716666666664
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of beige and light brown. On the right side of the walkway, there is a grassy area with a few trees and shrubs. On the left side, there are buildings with large windows and a few parked cars. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0085.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0085.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6494,7 +6494,7 @@
         -1.7113035333333333
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On the right side of the walkway, there is a curved concrete pathway with a darker shade of gray. The walkway is lined with trees and buildings on both sides. The trees have green leaves, and the buildings are multi-storied with white and brown exteriors. There are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0086.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0086.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6569,7 +6569,7 @@
         -1.7025981333333329
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On the right side of the walkway, there is a concrete curb. The walkway is lined with trees and buildings on both sides. The trees have green leaves, and the buildings are multi-storied with white and brown exteriors. There are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0087.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0087.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6644,7 +6644,7 @@
         -1.6856253999999997
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a brick-paved walkway that has a herringbone pattern. The bricks are a mix of light and dark shades of brown. On the right side of the walkway, there is a concrete sidewalk. The walkway is lined with trees and buildings on both sides. There are no people or moving objects visible in the video. The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0088.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0088.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6719,7 +6719,7 @@
         -1.6798935333333336
       ],
       "caption": "The video begins with a view of a brick-paved walkway on a university campus. The walkway is empty, and there are trees and buildings in the background. The sky is overcast. As the video progresses, a person wearing a blue jacket, beige pants, and carrying a backpack enters the frame from the right side. The person is holding a piece of paper in their hand. They walk towards the camera, stepping over a small puddle on the walkway. The person's face is not visible, and they do not interact with the camera.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0089.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0089.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6794,7 +6794,7 @@
         -1.671688666666667
       ],
       "caption": "The video shows a person walking on a brick-patterned sidewalk. The person is wearing a dark blue jacket, beige pants, and white sneakers. They are carrying a black backpack and holding a white piece of paper in their hand. The sidewalk is lined with trees and buildings, and there is a sign that reads \"MAKE YOUR MARK HERE\" in the background. The person is walking away from the camera, and their movement is the main focus of the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0090.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0090.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6869,7 +6869,7 @@
         -1.6615936333333334
       ],
       "caption": "The video begins with a view of a brick-patterned sidewalk, leading towards a building with a white facade and a red sign that reads \"Make Your Texas.\" The scene is set in a quiet, tree-lined area with no visible pedestrians. As the video progresses, a man wearing a blue jacket, khaki pants, and white sneakers enters the frame from the right, walking towards the camera. He is carrying a white paper bag in his left hand and a black object in his right hand. The man smiles and looks directly at the camera as he approaches. The",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0091.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0091.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -6944,7 +6944,7 @@
         -1.6626101
       ],
       "caption": "The video shows a man standing on a sidewalk in front of a building. He is wearing a blue jacket, a red shirt, and khaki pants. The man is holding a white paper in his hand. Behind him, there is a black car parked on the street. The building has a brick facade and several windows. There are trees and bushes in the background. The sky is overcast, and the ground appears to be wet, suggesting recent rain.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0092.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0092.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7019,7 +7019,7 @@
         -1.6536442000000002
       ],
       "caption": "The video shows a young man wearing a blue jacket, orange shirt, and khaki pants. He is standing on a concrete sidewalk with a brick patterned walkway to his left. Behind him is a grassy area with bushes and a building with arched windows. To his right, there is a black car parked in a driveway. The man is holding a white paper bag in his left hand and appears to be smiling at the camera. The sky is overcast, and there are no other people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0093.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0093.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7094,7 +7094,7 @@
         -1.6434998000000003
       ],
       "caption": "The video shows a man standing on a sidewalk. He is wearing a blue jacket, an orange shirt, and khaki pants. He is holding a white paper in his hand. The sidewalk is made of concrete and has a herringbone pattern. There is a grassy area with trees and shrubs on the other side of the sidewalk. In the background, there is a building with arched windows and a red sign that reads \"TEXAS\". The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0094.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0094.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7169,7 +7169,7 @@
         -1.6382841000000004
       ],
       "caption": "The video shows a man wearing a blue jacket, orange shirt, and khaki pants standing on a sidewalk. He is holding a white paper bag in his left hand. The sidewalk is made of concrete and has a curved edge. There is a brick pattern on the ground to the left of the sidewalk. Behind the man, there is a grassy area with bushes and trees. A building with arched windows can be seen in the background. The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0095.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0095.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7244,7 +7244,7 @@
         -1.6366128999999998
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick with a herringbone pattern, and the sidewalk is made of concrete. There are trees on both sides of the pathway, and the buildings in the background have a traditional architectural style with white walls and red roofs. There are no people or moving objects in the video, and the sky is overcast.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0096.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0096.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7319,7 +7319,7 @@
         -1.639190333333333
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick with a herringbone pattern, and the sidewalk is made of concrete. There are trees on both sides of the pathway, and the buildings in the background have a traditional architectural style with white walls and red roofs. There are no people or moving objects in the video, and the sky is overcast.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0097.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0097.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7394,7 +7394,7 @@
         -1.6403543333333332
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick and is empty, with no people walking on it. The pathway is bordered by a concrete sidewalk on the right and a grassy area with trees on the left. There are buildings visible in the background, and a red sign with white lettering is hanging from a tree. The sky is overcast, and the overall color scheme of the video is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0098.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0098.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7469,7 +7469,7 @@
         -1.6376165333333332
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick and is lined with trees on both sides. The trees have green leaves and are of medium height. There are no people or vehicles visible in the video. The sky is overcast, and the overall color scheme of the video is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0099.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0099.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7544,7 +7544,7 @@
         -1.640250966666667
       ],
       "caption": "The video shows a series of images of a university campus. The pathway is made of brick with a herringbone pattern and is bordered by a concrete sidewalk. There are trees with green leaves on either side of the pathway, and a few orange banners hanging from the trees. The sky is overcast, and there are no people or moving objects visible in the images.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0100.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0100.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7619,7 +7619,7 @@
         -1.6086195000000005
       ],
       "caption": "The video shows a pathway made of yellow and brown bricks, with a grey concrete border on the right side. The pathway is surrounded by trees with green leaves, and there are buildings visible in the background. The sky is overcast, and there are no people or moving objects in the scene.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0101.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0101.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7694,7 +7694,7 @@
         -1.5720394333333334
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of yellow and brown hues. On the right side of the walkway, there is a concrete curb. The walkway is lined with trees that have green leaves, and there are buildings visible in the background. The sky is overcast, and there are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0102.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0102.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7769,7 +7769,7 @@
         -1.5245578
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On the right side of the walkway, there is a grassy area with a few trees and a flagpole with a red flag. On the left side, there are buildings with large windows and a few trees. The sky is overcast, and there are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0103.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0103.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7844,7 +7844,7 @@
         -1.4788571
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of beige and light brown. On either side of the walkway, there are trees with green leaves, and a few buildings can be seen in the background. There are no people or moving objects in the video. The sky is overcast, and the overall color palette is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0104.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0104.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7919,7 +7919,7 @@
         -1.4163643666666668
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The bricks are a mix of light and dark shades of brown. On the right side of the walkway, there is a concrete sidewalk with a metal railing. Behind the railing, there are several trees with green leaves and a building with large windows. The sky is overcast, and there are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0105.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0105.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -7994,7 +7994,7 @@
         -1.3491931000000001
       ],
       "caption": "The video shows a brick-paved walkway with a herringbone pattern. The walkway is bordered by a concrete curb on one side and a metal railing on the other, leading to a set of stairs. There are several trees with green leaves on either side of the walkway, and a building with arched windows can be seen in the background. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0106.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0106.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8069,7 +8069,7 @@
         -1.2840458666666668
       ],
       "caption": "The video shows a series of images of a university campus. The pathway is made of brick with a herringbone pattern and is bordered by a concrete sidewalk. There are trees with green leaves on either side of the pathway, and a building with arched windows can be seen in the background. There are no people or moving objects in the video. The sky is overcast, and the overall color scheme is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0107.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0107.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8144,7 +8144,7 @@
         -1.2288092333333331
       ],
       "caption": "The video begins with a view of a brick-patterned sidewalk, bordered by a concrete curb on one side and a grassy area with shrubs on the other. The sky is overcast, and the trees are lush and green, suggesting it might be spring or summer. As the video progresses, a person wearing a dark blue dress and white sneakers enters the frame from the right, walking towards the camera. The person's face is not visible, and they appear to be alone. The video ends with the person walking out of the frame.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0108.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0108.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8219,7 +8219,7 @@
         -1.1894908666666664
       ],
       "caption": "The video shows a person walking on a brick-patterned sidewalk. The person is wearing a dark blue jacket, beige pants, and white sneakers. They are carrying a white paper in their right hand. The sidewalk is lined with trees and a building can be seen in the background. The sky is overcast.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0109.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0109.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8294,7 +8294,7 @@
         -1.1334254999999998
       ],
       "caption": "The video shows a person walking on a brick-patterned sidewalk. The person is wearing a dark jacket, light-colored pants, and dark shoes. They are carrying a white bag in their right hand. The sidewalk is bordered by a concrete curb on one side and a grassy area with fallen leaves on the other. There are trees with green leaves and a building with white walls and windows in the background. The sky is overcast.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0110.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0110.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8369,7 +8369,7 @@
         -1.1083977999999999
       ],
       "caption": "The video shows a man walking on a brick-patterned sidewalk. He is wearing a dark jacket, light-colored pants, and dark shoes. The man is carrying a white paper in his hand and appears to be reading it as he walks. The sidewalk is lined with trees and there is a grassy area with fallen leaves on the side. The sky is overcast and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0111.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0111.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8444,7 +8444,7 @@
         -1.1089110666666666
       ],
       "caption": "The video shows a person walking on a sidewalk made of patterned bricks. The sidewalk is bordered by a strip of grass on one side and a row of trees on the other. The person is wearing a red jacket, blue jeans, and white sneakers. They are carrying a backpack and appear to be walking at a steady pace. The trees have green leaves, and the grass is a mix of green and brown, indicating it might be autumn. There are no other people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0112.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0112.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8519,7 +8519,7 @@
         -1.1001702000000002
       ],
       "caption": "The video shows a person walking away from the camera on a sidewalk. The sidewalk is made of patterned bricks and is bordered by a concrete curb on one side and a grassy area with fallen leaves on the other. There are trees with green leaves on both sides of the sidewalk, and a building can be seen in the background. The person is wearing a dark jacket, light-colored pants, and dark shoes.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0113.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0113.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8594,7 +8594,7 @@
         -1.091242533333333
       ],
       "caption": "The video shows a person walking away from the camera down a pathway. The pathway is made of brick and has a concrete sidewalk on the right side. There are trees on both sides of the pathway, and the ground is covered with fallen leaves. The person is wearing dark clothing and is walking at a steady pace. The sky is overcast, and there are no other people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0114.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0114.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8669,7 +8669,7 @@
         -1.0789908666666668
       ],
       "caption": "The video shows a pathway made of brick with a herringbone pattern. The pathway is bordered by a concrete sidewalk on the right and a grassy area with fallen leaves on the left. There are trees with green leaves on both sides of the pathway. In the distance, there is a building with white walls and windows. A person is seen walking away from the camera down the pathway. The sky is overcast, and the overall color palette of the video is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0115.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0115.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8744,7 +8744,7 @@
         -1.0732244666666666
       ],
       "caption": "The video shows a pathway made of interlocking bricks, with a concrete sidewalk to the right. The sidewalk is lined with a metal pole and a lamp post. The pathway is surrounded by trees with green leaves, and there are buildings visible in the background. The sky is overcast, and the ground is covered with fallen leaves.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0116.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0116.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8819,7 +8819,7 @@
         -1.0857857
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick and is lined with trees on both sides. The trees have green leaves and the ground is covered with fallen leaves. There are no people or moving objects in the video. The sky is overcast and the overall color scheme is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0117.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0117.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8894,7 +8894,7 @@
         -1.0825175
       ],
       "caption": "The video begins with a view of a brick-paved walkway with a herringbone pattern. The walkway is bordered by a concrete sidewalk on the right and a grassy area with fallen leaves on the left. Tall trees with green leaves line the walkway, and a white building with multiple windows is visible in the background. As the video progresses, the camera pans to the right, revealing more of the brick walkway and the surrounding trees. The sky is overcast, and the overall color palette of the video is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0118.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0118.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -8969,7 +8969,7 @@
         -1.0882553333333331
       ],
       "caption": "The video shows a series of images of a university campus. The ground is covered with a herringbone pattern of beige and brown bricks. There are several trees with green leaves, and a large building with multiple windows in the background. There is a white sign with black lettering on the ground, and a black metal grate on the ground. The sky is clear and blue.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0119.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0119.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9044,7 +9044,7 @@
         -1.0990186333333332
       ],
       "caption": "The video shows a series of images of a university campus. The ground is covered with a herringbone pattern of beige and brown bricks. There is a large tree with a thick trunk and green leaves in the center of the frame. To the right of the tree, there is a white sign with black text, but the content of the sign is not visible. In the background, there are several buildings with large windows and a clear blue sky above. There are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0120.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0120.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9119,7 +9119,7 @@
         -1.0788445161290323
       ],
       "caption": "The video shows a series of images of a university campus. The ground is covered with a herringbone pattern of beige and brown bricks. There is a large tree with a thick trunk and green leaves in the center of the frame. To the right of the tree, there is a black sandwich board sign with white text. In the background, there are several buildings with large windows and columns. The sky is clear and blue.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0121.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0121.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9194,7 +9194,7 @@
         -1.0465011612903226
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a courtyard with a herringbone patterned brick walkway leading to a set of three white columns. The columns are surrounded by a circular area with mulch and small shrubs. The buildings surrounding the courtyard are made of brick and have multiple windows. There are no people or moving objects visible in the video. The sky is overcast, and the overall color scheme is muted with greys, browns, and greens.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0122.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0122.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9269,7 +9269,7 @@
         -1.096614193548387
       ],
       "caption": "The video shows a concrete walkway leading to a building with large windows and a glass door. On the right side of the walkway, there is a circular structure made of white bricks. The ground is covered with brown leaves, and there are green bushes on either side of the walkway. The sky is overcast, and the building appears to be made of brick with multiple stories.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0123.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0123.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9344,7 +9344,7 @@
         -1.245450193548387
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is a pathway made of light grey stone tiles, with some darker grey patches and scattered leaves. The pathway is flanked by green bushes on the left and a series of tall, grey concrete blocks on the right. In the background, there are buildings with large windows and a clear sky. There are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0124.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0124.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9419,7 +9419,7 @@
         -1.412471935483871
       ],
       "caption": "The video shows a concrete walkway with a series of rectangular stone slabs on the right side. The walkway is flanked by green bushes on the left and a tall building with windows on the right. The sky is overcast, and the ground is covered with fallen leaves. There are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0125.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0125.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9494,7 +9494,7 @@
         -1.5647882333333334
       ],
       "caption": "The video shows a concrete walkway with a light gray color and visible cracks and stains. The walkway is bordered by a low stone wall on one side and a row of green bushes on the other. In the background, there is a building with large windows and a scaffolding structure. The sky is overcast, and there are no people or moving objects in the scene.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0126.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0126.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9569,7 +9569,7 @@
         -1.7251910666666668
       ],
       "caption": "The video shows a concrete walkway with a few stains and patches of discoloration. The walkway is bordered by a low wall on one side and a row of bushes on the other. In the background, there is a building with large windows and a metal scaffolding structure. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0127.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0127.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9644,7 +9644,7 @@
         -1.8834567666666666
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is a walkway made of large, rectangular, light-colored tiles with darker grout lines. The walkway is bordered by a neatly trimmed green hedge on one side and a series of rectangular stone benches on the other. The background features a large building with multiple windows and a metal scaffolding structure. The sky is overcast, and the overall color palette is muted with greys, greens, and beiges.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0128.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0128.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9719,7 +9719,7 @@
         -2.030542933333334
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a walkway made of large, rectangular, light-colored tiles. The walkway is bordered by a low wall on one side and a row of bushes on the other. There are several benches made of the same material as the walkway, and a few trees with bare branches, suggesting it might be autumn or winter. The buildings in the background have large windows and the name \"Bill & Melinda Gates Foundation\" is visible on one of them. The sky is overcast, and there are no people",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0129.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0129.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9794,7 +9794,7 @@
         -2.1001869666666666
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a courtyard with a large tree in the center, surrounded by benches made of stone. The ground is made of large stone tiles, and there is a metal grate running along the edge of the courtyard. The building in the background has large windows and a sign that reads \"BILL & MELINDA GATES COMPUTER SCIENCE BUILDING.\" There are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0130.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0130.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9869,7 +9869,7 @@
         -2.053405766666666
       ],
       "caption": "The video shows a series of images of a university campus. The ground is made up of large, light-colored tiles with darker speckles. There are several large, rectangular stone benches placed throughout the area. The benches are made of a light-colored stone with darker veins running through them. The buildings in the background have large windows and are made of brick. There are trees with no leaves, suggesting it might be autumn or winter. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0131.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0131.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -9944,7 +9944,7 @@
         -1.9867233
       ],
       "caption": "The video begins with a view of a large, open courtyard with light-colored tiles. The camera pans to show a building with large glass doors and windows. The words \"COMPUTER SCIENCE\" are visible on the building. A person wearing a blue jacket and carrying a backpack walks into the frame from the right side and approaches the building. The person's face is not visible. The video ends with the person entering the building.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0132.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0132.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10019,7 +10019,7 @@
         -1.9439128333333333
       ],
       "caption": "The video shows a person wearing a blue jacket and white pants standing outside a building with glass doors. The building has a sign that reads \"Bill & Melinda Gates Computer Science.\" The person is standing on a stone pathway with a bench on the left side that has \"UTER SCHOOL\" engraved on it. The person is holding a phone and appears to be either taking a photo or video of the building. The sky is overcast, and there are no other people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0133.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0133.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10094,7 +10094,7 @@
         -1.9158323666666666
       ],
       "caption": "The video shows a person standing outside a building with glass doors. The person is wearing a dark blue jacket, beige pants, and white sneakers. They are holding a phone in their right hand and appear to be either taking a photo or video of the building. The building has large glass windows and a black doormat on the floor. The ground is made of light-colored stone tiles. There is a large stone block with the letters \"A\" and \"L\" on it, suggesting it may be a part of a larger sign or monument. The person seems to be alone, and there",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0134.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0134.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10169,7 +10169,7 @@
         -1.8836143333333333
       ],
       "caption": "The video begins with a view of a set of double glass doors with metal frames. The doors are open, revealing a spacious room with a high ceiling and large windows that let in natural light. The floor is made of light-colored tiles, and there are several rows of tables and chairs arranged neatly in the room. The walls are painted white, and there are no visible decorations or artwork. The room appears to be empty, with no people or movement visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0135.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0135.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10244,7 +10244,7 @@
         -1.8745888666666666
       ],
       "caption": "The video shows a spacious, well-lit room with a high ceiling and large windows that allow natural light to flood in. The floor is made of shiny tiles that reflect the light, creating a bright and airy atmosphere. In the center of the room, there is a black rectangular object, possibly a bench or a table. The walls are adorned with wooden panels, adding a touch of warmth to the otherwise modern space. There are several chairs and tables scattered throughout the room, suggesting that it may be a common area or a lounge. The room is empty,",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0136.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0136.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10319,7 +10319,7 @@
         -1.8848523225806457
       ],
       "caption": "The video shows a series of images of a university building's interior. The entrance is made of glass with metal frames, and there is a black rubber mat on the floor. Inside, there are wooden staircases with metal railings, and a large open space with a high ceiling. The walls are made of glass and metal, and there are several chairs and tables scattered around. The floor is made of shiny tiles, and there is a large window that lets in natural light.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0137.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0137.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10394,7 +10394,7 @@
         -1.8846532999999999
       ],
       "caption": "The video shows a modern building with a glass facade. The floor is made of shiny tiles, reflecting the light from the windows. There are several chairs and tables arranged in the lobby area. The chairs are black and have a sleek design, while the tables are rectangular and made of glass. The walls are made of wood panels, and there is a staircase visible in the background. The lighting is bright, and the overall color scheme is neutral with black, white, and wood tones.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0138.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0138.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10469,7 +10469,7 @@
         -1.8836658064516125
       ],
       "caption": "The video shows a series of images of a university building's interior. The space is spacious with a high ceiling and large windows that allow natural light to flood in. The floor is shiny and reflects the light, creating a bright and airy atmosphere. There are several rows of chairs and tables arranged neatly, suggesting a place for students to study or socialize. The walls are made of wood and glass, adding to the modern aesthetic of the building. There are no people visible in the video, giving the space a quiet and serene feel.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0139.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0139.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10544,7 +10544,7 @@
         -1.8866909354838712
       ],
       "caption": "The video shows a spacious, well-lit room with a high ceiling and large windows that allow natural light to flood in. The floor is made of shiny tiles that reflect the light, creating a bright and airy atmosphere. There are several white chairs and tables arranged in the room, suggesting it is a space for students to study or socialize. The walls are adorned with wooden panels, adding a touch of warmth to the otherwise modern design. There are no people visible in the video, giving the room an empty and quiet feel.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0140.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0140.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10619,7 +10619,7 @@
         -1.8974781333333335
       ],
       "caption": "The video shows a spacious university building with a high ceiling and large windows that let in ample natural light. The floor is made of shiny tiles that reflect the light, creating a bright and airy atmosphere. On the left side of the frame, there is a row of white chairs with black patterns, neatly stacked against the wall. In the center of the room, there are two large, gray, cone-shaped sculptures. On the right side, there is a long red bench with a wooden frame. The walls are made of wood panels, and there are metal railings",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0141.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0141.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10694,7 +10694,7 @@
         -1.919299766666667
       ],
       "caption": "The video shows a spacious, well-lit atrium with a high ceiling and large windows that allow natural light to flood the space. The floor is made of shiny, polished tiles that reflect the light, creating a bright and airy atmosphere. On the left side of the frame, there is a row of black metal chairs with white cushions, neatly arranged and facing towards the center of the atrium. On the right side, there are two red couches with a modern design, providing a pop of color against the neutral tones of the space. In the background, there",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0142.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0142.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10769,7 +10769,7 @@
         -1.922034933333333
       ],
       "caption": "The video shows a spacious university building with a high ceiling and large windows that allow natural light to flood the interior. The floor is made of shiny tiles that reflect the light, creating a bright and airy atmosphere. There are several rows of red chairs arranged in a semicircle, suggesting a space for lectures or presentations. The walls are adorned with wooden panels and informational posters. There are no people visible in the video, indicating that the building is currently empty.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0143.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0143.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10844,7 +10844,7 @@
         -1.9362398666666667
       ],
       "caption": "The video begins with a view of a large, open atrium with a high ceiling and a shiny, reflective floor. The walls are made of glass, allowing natural light to flood the space. There are several red couches and black chairs arranged in the area, providing seating options for students. The atrium is surrounded by various buildings with visible windows and doors. As the video progresses, a person enters the frame from the right side, walking across the atrium. The person is wearing a dark jacket and carrying a bag. The video ends with the person walking out of the frame.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0144.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0144.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10919,7 +10919,7 @@
         -1.977381133333334
       ],
       "caption": "The video shows a spacious university lobby with a shiny tiled floor reflecting the light from the large windows. There are several black chairs lined up against the wall, and a red couch is visible in the background. A man wearing a black jacket, white pants, and carrying a backpack walks from the left side of the frame towards the right. He stops briefly to look at a sign on the wall before continuing his walk.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0145.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0145.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -10994,7 +10994,7 @@
         -2.0253212666666665
       ],
       "caption": "The video shows a man walking through a university building. He is wearing a blue jacket, khaki pants, and brown shoes. He is carrying a white piece of paper in his hand. The building has a shiny tiled floor, and there are several black chairs lined up against the wall. There are also blue informational signs hanging on the wall. The man walks past a trash can and a pillar.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0146.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0146.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11069,7 +11069,7 @@
         -2.0543255333333335
       ],
       "caption": "The video shows a series of images of a university building's interior. The floors are shiny and reflective, with a speckled pattern. The walls are painted in a light color, and there are several informational signs and posters on the walls. There are also benches and trash cans placed at intervals. The ceiling has recessed lighting, and there are large windows allowing natural light to enter the space. The hallway is empty, with no people visible in the footage.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0147.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0147.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11144,7 +11144,7 @@
         -2.0563187
       ],
       "caption": "The video shows a view of a university building's interior. The floor is made of shiny, speckled tiles that reflect the overhead lighting. A concrete pillar is visible in the center of the frame, dividing the space. The walls are painted in a light color, and there are several windows with blinds partially drawn, allowing natural light to enter the room. On the right side of the frame, there is a bench against the wall. The ceiling has recessed lighting, and there are signs hanging from the ceiling. The overall atmosphere is quiet and empty, with no people",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0148.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0148.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11219,7 +11219,7 @@
         -2.0643651999999997
       ],
       "caption": "The video shows a spacious, well-lit hallway with a shiny, speckled floor. The walls are painted in a light color, and there are several windows allowing natural light to enter. A large, cylindrical pillar is visible in the center of the hallway, and there are two digital screens mounted on the wall displaying blue text. The hallway leads to a doorway at the end, and there are no people or objects in motion.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0149.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0149.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11294,7 +11294,7 @@
         -2.0628888
       ],
       "caption": "The video shows a spacious, well-lit hallway with a shiny, tiled floor reflecting the overhead lights. The walls are painted in a light color, and there are several doors and windows along the corridor. A large, cylindrical pillar is visible in the foreground, and there are informational posters on the walls. The hallway appears to be empty, with no people or movement visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0150.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0150.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11369,7 +11369,7 @@
         -2.1008260666666665
       ],
       "caption": "The video shows a long, empty hallway with a shiny, tiled floor reflecting the overhead lights. The walls are painted in a light color, and there are several closed doors along the hallway. On the right side, there is a wooden bench against the wall. Above the bench, there are three digital screens displaying various messages. The hallway is well-lit, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0151.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0151.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11444,7 +11444,7 @@
         -2.165492966666667
       ],
       "caption": "The video shows a long, empty hallway with a shiny, tiled floor that reflects the overhead lights. The walls are painted in a light color, and there are several glass doors on the left side of the hallway. On the right side, there is a wooden bench against the wall. The hallway leads to a brightly lit area in the distance, possibly an entrance or a common area. There are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0152.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0152.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11519,7 +11519,7 @@
         -2.2261337666666665
       ],
       "caption": "The video shows a long, empty hallway with a shiny, reflective floor. The walls are painted white, and there are several closed doors on either side of the hallway. There are also a few open doors leading to rooms or offices. The ceiling has fluorescent lights that are turned on, casting a bright light on the hallway. There are no people visible in the hallway, and no movement is observed. The hallway appears to be quiet and deserted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0153.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0153.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11594,7 +11594,7 @@
         -2.292292666666667
       ],
       "caption": "The video shows a long, empty hallway with a shiny, speckled floor that reflects the overhead lights. The walls are painted a light color, and there are several closed doors on either side of the hallway. At the end of the hallway, there is a brightly lit room with a red exit sign visible. The ceiling has fluorescent lights and a smoke detector. There are no people or moving objects in the hallway.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0154.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0154.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11669,7 +11669,7 @@
         -2.3490726
       ],
       "caption": "The video shows a long, empty hallway with a shiny, speckled floor that reflects the overhead lights. The walls are painted a light color, and there are several closed doors on either side of the hallway. The ceiling has a few visible lights and a red exit sign. At the end of the hallway, there is a brightly lit room with a glass door, and a person can be seen sitting at a desk inside. The hallway appears to be quiet and devoid of any activity.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0155.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0155.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11744,7 +11744,7 @@
         -2.4092985
       ],
       "caption": "The video shows a long, empty hallway with a shiny, speckled floor that reflects the overhead lights. The walls are painted white, and there are several closed doors on either side of the hallway. At the end of the hallway, there is a brightly lit room with a seating area and a large window. The ceiling has several recessed lights, and there is a red exit sign above the door at the end of the hallway.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0156.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0156.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11819,7 +11819,7 @@
         -2.4735894
       ],
       "caption": "The video shows a long, empty hallway with a shiny, tiled floor that reflects the overhead lights. The walls are painted white, and there are several windows on the right side, allowing natural light to enter the space. The ceiling is equipped with recessed lighting. At the end of the hallway, there is a seating area with tables and chairs, and a large, potted plant is visible. The hallway appears to be well-maintained and clean.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0157.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0157.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11894,7 +11894,7 @@
         -2.5265774193548385
       ],
       "caption": "The video shows a spacious, well-lit hallway with a shiny, white-tiled floor that reflects the overhead lights. The walls are painted white, and there are large windows on one side, allowing natural light to enter. The hallway is lined with metal handrails on both sides, providing support for those walking. In the distance, there is a seating area with tables and chairs, and a few people can be seen sitting and talking. The ceiling is dotted with recessed lighting, and there are several exit signs visible. The overall atmosphere is calm and quiet.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0158.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0158.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -11969,7 +11969,7 @@
         -2.584250903225807
       ],
       "caption": "The video shows a spacious, well-lit hallway with a shiny, speckled floor. The walls are painted white, and there are several metal handrails on either side of the hallway. The ceiling is dotted with recessed lighting. In the distance, there is a seating area with tables and chairs, and a large potted plant is visible. The hallway is empty, with no people or movement in sight.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0159.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0159.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12044,7 +12044,7 @@
         -2.545785967741935
       ],
       "caption": "The video shows a spacious, well-lit hallway with a shiny, speckled floor. The walls are painted white, and there are several framed pictures hanging on them. There are also potted plants placed at intervals along the walls. The ceiling is high, with recessed lighting. The hallway leads to a seating area with tables and chairs, and there is a glass door at the end of the hallway. The overall atmosphere is quiet and serene.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0160.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0160.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12119,7 +12119,7 @@
         -2.4068897999999996
       ],
       "caption": "The video shows a spacious room with a tiled floor and white walls. There are several tables and chairs arranged in the room, with a few people sitting at them. The room is well-lit, with ceiling lights and natural light coming in from the windows. There are paintings hanging on the walls, adding a touch of color to the otherwise neutral space. The room appears to be a common area or a cafeteria, with a few individuals engaged in conversation or working on their laptops.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0161.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0161.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12194,7 +12194,7 @@
         -2.4337865666666674
       ],
       "caption": "The video shows a spacious room with a tiled floor and walls adorned with framed artwork. There are several tables and chairs arranged throughout the room, suggesting a dining or meeting area. The tables are round and made of wood, with metal chairs surrounding them. The artwork on the walls features various colors and designs, adding a touch of creativity to the space. The room is well-lit, with ceiling lights reflecting off the shiny floor. There are no people visible in the video, giving the space a quiet and serene atmosphere.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0162.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0162.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12269,7 +12269,7 @@
         -2.4881199000000005
       ],
       "caption": "The video shows a spacious room with beige tiled flooring and walls adorned with various colorful paintings. There are several tables and chairs arranged in the room, but no people are visible. The room is well-lit with ceiling lights. The walls are decorated with a combination of abstract and figurative artwork. The paintings feature a range of colors, including red, blue, yellow, and green. The room appears to be a common area or a lounge within a university building.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0163.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0163.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12344,7 +12344,7 @@
         -2.540858633333333
       ],
       "caption": "The video shows a spacious, well-lit hallway with beige tiled flooring. On the left side of the hallway, there are two tables with chairs, and on the right side, there are several posters on the wall. The hallway leads to a brightly lit area at the end. There are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0164.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0164.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12419,7 +12419,7 @@
         -2.5889398
       ],
       "caption": "The video shows a long, narrow hallway with beige tiled flooring and walls painted in a light yellow color. There are several closed doors on either side of the hallway, each with a small window and a sign above it. The ceiling has recessed lighting, and there are framed pictures hanging on the walls. A blue recycling bin is visible on the left side of the hallway. The hallway leads to a brightly lit area at the end, suggesting an entrance or exit.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0165.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0165.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12494,7 +12494,7 @@
         -2.6440521000000006
       ],
       "caption": "The video shows a long, empty hallway with beige tiled flooring and walls painted in a light yellow color. There are several closed wooden doors on the right side of the hallway, and a series of framed pictures hanging on the left wall. The hallway is well-lit with fluorescent lights on the ceiling. At the end of the hallway, there is a bright light coming from an open doorway. There are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0166.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0166.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12569,7 +12569,7 @@
         -2.6895413333333327
       ],
       "caption": "The video shows a long, empty hallway with beige walls and a tiled floor. There are several blue-framed pictures hanging on the walls, and a trash can is visible in the distance. The hallway is well-lit with fluorescent lights on the ceiling. The walls have a wooden trim at the bottom. There are no people or moving objects in the hallway.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0167.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0167.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12644,7 +12644,7 @@
         -2.7273262000000007
       ],
       "caption": "The video shows a long, empty hallway with beige walls and a tiled floor. There are several framed pictures hanging on the walls, and a trash can is visible in the distance. The hallway is well-lit with overhead lights. There are no people or moving objects in the scene.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0168.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0168.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12719,7 +12719,7 @@
         -2.7936144000000005
       ],
       "caption": "The video shows a long, empty hallway with beige tiled flooring and walls. There are two framed pictures hanging on the wall, one on the left and one on the right. The hallway is well-lit with fluorescent lights on the ceiling. At the end of the hallway, there is a doorway leading to another room. There is a black trash can on the right side of the hallway. The walls have a wooden trim at the bottom.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0169.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0169.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12794,7 +12794,7 @@
         -2.845435866666667
       ],
       "caption": "The video shows a long, empty hallway with beige tiled flooring and walls. There are two framed pictures hanging on the wall, one on the left and one on the right. The hallway has a wooden trim at the bottom and a recessed ceiling with a single light fixture. At the end of the hallway, there is a doorway with a glass door. To the right of the hallway, there is a black trash can. The hallway is well-lit and appears to be clean and tidy.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0170.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0170.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12869,7 +12869,7 @@
         -2.8959645
       ],
       "caption": "The video shows a spacious, well-lit hallway with beige tiled flooring and cream-colored walls. There are several framed pictures hanging on the walls, and the ceiling has recessed lighting. The hallway leads to a brightly lit entrance with glass doors. There are no people visible in the hallway, and the atmosphere appears calm and quiet.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0171.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0171.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -12944,7 +12944,7 @@
         -2.949879466666667
       ],
       "caption": "The video shows a spacious, well-lit hallway with a tiled floor. The walls are adorned with framed artwork. The hallway is empty, with no people visible. The ceiling has recessed lighting, and the walls are painted in a light color. The artwork consists of abstract and landscape paintings. There are doors on either side of the hallway, and the floor has a geometric pattern.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0172.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0172.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13019,7 +13019,7 @@
         -3.0061254666666666
       ],
       "caption": "The video shows a spacious hallway with beige tiled flooring and cream-colored walls. There are two framed artworks hanging on the walls, one on each side of the hallway. The hallway leads to a brightly lit area with a glass door at the end. There are no people or moving objects visible in the video. The lighting is artificial, and the hallway appears to be well-maintained and clean.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0173.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0173.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13094,7 +13094,7 @@
         -3.056935933333334
       ],
       "caption": "The video begins with a view of a long, empty hallway with beige tiled flooring and walls. The hallway is well-lit with fluorescent lights on the ceiling. There are several closed doors on either side of the hallway, and a trash can is visible near the end of the hallway. As the video progresses, a person enters the frame from the right side, walking towards the camera. The person is wearing a blue jacket, khaki pants, and white sneakers. The person's face is not visible as the camera angle is low to the ground",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0174.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0174.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13169,7 +13169,7 @@
         -3.1037119666666664
       ],
       "caption": "The video shows a person walking down a hallway. The person is wearing a blue jacket, beige pants, and white shoes. They are carrying a black backpack and have a white tissue in their hand. The hallway has beige tiles on the floor and walls, with a wooden trim at the bottom. There are two trash cans on the left side of the hallway, and a doorway at the end of the hallway. The person is walking towards the doorway.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0175.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0175.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13244,7 +13244,7 @@
         -3.1505994
       ],
       "caption": "The video shows a person walking away from the camera down a long, narrow hallway. The person is wearing a dark blue jacket, beige pants, and white sneakers. They have a backpack on their back and are carrying a white cup in their right hand. The walls of the hallway are painted a light beige color, and there are several closed doors along the right side. On the left side, there is a yellow caution sign on the floor and a potted plant near the entrance. The floor is tiled in large, square, beige tiles. The hallway is well",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0176.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0176.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13319,7 +13319,7 @@
         -3.1925894666666665
       ],
       "caption": "The video shows a person walking away from the camera down a long, narrow hallway. The walls are beige with a wooden trim at the bottom. The floor is tiled in a light beige color. On the left wall, there is a sign that reads \"ODER INSTITUTE\" in red letters. The person is wearing a dark jacket, light-colored pants, and dark shoes. They have a backpack on their back. The hallway leads to a brightly lit room with a glass door at the end.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0177.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0177.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13394,7 +13394,7 @@
         -3.231041387096774
       ],
       "caption": "The video shows a person walking away from the camera through a hallway with beige tiled flooring. The walls are painted in a light cream color with wooden trim. On the left side of the hallway, there is a potted plant with green leaves. The hallway leads to a glass door with a view of the outside where trees and a clear sky can be seen. The person is wearing a dark jacket and light-colored pants.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0178.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0178.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13469,7 +13469,7 @@
         -3.2698882903225805
       ],
       "caption": "The video shows a spacious lobby with tiled flooring and a high ceiling with recessed lighting. There is a large glass door at the far end of the lobby, through which daylight is visible. A potted plant is situated to the left of the door, and a colorful painting hangs on the wall to the right. A person is seen walking towards the door, entering the building. The walls are painted in a light color, and there are no other visible people or objects in the lobby.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0179.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0179.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13544,7 +13544,7 @@
         -3.313864032258065
       ],
       "caption": "The video shows a spacious room with tiled flooring and a large glass door at the far end. The door is open, revealing a view of trees and a building outside. A person is seen walking towards the door, entering the room, and then walking out of the door. The room is well-lit, and there is a colorful painting on the wall to the right. The person is wearing dark clothing and appears to be alone in the room.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0180.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0180.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13619,7 +13619,7 @@
         -3.360509193548387
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a set of glass doors with a black mat in front of them. There is a sign on the right side of the doors that reads \"EMERGENCY EXIT ONLY\" in red and white letters. The doors are open, and a person is seen walking through them. The person is wearing a red shirt and khaki shorts. The floor is tiled, and there are trees and buildings visible in the background.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0181.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0181.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13694,7 +13694,7 @@
         -3.3949736774193555
       ],
       "caption": "The video shows a man wearing a red shirt and black pants walking through a set of glass doors. The doors have a sign that reads \"EMERGENCY EXIT ONLY\" in red and white letters. The man is wearing a face mask and has a backpack on his back. The floor is covered with a black rubber mat, and there is a sign on the wall that says \"PARDON OUR APPEARANCE.\" The background shows a tree-lined street with buildings and parked cars.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0182.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0182.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13769,7 +13769,7 @@
         -3.43497970967742
       ],
       "caption": "The video begins with a view from inside a building, looking out through a glass door onto a concrete sidewalk. The sidewalk is bordered by a black rubber mat and leads to a grassy area with trees. The trees have green leaves and are spaced out evenly. In the distance, there are buildings with multiple windows and a clear sky above. As the video progresses, a person wearing white sneakers enters the frame from the right side and walks across the sidewalk, passing by the black mat and the grassy area. The person's movement is casual and unhurried.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0183.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0183.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13844,7 +13844,7 @@
         -3.545680733333333
       ],
       "caption": "The video shows a concrete pathway leading towards a building with a glass facade. The pathway is lined with neatly trimmed hedges on the left and trees on the right. The sky is overcast, and the ground is covered with fallen leaves, indicating it might be autumn. There are no people or moving objects in the video, and the scene is still and quiet.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0184.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0184.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13919,7 +13919,7 @@
         -3.616326000000001
       ],
       "caption": "The video shows a concrete pathway with scattered leaves on it. There are trees on both sides of the pathway, and buildings can be seen in the background. The sky is overcast, and there are no people or moving objects visible in the video. The colors in the video are muted, with the grey of the concrete, the green of the trees, and the brown of the leaves being the most prominent.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0185.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0185.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -13994,7 +13994,7 @@
         -3.573009066666667
       ],
       "caption": "The video shows a concrete sidewalk with scattered leaves. There is a street lamp on the left side of the frame. In the background, there are trees and buildings, including a tall brick building with multiple windows. The sky is overcast, and the overall color palette is muted with greys, greens, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0186.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0186.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14069,7 +14069,7 @@
         -3.4984151
       ],
       "caption": "The video shows a series of images of a university campus. The campus is empty with no people visible. The ground is covered with concrete and there are several trees scattered around. There are buildings with large windows and a few cars parked in the distance. The sky is overcast and the overall color scheme is muted with greys, greens, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0187.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0187.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14144,7 +14144,7 @@
         -3.419896333333334
       ],
       "caption": "The video shows a quiet street scene with a sidewalk in the foreground. There is a street lamp on the right side of the frame, and a neatly trimmed hedge runs parallel to the sidewalk. The sidewalk is made of concrete and has a few scattered leaves on it. In the background, there are trees with green leaves, and a few buildings can be seen. The sky is overcast, and there are no people or moving vehicles in the scene.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0188.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0188.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14219,7 +14219,7 @@
         -3.3396050333333327
       ],
       "caption": "The video shows a series of images of a university campus. The campus is empty with no people visible. The images show a concrete sidewalk with a yellow tactile paving near the curb. There are trees with green leaves on the sidewalk, and a street lamp is visible in the background. The sky is overcast, and the buildings in the background are multi-storied with large windows.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0189.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0189.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14294,7 +14294,7 @@
         -3.2768482666666667
       ],
       "caption": "The video shows a concrete sidewalk with a street lamp on the right side. The sidewalk is bordered by a grassy area with fallen leaves on the ground. There are trees with green leaves on the left side of the sidewalk. The sky is clear and blue. There are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0190.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0190.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14369,7 +14369,7 @@
         -3.2008490999999997
       ],
       "caption": "The video shows a concrete sidewalk with a curb on the right side and a grassy area with fallen leaves on the left. There are trees with green leaves on both sides of the sidewalk. A street lamp is visible on the left side of the sidewalk. The sky is clear and blue. There are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0191.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0191.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14444,7 +14444,7 @@
         -3.1178046999999998
       ],
       "caption": "The video shows a concrete sidewalk with a metal pole on the left side. The sidewalk is bordered by a grassy area on the left and a road on the right. There are trees with green leaves on both sides of the sidewalk. The sky is overcast, and there are no people or moving objects visible in the video. The colors in the video are muted, with the grey of the concrete and the green of the trees being the most prominent.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0192.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0192.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14519,7 +14519,7 @@
         -3.033968366666666
       ],
       "caption": "The video shows a concrete sidewalk with a metal pole on the left side. The sidewalk is bordered by a grassy area with trees and shrubs. The trees have green leaves, and the grass is a mix of green and brown. The sky is overcast, and there are no people or moving objects visible in the video. The buildings in the background have a modern architectural style with glass windows.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0193.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0193.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14594,7 +14594,7 @@
         -2.9440317666666664
       ],
       "caption": "The video shows a concrete sidewalk with a curb on the right side and a grassy area with trees on the left. The trees have green leaves and the grass is a mix of green and brown. There are no people or moving objects in the video. The sky is overcast and the buildings in the background are white and gray. There is a street sign visible in the distance.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0194.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0194.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14669,7 +14669,7 @@
         -2.8572427666666664
       ],
       "caption": "The video shows a concrete sidewalk with a curb on the right side and a grassy area with fallen leaves on the left. There are large trees with green leaves on the grassy area. The sky is clear and blue. In the distance, there are buildings with windows and a street with a white car parked on the side. There are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0195.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0195.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14744,7 +14744,7 @@
         -2.771470322580645
       ],
       "caption": "The video shows a concrete sidewalk with a metal pole on the left side and a grassy area on the right. The sidewalk is empty, and there are no people visible. The grassy area has a few scattered leaves. In the background, there are trees with green leaves and a building with a glass facade. The sky is overcast, and the overall color palette of the video is muted with greys, greens, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0196.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0196.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14819,7 +14819,7 @@
         -2.691850225806452
       ],
       "caption": "The video shows a concrete sidewalk with a metal pole on the left side. The sidewalk is bordered by a grassy area with fallen leaves on the ground. There are trees with green leaves on the left side of the sidewalk. The sky is overcast, and the buildings in the background have a modern architectural style. There are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0197.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0197.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14894,7 +14894,7 @@
         -2.6053588
       ],
       "caption": "The video shows a concrete sidewalk with a yellow line running down the middle. There are trees on the left side of the sidewalk, and a street with a stop sign on the right side. The sky is overcast, and there are no people or vehicles visible in the video. The buildings in the background have a modern architectural style with glass windows.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0198.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0198.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -14969,7 +14969,7 @@
         -2.509395333333333
       ],
       "caption": "The video shows a concrete sidewalk with a yellow pole on the right side. There are trees with green leaves on the left side of the sidewalk. The sky is clear and blue. There are no people or moving objects in the video. The sidewalk appears to be clean and well-maintained.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0199.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0199.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15044,7 +15044,7 @@
         -2.4290613225806448
       ],
       "caption": "The video shows a concrete sidewalk with a yellow pole on the left side and a street on the right. There are trees and bushes on the left side of the sidewalk, and a large building with glass windows on the right side. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0200.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0200.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15119,7 +15119,7 @@
         -2.341544225806452
       ],
       "caption": "The video shows a concrete sidewalk with a yellow pole on the left side, which has the words \"HELP\" written on it. The sidewalk is bordered by a grassy area with fallen leaves on the ground. In the background, there are buildings with large windows and trees with green leaves. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0201.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0201.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15194,7 +15194,7 @@
         -2.261956366666667
       ],
       "caption": "The video shows a concrete sidewalk with a yellow post on the left side, a street lamp in the middle, and a building with glass windows on the right. The sky is overcast, and there are trees and bushes on the sides of the sidewalk. There are no people or moving objects in the video. The colors are muted, with the yellow post being the most vibrant object.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0202.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0202.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15269,7 +15269,7 @@
         -2.179339866666666
       ],
       "caption": "The video begins with a view of a university campus, with a large building on the right and a brick-paved area in the center. There are trees and a street lamp on the left. The sky is overcast, and the ground is covered with fallen leaves. As the video progresses, a person wearing a blue shirt and shorts enters the frame from the right, walking across the brick-paved area. The person's movement is casual and unhurried.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0203.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0203.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15344,7 +15344,7 @@
         -2.1196680333333338
       ],
       "caption": "The video shows a series of images of a person jogging on a brick-patterned sidewalk. The person is wearing a blue shirt and black shorts. The sidewalk is lined with trees and buildings, and there is a stop sign visible in the background. The sky is overcast, and the person's shadow is visible on the ground.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0204.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0204.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15419,7 +15419,7 @@
         -2.1251599666666667
       ],
       "caption": "The video begins with a view of a brick-paved walkway with a herringbone pattern. The colors of the bricks range from light beige to dark brown. In the background, there is a large building with multiple windows and a tree with green leaves. A person wearing a red shirt and blue jeans is seen walking away from the camera. As the video progresses, another person wearing a brown jacket and blue jeans enters the frame from the right side and walks towards the left. The person in the brown jacket is carrying a black bag and wearing black shoes. The sky",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0205.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0205.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15494,7 +15494,7 @@
         -2.1559258666666667
       ],
       "caption": "The video shows a series of images taken from a low angle, looking down a brick-paved sidewalk. The bricks are arranged in a herringbone pattern, and there are scattered leaves on the ground. In the background, there is a stop sign, a street lamp, and a building with large windows. The sky is overcast, and there are trees and bushes visible in the distance.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0206.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0206.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15569,7 +15569,7 @@
         -2.151648933333333
       ],
       "caption": "The video shows a brick-paved sidewalk with a herringbone pattern. The bricks are a mix of light and dark brown. There is a stop sign on the right side of the frame, and a street lamp is visible in the background. The sidewalk is empty, and there are no people or moving objects in the scene. The background includes a building with large windows and a tree with green leaves. The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0207.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0207.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15644,7 +15644,7 @@
         -2.1545624193548387
       ],
       "caption": "The video begins with a view of a brick-patterned sidewalk, with a stop sign and a street lamp visible in the background. The scene is set against a backdrop of a large building with trees and a clear sky. As the video progresses, a person wearing a blue jacket, beige pants, and white shoes enters the frame from the right, walking across the sidewalk. The person is carrying a backpack and appears to be in a hurry. The video ends as the person exits the frame, continuing their walk.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0208.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0208.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15719,7 +15719,7 @@
         -2.1098299333333332
       ],
       "caption": "The video shows a person walking on a brick-patterned sidewalk. The person is wearing a dark blue jacket, beige pants, and white sneakers. They are carrying a black backpack and appear to be walking at a steady pace. The sidewalk is lined with trees and a modern building with large windows can be seen in the background. The sky is overcast, and there are no other people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0209.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0209.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15794,7 +15794,7 @@
         -2.0613885333333335
       ],
       "caption": "The video begins with a view of an empty street with a sidewalk on the right and a building on the left. The sidewalk is made of concrete with a patterned brick section. There are trees and a stop sign visible in the background. As the video progresses, a person wearing a blue jacket, khaki pants, and white shoes enters the frame from the right, walking on the sidewalk. The person is carrying a white paper bag in their left hand. They walk past the stop sign and continue down the sidewalk, eventually exiting the frame to the left.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0210.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0210.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15869,7 +15869,7 @@
         -2.0481480999999997
       ],
       "caption": "The video begins with a view of a sidewalk with a herringbone pattern, bordered by a concrete curb. A street lamp stands in the foreground, and a person wearing a blue jacket and carrying a white paper walks by. The background features a large tree with a thick trunk and sprawling branches, and a building with multiple windows. The person walks from the right side of the frame towards the left, and as they pass by, the camera follows their movement. The colors in the video are muted, with the grey of the concrete and the green of the tree leaves being the most prominent",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0211.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0211.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -15944,7 +15944,7 @@
         -2.043003933333334
       ],
       "caption": "The video shows a series of images of a university campus. The pathway is made of brick with a herringbone pattern and is bordered by a concrete sidewalk. There are large trees with green leaves on either side of the pathway. The sky is overcast, and the buildings in the background are made of brick and have multiple windows. There are a few people walking in the distance, and a bicycle is parked on the sidewalk. The colors in the video are muted, with the brick pathway being the most prominent feature.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0212.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0212.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16019,7 +16019,7 @@
         -2.0378005333333333
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick and is lined with trees on both sides. The trees have green leaves and are tall, providing shade over the pathway. There are no people visible in the video, and no movement is observed. The sky is overcast, and the overall color palette of the video is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0213.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0213.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16094,7 +16094,7 @@
         -2.0448878333333336
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick and is lined with trees on both sides. The trees have green leaves and are tall, providing shade over the pathway. The buildings in the background are made of brick and have multiple windows. There is a street lamp on the right side of the pathway. The sky is overcast, and there are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0214.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0214.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16169,7 +16169,7 @@
         -2.0433744666666662
       ],
       "caption": "The video shows a quiet and empty university campus. The pathway is made of brick and is lined with trees on both sides. The trees have green leaves and are tall, providing shade over the pathway. The buildings in the background are made of brick and have multiple windows. There are no people or moving objects in the video. The sky is overcast, and the overall color scheme is muted with greens, browns, and grays.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0215.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0215.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16244,7 +16244,7 @@
         -2.0516963548387097
       ],
       "caption": "The video begins with a view of a brick-paved walkway with a herringbone pattern. The color of the bricks is a mix of light brown and beige. The walkway is surrounded by trees with green leaves, and there are buildings in the background. As the video progresses, a person on a bicycle enters the frame from the right side, riding along the walkway. The cyclist is wearing a dark-colored outfit and a helmet. The background shows more of the campus, including a large metal sculpture, more trees, and a few pedestrians walking",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0216.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0216.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16319,7 +16319,7 @@
         -2.0852329333333333
       ],
       "caption": "The video shows a person walking on a brick-patterned sidewalk. The sidewalk is lined with trees and buildings, and there is a large metal sculpture on the left side. The person is wearing dark clothing and is walking away from the camera. The sky is overcast, and there are a few other people visible in the background.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0217.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0217.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16394,7 +16394,7 @@
         -2.1054433666666665
       ],
       "caption": "The video shows a young man wearing a dark blue t-shirt and shorts, walking on a brick-patterned sidewalk. He is wearing sunglasses and has a backpack on his back. The sidewalk is lined with trees and buildings, and there is a large metal sculpture on the left side of the frame. The sky is overcast, and there are no other people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0218.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0218.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16469,7 +16469,7 @@
         -2.1144181666666664
       ],
       "caption": "The video shows a pedestrian walkway with a herringbone pattern made of beige bricks. On the left side of the walkway, there is a large metal sculpture with multiple curved elements. The walkway is bordered by a concrete sidewalk on the left and a grassy area with trees on the right. In the distance, there are buildings and a few people walking. The sky is overcast, and the overall color palette of the scene is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0219.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0219.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16544,7 +16544,7 @@
         -2.139001066666667
       ],
       "caption": "The video shows a wide pedestrian walkway with a herringbone pattern made of beige bricks. On the left side of the walkway, there is a large, metallic, abstract sculpture with a complex, intertwined design. The sculpture is silver in color and stands out against the backdrop of the campus. In the distance, there are several buildings with a mix of modern and traditional architecture. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0220.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0220.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16619,7 +16619,7 @@
         -2.1457962333333334
       ],
       "caption": "The video shows a wide pedestrian walkway with a herringbone pattern of beige and brown bricks. On the left side of the walkway, there is a grey concrete sidewalk. On the right side, there is a grassy area with trees and a few benches. In the distance, there are tall buildings, and a few people can be seen walking on the walkway. The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0221.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0221.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16694,7 +16694,7 @@
         -2.161790166666668
       ],
       "caption": "The video shows a wide pedestrian walkway with a herringbone pattern of beige and brown bricks. On the left side of the walkway, there is a grey concrete sidewalk. On the right side, there is a row of trees with green leaves and a few benches. In the background, there are tall buildings with many windows. A person on a bicycle is seen riding down the walkway, wearing a blue shirt and dark pants. The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0222.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0222.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16769,7 +16769,7 @@
         -2.1820675333333335
       ],
       "caption": "The video shows a wide, empty pedestrian walkway with a herringbone pattern of beige bricks. On the left side of the walkway, there is a grey concrete sidewalk. On the right side, there is a row of green trees and a series of tall buildings with multiple windows. The sky is overcast, and the overall color palette of the scene is muted. There are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0223.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0223.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16844,7 +16844,7 @@
         -2.1895071
       ],
       "caption": "The video shows a wide, empty pedestrian walkway with a herringbone pattern of beige and brown bricks. On the left side of the walkway, there is a grey concrete sidewalk with a red and white signpost. On the right side, there is a row of green trees and a tall building with many windows. In the distance, there are a few people walking away from the camera. The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0224.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0224.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16919,7 +16919,7 @@
         -2.2209512333333334
       ],
       "caption": "The video shows a pedestrian walkway with a herringbone pattern made of beige bricks. On the left side of the walkway, there is a concrete sidewalk with a red and white sign that reads \"No Parking.\" On the right side, there are green bushes and a red fire hydrant. In the background, there are tall buildings, trees, and a clear sky. There are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0225.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0225.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -16994,7 +16994,7 @@
         -2.224881733333333
       ],
       "caption": "The video shows a pedestrian walkway with a herringbone pattern made of beige bricks. On the left side of the walkway, there is a concrete curb and a grassy area with a few trees and bushes. On the right side, there are tall buildings with multiple windows. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0226.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0226.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17069,7 +17069,7 @@
         -2.241061733333334
       ],
       "caption": "The video shows a pedestrian walkway with a herringbone pattern made of beige bricks. The walkway is bordered by a concrete curb on the left and a grassy area with trees on the right. In the distance, there are several buildings, including a tall brown building with many windows. The sky is overcast, and there are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0227.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0227.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17144,7 +17144,7 @@
         -2.2511433666666667
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a brick-paved walkway that leads towards a building in the distance. The bricks are arranged in a herringbone pattern, with a mix of light and dark brown hues. On either side of the walkway, there are patches of grass and small trees. The buildings in the background are multi-storied, with a mix of brick and concrete exteriors. There are no people or moving objects visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0228.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0228.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17219,7 +17219,7 @@
         -2.265741133333334
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a brick-paved walkway that has a herringbone pattern. The bricks are a mix of light and dark shades of brown. There are yellow bollards placed at regular intervals along the walkway. The walkway is flanked by greenery on one side and a row of buildings on the other. The buildings are multi-storied and have a modern architectural style. There are no people visible in the video. The sky is overcast, and the overall color palette of the video is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0229.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0229.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17294,7 +17294,7 @@
         -2.281475999999999
       ],
       "caption": "The video shows a series of images of a university campus. The main focus is on a brick-paved walkway with a herringbone pattern. There are two yellow bollards with reflective strips on the walkway, which are retractable and extend outwards. The bollards are positioned on either side of the walkway, creating a pathway in the middle. The surrounding area includes buildings with large windows, trees, and a street with parked cars. The sky is overcast, and the overall color scheme is muted with shades of grey, yellow, and brown.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0230.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0230.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17369,7 +17369,7 @@
         -2.2931870333333335
       ],
       "caption": "The video begins with a view of a brick-paved walkway with a herringbone pattern. Two yellow bollards with reflective strips are positioned on the walkway. The camera pans to the right, revealing a street with parked cars and a building with multiple windows. The sky is overcast, and the overall color palette is muted with shades of gray, yellow, and brown.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0231.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0231.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17444,7 +17444,7 @@
         -2.299439866666667
       ],
       "caption": "The video shows a view of a university campus with a focus on a brick-patterned sidewalk. The sidewalk is made up of rectangular bricks arranged in a herringbone pattern, with a mix of light and dark brown colors. The sidewalk is bordered by a concrete curb on one side and a grassy area with trees on the other. In the background, there are buildings with large windows and a few cars parked on the street. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0232.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0232.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17519,7 +17519,7 @@
         -2.2729260666666664
       ],
       "caption": "The video begins with a view of a large, empty concrete courtyard surrounded by buildings. The buildings are made of beige stone and have multiple windows. There are trees with green leaves in the background, and a clear sky above. The courtyard has a patterned brick walkway on one side. There are no people or moving objects in the scene. The camera slowly pans across the courtyard, showing the same scene from different angles.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0233.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0233.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17594,7 +17594,7 @@
         -2.2608346
       ],
       "caption": "The video shows a concrete courtyard with a large building on the right side. The building has multiple windows and a tree in front of it. There is a covered walkway connecting the building to another structure on the left. The courtyard is empty, with no people or objects in sight. The sky is overcast, and the overall color scheme is muted with grays, beiges, and greens.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0234.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0234.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17669,7 +17669,7 @@
         -2.2187129000000003
       ],
       "caption": "The video shows a concrete courtyard with a few scattered leaves on the ground. There are buildings surrounding the courtyard, with one building having a glass walkway connecting it to another building. The buildings are primarily beige and gray with some windows visible. There are no people or moving objects in the video. The sky is overcast, and the overall color palette is muted.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0235.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0235.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17744,7 +17744,7 @@
         -2.1541614
       ],
       "caption": "The video shows a concrete pathway leading to a building with a glass bridge overhead. The pathway is lined with metal barriers and has a metal grate on the ground. There are no people or moving objects in the scene. The sky is overcast, and the buildings are made of brick and concrete. The colors in the video are muted, with the grey of the concrete and the red of the brick being the most prominent.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0236.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0236.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17819,7 +17819,7 @@
         -2.1494786666666665
       ],
       "caption": "The video shows a concrete pathway leading to a building with a red brick facade. The pathway is lined with concrete barriers and has a red line painted on the ground. There are no people or moving objects in the scene. The sky is overcast, and the buildings have multiple windows. The pathway leads to a set of stairs on the right side of the frame.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0237.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0237.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17894,7 +17894,7 @@
         -2.087211666666667
       ],
       "caption": "The video shows a concrete pathway leading through a university campus. The pathway is lined with concrete barriers on either side, and there are buildings on both sides of the pathway. The buildings are made of brick and have multiple windows. There are no people visible in the video, and there are no moving objects. The sky is overcast, and the overall color scheme of the video is muted with grays, browns, and reds.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0238.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0238.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -17969,7 +17969,7 @@
         -1.9947361333333335
       ],
       "caption": "The video shows a concrete street with a white line down the middle. On either side of the street, there are buildings with windows and doors. There are several concrete bollards on the sidewalk, and a red fire hydrant is visible on the right side of the street. The sky is overcast, and there are no people or moving vehicles in the scene.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0239.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0239.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18044,7 +18044,7 @@
         -1.9061487333333331
       ],
       "caption": "The video shows a concrete pathway with a white line down the middle, leading towards a building. The pathway is flanked by a series of concrete bollards on either side. The building in the distance has a red sign with white lettering, but the text is not legible. The sky is overcast, and the overall color palette of the scene is muted with grays, browns, and reds.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0240.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0240.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18119,7 +18119,7 @@
         -1.8290053
       ],
       "caption": "The video shows a concrete pathway leading towards a building with a red line painted on the ground. There are several concrete bollards on the pathway, and a few bicycles parked on the side. The building in the background has a sign that reads \"EXIT\" and a fire hydrant is visible on the right side of the frame. The sky is overcast, and the overall color palette of the video is muted with grays, browns, and reds.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0241.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0241.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18194,7 +18194,7 @@
         -1.760506366666667
       ],
       "caption": "The video shows a concrete pathway leading through a university campus. The pathway is lined with concrete barriers and has a red line painted on the ground. On the left side of the pathway, there are several bicycles parked against a metal rack. On the right side, there are buildings with large windows and doors. The sky is overcast, and the overall color scheme of the video is muted with grays, reds, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0242.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0242.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18269,7 +18269,7 @@
         -1.689346033333333
       ],
       "caption": "The video shows a concrete pathway leading through a university campus. The pathway is lined with red curbs on either side. On the left side of the pathway, there are several bicycles parked against a metal rack. On the right side, there is a white delivery truck parked next to a building. The buildings on either side of the pathway are made of brick and have multiple windows. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0243.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0243.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18344,7 +18344,7 @@
         -1.617780366666667
       ],
       "caption": "The video shows a concrete pathway leading towards a building with a white exterior. On the left side of the pathway, there are several bicycles parked against a railing. On the right side, there is a white delivery truck parked next to a concrete pillar. The sky is overcast, and the overall color palette of the scene is muted with grays, whites, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0244.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0244.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18419,7 +18419,7 @@
         -1.5545138
       ],
       "caption": "The video shows a concrete parking lot with a white delivery truck parked on the right side. There are several bicycles parked on the left side of the lot. The buildings surrounding the lot are made of brick and have multiple windows. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0245.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0245.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18494,7 +18494,7 @@
         -1.5024899666666665
       ],
       "caption": "The video shows a concrete parking lot with a few parked cars and a bicycle. There are two concrete pillars with red lines painted on them, possibly indicating parking spaces. The lot is surrounded by buildings, one of which has a white trailer parked in front of it. The sky is overcast, and there are no people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0246.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0246.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18569,7 +18569,7 @@
         -1.4468303333333337
       ],
       "caption": "The video shows a concrete parking lot with a few visible details. There are two concrete pillars on the right side of the frame, and a red line painted on the ground. The parking lot is empty, and there are no visible people or vehicles. In the background, there are buildings with windows and a staircase leading up to a door. The sky is overcast, and the overall color scheme of the video is muted with grays, reds, and browns.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0247.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0247.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18644,7 +18644,7 @@
         -1.3751064666666666
       ],
       "caption": "The video shows a concrete parking lot with a few visible details. There are two concrete pillars with pink stripes on the ground, indicating parking spaces. The parking lot is empty, with no cars or people in sight. In the background, there is a building with a gray facade and a set of stairs leading to the entrance. The sky is overcast, and the overall color palette of the video is muted with grays, browns, and the pink stripes on the pillars.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0248.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0248.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18719,7 +18719,7 @@
         -1.3129775333333336
       ],
       "caption": "The video shows a concrete parking lot with a few visible cracks and a manhole cover. The lot is surrounded by buildings with brick facades and large windows. There are no people or vehicles in the lot, and the sky is overcast. The buildings have a modern architectural style, and there are no visible signs or banners. The parking lot is empty, and there are no visible markings or lines.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0249.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0249.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18794,7 +18794,7 @@
         -1.2295357333333334
       ],
       "caption": "The video shows a concrete courtyard with a large building on the left side. The building has a beige facade with several windows and a set of stairs leading to the entrance. There is a metal railing in front of the stairs. On the right side of the courtyard, there is a green building with arched windows. The courtyard is empty, with no people or objects in sight. The sky is overcast, and the ground appears to be wet, suggesting recent rain.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0250.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0250.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18869,7 +18869,7 @@
         -1.0968204333333336
       ],
       "caption": "The video shows a concrete courtyard with a large building on the left side. The building has a set of stairs leading up to a doorway. There is a metal railing in front of the stairs. On the right side of the courtyard, there is a green fence and a trash can. The sky is overcast, and there are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0251.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0251.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -18944,7 +18944,7 @@
         -0.9614171666666669
       ],
       "caption": "The video shows a concrete courtyard with a metal fence surrounding it. The fence has a gate that is closed. There is a building with a brick facade and a set of stairs leading up to it. The sky is overcast, and there are no people or moving objects in the scene. The ground is mostly empty, with a few scattered leaves and a small pink line painted on the concrete.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0252.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0252.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19019,7 +19019,7 @@
         -0.8194192333333333
       ],
       "caption": "The video shows a concrete area with a metal fence on the left side and a brick building on the right side. The sky is overcast, and there are no people or moving objects in the scene. The fence is gray and has vertical bars with a horizontal top rail. The building has arched windows and a green dumpster in front of it. The ground is gray with some scattered leaves and a curb painted red.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0253.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0253.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19094,7 +19094,7 @@
         -0.7120031612903225
       ],
       "caption": "The video shows a series of images of a large, empty parking lot with a concrete surface. The lot is surrounded by a metal fence on one side and a brick building with arched windows on the other. There are no visible people or vehicles in the lot. The sky is overcast, and the ground is scattered with leaves and small debris. The parking lot has white lines marking parking spaces, and there is a red curb along the edge of the lot.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0254.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0254.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19169,7 +19169,7 @@
         -0.6298744
       ],
       "caption": "The video shows a large, empty parking lot with a few visible cracks and patches on the asphalt. The lot is surrounded by a tall brick building with arched windows and a green dumpster in front of it. There is a metal fence on the left side of the frame and a red curb on the right. The sky is overcast, and there are no people or moving objects in the scene.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0255.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0255.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19244,7 +19244,7 @@
         -0.5387912999999999
       ],
       "caption": "The video shows a large, empty parking lot with a brick building in the background. The building has multiple arched windows and a green dumpster in front of it. There are no people or vehicles in the lot, and the sky is overcast. The ground is made of concrete, and there are visible cracks and patches. The building appears to be a few stories high, and there is a red fire hydrant on the right side of the frame.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0256.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0256.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19319,7 +19319,7 @@
         -0.4851136666666668
       ],
       "caption": "The video shows a large, brick building with arched windows and a green dumpster in front of it. The ground is made of concrete and there is a red curb along the sidewalk. There are no people or moving objects in the video. The sky is overcast and the building appears to be in a quiet area of the campus.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0257.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0257.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19394,7 +19394,7 @@
         -0.4581363870967742
       ],
       "caption": "The video shows a large, brick building with arched windows and a green door. There is a green dumpster in front of the building and a red fire hydrant on the sidewalk. The ground is made of gray asphalt, and there are no people or moving objects in the scene. The sky is overcast, and the building appears to be a university or college building.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0258.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0258.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19469,7 +19469,7 @@
         -0.41888600000000004
       ],
       "caption": "The video shows a large, empty parking lot with a rough texture and visible tire marks. The lot is surrounded by a brick building with arched windows and a green dumpster on the left side. There is a white door with a sign on the right side of the building. The sky is overcast, and there are no people or moving objects in the scene.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0259.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0259.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19544,7 +19544,7 @@
         -0.3749310666666667
       ],
       "caption": "The video shows a large, brick building with multiple arched windows. The building has a green dumpster on the left side and a white door with a sign on the right side. The ground is made of concrete with visible cracks and tire marks. There are no people or moving objects in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0260.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0260.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19619,7 +19619,7 @@
         -0.3293670322580644
       ],
       "caption": "The video shows a series of images of a parking lot with a large brick building in the background. The building has multiple windows and a white door with a sign that reads \"DO NOT ENTER.\" There is a green dumpster on the left side of the frame and a metal railing on the right side. The parking lot is empty, and there are tire marks on the ground. The sky is overcast, and the overall color scheme is muted with grays, browns, and greens.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0261.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0261.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19694,7 +19694,7 @@
         -0.28780483333333334
       ],
       "caption": "The video shows a concrete parking lot with tire marks and a metal barrier on the left side. There is a brick building with large windows in the background. A metal bench is visible on the right side of the frame. The sky is overcast, and the overall color palette is muted with grays, browns, and beige.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0262.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0262.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19769,7 +19769,7 @@
         -0.24602951612903223
       ],
       "caption": "The video shows a concrete parking lot with a metal bench on the left side. There is a white garage door on the right side of the frame. The ground is cracked in some areas, and there is a sign on the right side of the frame that reads \"Loading Zone.\" The sky is overcast, and the building in the background is made of brick.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0263.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0263.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19844,7 +19844,7 @@
         -0.16811399999999999
       ],
       "caption": "The video begins with a view of a loading zone, which is a designated area for vehicles to pick up or drop off passengers. The loading zone is marked by a sign that reads \"LOADING ZONE NO PARKING AT ALL TIMES\" in bold, capital letters. The sign is blue with white lettering and is attached to a metal pole. The loading zone itself is a concrete area with a metal grate that allows water to drain away from the building. The building in the background is made of brick and has two windows with white frames. There is a metal bench on the left side of the frame",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0264.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0264.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19919,7 +19919,7 @@
         -0.005065451612903225
       ],
       "caption": "The video begins with a view of a concrete sidewalk with two manhole covers. The sidewalk is in front of a brick building with two windows. A sign on the building reads \"LOADING ZONE NO PARKING AT ALL TIMES.\" The camera pans to the right, revealing a metal railing and a closed garage door. The video ends with the camera pointing towards the building.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0265.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0265.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -19994,7 +19994,7 @@
         -0.018064100000000003
       ],
       "caption": "The video shows a concrete sidewalk with a metal railing on the right side. There is a red and white sign on the left side of the frame that reads \"TOW AWAY ZONE LOADING ZONE NO PARKING AT ALL TIMES\". The background features a brick building with windows and a closed white garage door. The sky is overcast, and there are no people or moving objects in the scene.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0266.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0266.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -20069,7 +20069,7 @@
         -0.04244135483870968
       ],
       "caption": "The video begins with a view of a concrete courtyard surrounded by buildings. The ground is textured with tire marks and there is a metal ramp on the right side. The ramp has a grey platform with a black railing on top. As the video progresses, a man wearing a blue jacket, khaki pants, and carrying a white paper walks into the frame from the right side. He approaches the ramp and stops at the bottom. The man appears to be looking at the ramp, possibly contemplating climbing it.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0267.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0267.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -20144,7 +20144,7 @@
         -0.052695233333333334
       ],
       "caption": "The video shows a man wearing a red jacket, blue jeans, and white sneakers walking on a concrete surface. He is holding a white paper in his hand. The man is walking past a large green electrical box and a metal staircase. The background consists of a tall brick building with multiple windows. The sky is overcast, and there are no other people visible in the video.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0268.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0268.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -20219,7 +20219,7 @@
         -0.02559877419354839
       ],
       "caption": "The video shows a concrete area with a large green electrical box on the right side. There is a metal pole in the center of the frame. The ground is cracked and there are some leaves scattered around. In the background, there is a building with windows and a staircase leading up to it. A person wearing a yellow shirt and dark pants is walking away from the camera towards the building.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0269.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0269.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -20294,7 +20294,7 @@
         -0.0098433
       ],
       "caption": "The video shows a concrete sidewalk with a metal grate on the ground. There is a metal bench on the right side of the frame. In the background, there are large green electrical boxes and a brick building. A person wearing a blue shirt and dark pants is walking away from the camera. The sky is overcast, and there are no leaves on the trees.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0270.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0270.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -20369,7 +20369,7 @@
         -0.00011361290322580658
       ],
       "caption": "The video shows a concrete sidewalk with a metal bike rack on the right side. There is a large green dumpster on the left side of the frame. In the background, there is a building with a brick facade. A person is walking away from the camera, wearing a dark-colored outfit. The sky is overcast, and there are no visible shadows on the ground.",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0271.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0271.jpg",
       "sample_frames": [
         {
           "slot": 1,
@@ -20444,7 +20444,7 @@
         0.003422000000000001
       ],
       "caption": "The video shows a concrete sidewalk with a metal bike rack on the right side. There is a large green dumpster in the background, and a brick building on the right. The sky is overcast, and there are no people or moving objects in the scene. The bike rack is empty, and there are no bikes or other objects on it. The sidewalk is clean and there are no visible cracks or damage. The dumpster is closed and there are no visible signs or labels on it. The brick building has several windows, but it is not possible to see inside. The overall atmosphere of the",
-      "contact_sheet": "../../../../b0/v1/sequence_0_media/frames/caption_0272.jpg",
+      "contact_sheet": "../../../b0/v1/sequence_0_media/frames/caption_0272.jpg",
       "sample_frames": [
         {
           "slot": 1,

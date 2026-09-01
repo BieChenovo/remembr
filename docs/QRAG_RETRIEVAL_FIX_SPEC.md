@@ -290,5 +290,5 @@ sequence 0 做集成验证，通过后再运行 210 题。
   10/210（4.8%）。相比 v3，24 题改善、24 题退化，答案准确率净变化为 0。
 - question-state audit 覆盖 218 个 answer attempts：148 次 duplicate 被拦截，
   95 次触发 replan，top-1、预算、全局 mask、跨模态 state 和终止上限错误均为 0。
-- 完整报告发布于 `docs/reports/b3/v2/v4_unified_top1/`，跨版本对比发布于
-  `docs/reports/comparison/v4_unified_top1/`。
+- 完整报告发布于 `docs/reports/b3/v4/`，跨版本对比发布于
+  `docs/reports/comparison/v4/`。

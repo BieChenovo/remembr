@@ -61,7 +61,12 @@ if [[ -z "${DUPLICATE_REPLAN_LIMIT:-}" ]]; then
         DUPLICATE_REPLAN_LIMIT=1
     fi
 fi
-REPORT_VERSION=${REPORT_VERSION:-v2}
+case "$RUN_TAG" in
+    *question_state_v4_unified_top1*) TAG_REPORT_VERSION=v4 ;;
+    *question_state_v3_interleaved*) TAG_REPORT_VERSION=v3 ;;
+    *) TAG_REPORT_VERSION= ;;
+esac
+REPORT_VERSION=${REPORT_VERSION:-${TAG_REPORT_VERSION:-v2}}
 GPU_COUNT=${GPU_COUNT:-4}
 GPU_IDS=${GPU_IDS:-}
 BASE_PORT=${BASE_PORT:-12434}
@@ -80,16 +85,10 @@ case "$TEXT_RETRIEVER" in
     qrag) REPORT_GROUP=b3 ;;
     *) REPORT_GROUP="$TEXT_RETRIEVER" ;;
 esac
-# Keep historical question_state_v2 reports immutable.  v3 is a run tag under
-# the existing v2 (= fixed implementation) report namespace.
+# Every implementation version owns a sibling report directory. Keep historical
+# v1/v2 reports immutable and never nest v3/v4 below v2.
 if [[ -z "${REPORT_DIR:-}" ]]; then
-    if [[ "$RUN_TAG" == *question_state_v3_interleaved* ]]; then
-        REPORT_DIR="$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/v3_interleaved/sequences"
-    elif [[ "$RUN_TAG" == *question_state_v4_unified_top1* ]]; then
-        REPORT_DIR="$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/v4_unified_top1/sequences"
-    else
-        REPORT_DIR="$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/sequences"
-    fi
+    REPORT_DIR="$PROJECT_ROOT/artifacts/eval_reports/$REPORT_GROUP/$REPORT_VERSION/sequences"
 fi
 mkdir -p "$LOG_DIR" "$CACHE_DIR" "$REPORT_DIR" "$RESULT_ROOT"
 
@@ -131,10 +130,15 @@ trap on_error ERR
     printf 'TEXT_RETRIEVER must be dense, gte_dense, qrag_static, or qrag; got %s\n' "$TEXT_RETRIEVER" >&2
     exit 2
 }
-[[ "$REPORT_VERSION" == v1 || "$REPORT_VERSION" == v2 ]] || {
-    printf 'REPORT_VERSION must be v1 or v2; got %s\n' "$REPORT_VERSION" >&2
+[[ "$REPORT_VERSION" =~ ^v[1-4]$ ]] || {
+    printf 'REPORT_VERSION must be v1, v2, v3, or v4; got %s\n' "$REPORT_VERSION" >&2
     exit 2
 }
+if [[ -n "$TAG_REPORT_VERSION" && "$REPORT_VERSION" != "$TAG_REPORT_VERSION" ]]; then
+    printf 'RUN_TAG %s requires REPORT_VERSION=%s; got %s\n' \
+        "$RUN_TAG" "$TAG_REPORT_VERSION" "$REPORT_VERSION" >&2
+    exit 2
+fi
 [[ "$TEXT_EPISODE_MODE" == per_call || "$TEXT_EPISODE_MODE" == question ]] || {
     printf 'TEXT_EPISODE_MODE must be per_call or question; got %s\n' \
         "$TEXT_EPISODE_MODE" >&2

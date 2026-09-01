@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>B3 v3 · Controller-interleaved Q-RAG</title>
+  <title>B3 v4 · Unified top-1 Q-RAG</title>
   <style>
     :root { color-scheme:dark; --bg:#07111f; --panel:#0d1b2d; --line:#29415c; --text:#e9f2ff; --muted:#9db1c8; --cyan:#63d7ff; --violet:#b8a1ff; }
     * { box-sizing:border-box; }
@@ -31,26 +31,26 @@
 <body>
 <main>
   <a href="../../../">← 返回报告目录</a>
-  <div class="eyebrow">B3 · v3 interleaved · 210 questions</div>
-  <h1>Controller-interleaved Q-RAG</h1>
-  <p>每轮 controller 最多执行一次 retrieval，结果进入下一轮上下文；Q-RAG 文本调用每次只返回 top-1，并在题级状态中继承已选记忆与全局 mask。</p>
+  <div class="eyebrow">B3 · v4 unified top-1 · 210 questions</div>
+  <h1>Unified top-1 Q-RAG</h1>
+  <p>文本、时间和位置检索统一为每次 top-1，共享题级 evidence ledger、ID mask 与 5 条唯一证据预算；数值检索结果也会进入下一轮 Q-RAG 状态。重复工具调用最多触发两次 controller replan。</p>
 
   <section class="cards">
     <article class="card"><span>答案准确率</span><strong>44.3%</strong><span>93 / 210</span></article>
-    <article class="card"><span>Reference-memory hit</span><strong>9.0%</strong><span>19 / 210</span></article>
-    <article class="card"><span>Grounded 正确率</span><strong>6.7%</strong><span>14 / 210</span></article>
-    <article class="card"><span>实现审计错误</span><strong>0</strong><span>222 attempts</span></article>
+    <article class="card"><span>Reference-memory hit</span><strong>4.8%</strong><span>10 / 210</span></article>
+    <article class="card"><span>Grounded 正确率</span><strong>4.8%</strong><span>10 / 210</span></article>
+    <article class="card"><span>实现审计错误</span><strong>0</strong><span>218 attempts</span></article>
   </section>
 
   <section class="panel finding">
     <h2>主要观察</h2>
-    <p>闭环实现本身通过审计，但结果低于 B3-v2：答案准确率从 49.5% 降至 44.3%，reference-memory hit 从 25.2% 降至 9.0%。最终计分轨迹包含 401 个 retrieval 事件，其中 175 个是文本事件；全量回答尝试另有 81 个重复签名被安全拦截。top-1 与重复 query 的组合使每题获得的有效文本证据少于 v2。</p>
+    <p>v4 的闭环状态审计通过，但答案准确率与 v3 同为 44.3%：逐题比较有 24 题改善、24 题退化。Reference-memory hit 从 v3 的 9.0% 降至 4.8%。218 次回答尝试中，148 次重复调用被拦截、95 次触发 replan；每次尝试最多积累 4 条唯一证据，未用满 5 条全局预算。结果说明统一 top-1 已按设计工作，但当前 controller 查询策略和证据覆盖仍是主要瓶颈。</p>
   </section>
 
   <section class="panel">
     <h2>报告入口</h2>
     <div class="links">
-      <a href="../../../comparison/v3_interleaved/">B0–B3 / v2–v3 对比</a>
+      <a href="../../comparison/v4/">B0–B3 / v2–v4 对比</a>
       <a href="analysis/">210 题错误分析</a>
       <a href="sequence_0_audit/">Sequence 0 深度审计</a>
     </div>
