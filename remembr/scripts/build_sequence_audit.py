@@ -51,6 +51,14 @@ def dump_json(path: Path, value: Any) -> None:
     )
 
 
+def portable_artifact_path(path: Path) -> str:
+    """Return an artifacts-relative path suitable for a published report."""
+    parts = path.parts
+    if "artifacts" in parts:
+        return str(Path(*parts[parts.index("artifacts") :]))
+    return path.name
+
+
 def timestamp_from_path(path: Path) -> float:
     return float(path.stem)
 
@@ -501,11 +509,11 @@ def main() -> None:
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "sequence_id": sequence,
         "source_paths": {
-            "coda_dir": str(coda_dir),
-            "captions": str(args.captions),
-            "questions": str(args.questions),
-            "result": str(args.result),
-            "analysis": str(args.analysis),
+            "coda_dir": f"CODa/{sequence}",
+            "captions": portable_artifact_path(args.captions),
+            "questions": portable_artifact_path(args.questions),
+            "result": portable_artifact_path(args.result),
+            "analysis": portable_artifact_path(args.analysis),
         },
         "caption_sampling": {
             "seconds_per_caption": 3,

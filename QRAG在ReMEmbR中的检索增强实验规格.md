@@ -1,12 +1,12 @@
-# Q-RAG × ReMEmbR：NaVQA 长时 EQA 检索实验 Idea 规格
+# Q-RAG × ReMEmbR：NaVQA 长期记忆检索增强实验规格
 
-> 文档类型：跨论文研究 Idea、实验规格与 Agent 交接协议
+> 文档类型：跨论文实验规格与 Agent 交接协议
 >
-> 版本：v0.5，2026-09-01
+> 版本：v0.6，2026-09-01
 >
 > 目标读者：负责数据、模型和实验实现的 Agent
 >
-> 当前状态：**B0–B3 的旧版和 question-state v2 结果均已保留；controller-interleaved B3 v3 与 unified top-1 B3 v4 均已完成 210 题。v4 答案准确率为 44.3%（93/210），question-state 审计为 0 错误。**
+> 当前状态：**B0–B3 的旧版和 question-state v2 结果均已保留；controller-interleaved B3 v3、unified top-1 B3 v4，以及 mxbai Top-5 closed-loop B0 v4 均已完成 210 题。B0-v4 答案准确率为 52.4%（110/210），reference-memory hit 为 30.5%（64/210），状态审计为 0 错误。**
 
 ## 0. 一分钟版本
 
@@ -874,8 +874,9 @@ retry episode 复用、query 缺失和 B3 step/selection 顺序错误均为 0，
 报告目录统一采用 `b0/b1/b2/b3 → v1/v2` 两级命名：`v1` 表示修复前的
 legacy `per_call + native`，`v2` 表示修复后的 question-state。每组内部只使用
 `sequences/`、`analysis/` 和 `sequence_0_audit/`；跨组结果放在
-`comparison/v1` 或 `comparison/v2`。B0 不涉及这次状态修复，因此只保留
-`b0/v1`，v2 对比复用同一份 B0。完整规则见 `artifacts/eval_reports/README.md`。
+`comparison/v1` 或 `comparison/v2`。B0-v1 继续作为这两版对比中的历史基线；
+随后新增的 B0-v4 使用修复后的闭环 controller 与 text Top-5 协议，独立保存在
+`b0/v4`，不可追溯覆盖 B0-v1。完整规则见 `docs/reports/README.md`。
 
 #### 14.10.2 controller-interleaved v3 修复
 
@@ -927,6 +928,22 @@ answer attempts 的 top-1、全局 mask、跨模态 state、duplicate replan 和
 审计错误均为 0。完整报告位于
 `docs/reports/b3/v4/`，对比报告位于
 `docs/reports/comparison/v4/`。
+
+#### 14.10.4 B0 v4 · mxbai Top-5 closed-loop 对照
+
+为验证闭环修复对原始 dense retrieval 的影响，B0 保留 mxbai scorer，并使用与当前
+controller 相同的逐轮交互协议重跑 7 个 sequence、共 210 题。该配置中 text
+retrieval 每次返回 Top-5，time/position 沿用 Top-4；工具结果会进入下一轮
+controller 上下文，每轮只执行一个工具，最多 5 轮，重复调用最多重规划 2 次。
+由于它没有启用 B3-v4 的 unified top-1 evidence ledger，因此 B0-v4 与 B3-v4
+属于同一实现代次下的不同检索协议，不能把版本号解释为完全相同的超参数。
+
+**[当前实测]** B0-v4 答案准确率为 110/210（52.4%），有效结构化输出为
+201/210（95.7%）；reference-memory hit 为 64/210（30.5%），Grounded 正确率为
+51/210（24.3%），另有 59 题答案正确但未命中 derived reference memory。命中
+reference 后答案正确率为 79.7%；在实际调用过 text retrieval 的题中，命中率为
+48.7%。完整 trace 覆盖 210/210，227 个 answer attempts 的状态、预算与 mask
+审计错误均为 0。报告位于 `docs/reports/b0/v4/`。
 
 ### 14.11 可直接复制给另一对话的任务
 

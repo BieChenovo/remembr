@@ -1,0 +1,16 @@
+{
+  "b0_v4_top5": {
+    "questions": 210,
+    "attempts": 227,
+    "retry_questions": 17,
+    "text_calls": 132,
+    "multi_text_attempts": 10,
+    "empty_exhausted_calls": 13,
+    "duplicate_blocked_calls": 113,
+    "duplicate_reprompted_calls": 0,
+    "interleaved_attempts": 227,
+    "max_unique_evidence_per_attempt": 5,
+    "errors": [],
+    "error_count": 0
+  }
+}

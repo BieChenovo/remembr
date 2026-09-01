@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>B0 v4 · mxbai Top-5 closed-loop</title>
+  <style>
+    :root { color-scheme:dark; --bg:#07111f; --panel:#0d1b2d; --line:#29415c; --text:#e9f2ff; --muted:#9db1c8; --cyan:#63d7ff; --violet:#b8a1ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 85% 0,rgba(184,161,255,.16),transparent 34rem),var(--bg); color:var(--text); font:15px/1.6 Inter,system-ui,sans-serif; }
+    main { width:min(1040px,calc(100% - 32px)); margin:auto; padding:52px 0 70px; }
+    a { color:var(--cyan); }
+    h1 { margin:8px 0 12px; font-size:clamp(32px,5vw,54px); line-height:1.05; }
+    h2 { margin:0 0 12px; font-size:21px; }
+    p { color:var(--muted); }
+    .eyebrow { color:var(--violet); font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:28px 0; }
+    .card,.panel { border:1px solid var(--line); border-radius:15px; background:rgba(13,27,45,.9); }
+    .card { padding:18px; }
+    .card span { display:block; color:var(--muted); font-size:13px; }
+    .card strong { display:block; margin-top:4px; color:var(--violet); font-size:28px; }
+    .panel { margin-top:16px; padding:22px; }
+    .links { display:flex; flex-wrap:wrap; gap:9px; }
+    .links a { padding:7px 11px; border:1px solid #3a5879; border-radius:9px; color:var(--text); text-decoration:none; }
+    .links a:hover { border-color:var(--cyan); }
+    .finding { border-color:rgba(255,200,117,.48); }
+    code { color:var(--cyan); }
+    @media(max-width:720px){.cards{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<main>
+  <a href="../../../">← 返回报告目录</a>
+  <div class="eyebrow">B0 · v4 Top-5 · 210 questions</div>
+  <h1>mxbai Top-5 closed-loop</h1>
+  <p>保留 B0 的静态 mxbai dense scorer；每次文本检索最多返回 5 条记忆。工具结果进入下一轮 controller 上下文，controller 每轮只执行一个工具，最多 5 轮，并对重复调用进行拦截和重规划。时间与位置检索沿用 B0 的 Top-4。</p>
+
+  <section class="cards">
+    <article class="card"><span>答案准确率</span><strong>52.4%</strong><span>110 / 210</span></article>
+    <article class="card"><span>Reference-memory hit</span><strong>30.5%</strong><span>64 / 210</span></article>
+    <article class="card"><span>Grounded 正确率</span><strong>24.3%</strong><span>51 / 210</span></article>
+    <article class="card"><span>实现审计错误</span><strong>0</strong><span>227 attempts</span></article>
+  </section>
+
+  <section class="panel finding">
+    <h2>主要观察</h2>
+    <p>完整 trace 覆盖 210/210；有效结构化输出为 201/210。64 题检索到至少一条 derived reference memory，其中 51 题答案也正确，即命中 reference 后答案正确率为 79.7%。另有 59 题答案正确但没有命中 reference，这部分正是不能计入“检索到了正确记忆”准确率的干扰项。113 题调用过文本检索；在调用文本检索的题中，reference-memory hit 为 48.7%。状态审计未发现跨轮可见性、题级预算或 mask 错误，每个 attempt 最多使用 5 条唯一文本证据。</p>
+  </section>
+
+  <section class="panel">
+    <h2>报告入口</h2>
+    <div class="links">
+      <a href="analysis/">210 题错误分析</a>
+      <a href="retrieval/">Retrieval-hit / grounded 分析</a>
+      <a href="sequence_0_audit/">Sequence 0 深度审计</a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>逐序列轨迹</h2>
+    <div class="links">
+      <a href="sequences/sequence_0.html">seq 0</a><a href="sequences/sequence_3.html">seq 3</a><a href="sequences/sequence_4.html">seq 4</a><a href="sequences/sequence_6.html">seq 6</a><a href="sequences/sequence_16.html">seq 16</a><a href="sequences/sequence_21.html">seq 21</a><a href="sequences/sequence_22.html">seq 22</a>
+    </div>
+  </section>
+</main>
+</body>
+</html>

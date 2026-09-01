@@ -332,6 +332,7 @@ def group_accuracy(rows: list[dict[str, Any]], key: str) -> dict[str, dict[str, 
 
 def build_analysis(args: argparse.Namespace) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
+    run_configs: list[dict[str, Any]] = []
     reference_entry_total = 0
     reference_entry_in_pool = 0
     outside_before = 0
@@ -352,10 +353,17 @@ def build_analysis(args: argparse.Namespace) -> dict[str, Any]:
             / "human_qa"
             / args.result_name.format(tag=args.tag)
         )
+        published_result_path = (
+            Path("artifacts/eval_outs")
+            / str(sequence)
+            / "human_qa"
+            / result_path.name
+        )
         questions_document = json.loads(questions_path.read_text(encoding="utf-8"))
         questions = questions_document["data"]
         captions = json.loads(captions_path.read_text(encoding="utf-8"))
         result = json.loads(result_path.read_text(encoding="utf-8"))
+        run_configs.append(result.get("config", {}))
         responses = result["responses"]
         if len(questions) != 30 or len(responses) != len(questions):
             raise ValueError(
@@ -472,7 +480,9 @@ def build_analysis(args: argparse.Namespace) -> dict[str, Any]:
                     else None
                 ),
                 "reference_captions": reference_captions,
-                "result_path": str(result_path),
+                # Keep generated reports portable and avoid publishing host-specific
+                # spooler or project paths.
+                "result_path": str(published_result_path),
             }
             rows.append(row)
 
@@ -547,6 +557,29 @@ def build_analysis(args: argparse.Namespace) -> dict[str, Any]:
         "version": 1,
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "run_tag": args.tag,
+        "run_config": {
+            "answer_models": sorted(
+                {
+                    str(config.get("answer_model"))
+                    for config in run_configs
+                    if config.get("answer_model") is not None
+                }
+            ),
+            "num_predict": sorted(
+                {
+                    int(config.get("num_predict"))
+                    for config in run_configs
+                    if config.get("num_predict") is not None
+                }
+            ),
+            "disable_thinking": sorted(
+                {
+                    bool(config.get("disable_thinking"))
+                    for config in run_configs
+                    if config.get("disable_thinking") is not None
+                }
+            ),
+        },
         "thresholds": {
             "position_m": POSITION_THRESHOLD_M,
             "time_min": TIME_THRESHOLD_MIN,
@@ -582,6 +615,12 @@ def build_html(analysis: dict[str, Any], json_path: Path, csv_path: Path) -> str
     summary = analysis["summary"]
     rows = analysis["rows"]
     audit = summary["reference_context_audit"]
+    num_predict_values = analysis.get("run_config", {}).get("num_predict", [])
+    num_predict_label = (
+        str(num_predict_values[0])
+        if len(num_predict_values) == 1
+        else "/".join(map(str, num_predict_values)) or "unknown"
+    )
 
     reason_rows = []
     for reason, count in sorted(
@@ -688,7 +727,7 @@ def build_html(analysis: dict[str, Any], json_path: Path, csv_path: Path) -> str
 .toolbar{{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px}} input,select{{color:var(--text);background:#0a1525;border:1px solid var(--line);border-radius:9px;padding:10px 12px}} input{{min-width:280px;flex:1}} .table-wrap{{overflow:auto;border:1px solid var(--line);border-radius:12px}} table{{border-collapse:collapse;width:100%;min-width:1450px}} th,td{{padding:12px;border-bottom:1px solid #25364f;text-align:left;vertical-align:top}} th{{position:sticky;top:0;background:#192941;color:#bbc8da;font-size:11px;letter-spacing:.06em;text-transform:uppercase;z-index:2}} tbody tr:hover{{background:rgba(85,167,255,.055)}} td small{{display:block}} .wide{{min-width:360px;max-width:520px}} summary{{cursor:pointer;font-weight:650}} details p{{font-size:12px;color:#cbd7e7}} code{{color:#acd5ff}} .caption{{white-space:pre-wrap;max-width:520px}} .warn{{color:#ffabb3}} .pill{{display:inline-block;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:750;white-space:nowrap}} .outcome-correct{{color:#64e9ac;background:#123b30}} .outcome-wrong{{color:#ff9faa;background:#47202a}} .type-position{{color:#ffc985;background:#3c2f1e}} .type-time{{color:#cbbcff;background:#30294e}} .type-duration{{color:#85eeef;background:#183e43}} .type-binary{{color:#9ad0ff;background:#173754}} .type-text{{color:#d1d7e0;background:#323b48}}
 footer{{color:var(--muted);font-size:12px;margin-top:16px}} @media(max-width:1100px){{.cards{{grid-template-columns:repeat(3,1fr)}}.grid2,.grid3{{grid-template-columns:1fr}}}} @media(max-width:700px){{.wrap{{width:calc(100% - 22px);padding-top:24px}}header{{display:block}}.source{{text-align:left;margin-top:10px}}.cards{{grid-template-columns:1fr 1fr}}}}
 </style></head><body><main class="wrap">
-<header><div><div class="eyebrow">ReMEmbR retrieval run · error audit</div><h1>NaVQA {summary['questions']} 题聚合错误分析</h1><p class="muted">run={esc(analysis['run_tag'])} · Qwen3-8B · no thinking · 256 tokens · VILA1.5-13B 3 s captions · America/Los_Angeles</p></div><div class="source">生成于 {generated}<br>JSON：{esc(json_path)}<br>CSV：{esc(csv_path)}</div></header>
+<header><div><div class="eyebrow">ReMEmbR retrieval run · error audit</div><h1>NaVQA {summary['questions']} 题聚合错误分析</h1><p class="muted">run={esc(analysis['run_tag'])} · Qwen3-8B · no thinking · {esc(num_predict_label)} tokens · VILA1.5-13B 3 s captions · America/Los_Angeles</p></div><div class="source">生成于 {generated}<br>JSON：{esc(json_path)}<br>CSV：{esc(csv_path)}</div></header>
 <section class="cards">
   <article class="card"><span>严格 Overall</span><strong>{pct(summary['correct'], summary['questions'])}</strong><small>{summary['correct']}/{summary['questions']}，失效按错误计</small></article>
   <article class="card"><span>错误总数</span><strong>{summary['wrong']}</strong><small>含 {summary['invalid']} 个输出失效</small></article>

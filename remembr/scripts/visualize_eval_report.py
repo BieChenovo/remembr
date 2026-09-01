@@ -152,6 +152,14 @@ def metric_card(label: str, value: str, note: str, tone: str = "blue") -> str:
     </article>"""
 
 
+def portable_artifact_path(path: Path) -> Path:
+    """Return an artifacts-relative display path without leaking the host mount."""
+    parts = path.parts
+    if "artifacts" in parts:
+        return Path(*parts[parts.index("artifacts") :])
+    return Path(path.name)
+
+
 def build_report(
     result: dict[str, Any],
     questions: list[dict[str, Any]],
@@ -514,7 +522,12 @@ def main() -> None:
     if not isinstance(questions, list):
         raise TypeError("Question JSON must contain a list or a top-level 'data' list")
 
-    report = build_report(result, questions, args.result, args.questions)
+    report = build_report(
+        result,
+        questions,
+        portable_artifact_path(args.result),
+        portable_artifact_path(args.questions),
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(report, encoding="utf-8")
     print(args.output)

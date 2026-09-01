@@ -34,14 +34,14 @@
 
   <section class="legend">
     <h2>版本规则</h2>
-    <p>B0 是固定的 mxbai baseline，不涉及 Q-RAG question-state 修复，所以只保留 B0/v1；comparison/v2 继续复用该结果。所有深度审计页面共享 B0/v1 下的视频与 273 张 contact sheets。</p>
+    <p>B0/v1 是修复前历史基线；B0/v4 保留 mxbai dense scorer，并按修复后的 controller 闭环以 text Top-5、time/position Top-4 重跑 210 题。两者协议不同，不能视作只改变 Top-K 的严格配对。所有深度审计页面共享 B0/v1 下的视频与 273 张 contact sheets。</p>
   </section>
 
   <section class="group">
     <h2>B0 · mxbai dense baseline</h2>
     <div class="grid">
       <div class="version"><span class="tag v1">v1</span><div class="links"><a href="b0/v1/analysis/">analysis</a><a href="b0/v1/sequence_0_analysis/">sequence 0 analysis</a><a href="b0/v1/sequence_0_audit/">sequence 0 audit</a><a href="b0/v1/sequence_0_media/">shared media</a></div></div>
-      <div class="version"><span class="tag">v2</span><p class="empty">无需单独重跑；复用固定 B0/v1。</p></div>
+      <div class="version"><span class="tag">v4 · Top-5 closed-loop</span><div class="links"><a href="b0/v4/">overview</a><a href="b0/v4/sequences/sequence_0.html">sequences</a><a href="b0/v4/analysis/">analysis</a><a href="b0/v4/retrieval/">retrieval hit</a><a href="b0/v4/sequence_0_audit/">sequence 0 audit</a></div></div>
     </div>
   </section>
 

@@ -54,7 +54,8 @@ fi
 QUESTION_EVIDENCE_BUDGET=${QUESTION_EVIDENCE_BUDGET:-5}
 MAX_RETRIEVAL_ROUNDS=${MAX_RETRIEVAL_ROUNDS:-5}
 if [[ -z "${DUPLICATE_REPLAN_LIMIT:-}" ]]; then
-    if [[ "$RUN_TAG" == *question_state_v4_unified_top1* ]]; then
+    if [[ "$RUN_TAG" == *question_state_v4_unified_top1* \
+        || "$RUN_TAG" == *question_state_v4_top5* ]]; then
         DUPLICATE_REPLAN_LIMIT=2
     else
         # One blocked duplicate reproduces v3's immediate reader fallback.
@@ -63,6 +64,7 @@ if [[ -z "${DUPLICATE_REPLAN_LIMIT:-}" ]]; then
 fi
 case "$RUN_TAG" in
     *question_state_v4_unified_top1*) TAG_REPORT_VERSION=v4 ;;
+    *question_state_v4_top5*) TAG_REPORT_VERSION=v4 ;;
     *question_state_v3_interleaved*) TAG_REPORT_VERSION=v3 ;;
     *) TAG_REPORT_VERSION= ;;
 esac
@@ -190,6 +192,26 @@ if [[ "$RUN_TAG" == *question_state_v4_unified_top1* ]]; then
             exit 2
         }
     fi
+fi
+if [[ "$RUN_TAG" == *question_state_v4_top5* ]]; then
+    [[ "$TEXT_RETRIEVER" == dense ]] || {
+        printf 'v4 top-5 baseline requires TEXT_RETRIEVER=dense; got %s\n' \
+            "$TEXT_RETRIEVER" >&2
+        exit 2
+    }
+    [[ "$UNIFIED_EVIDENCE_LEDGER" == 0 ]] || {
+        printf 'v4 top-5 baseline requires UNIFIED_EVIDENCE_LEDGER=0\n' >&2
+        exit 2
+    }
+    [[ "$TEXT_EPISODE_MODE" == question ]] || {
+        printf 'v4 top-5 baseline requires TEXT_EPISODE_MODE=question\n' >&2
+        exit 2
+    }
+    [[ "$QUESTION_TEXT_EVIDENCE_BUDGET" == 5 ]] || {
+        printf 'v4 top-5 baseline requires QUESTION_TEXT_EVIDENCE_BUDGET=5; got %s\n' \
+            "$QUESTION_TEXT_EVIDENCE_BUDGET" >&2
+        exit 2
+    }
 fi
 [[ "$MAX_RETRIEVAL_ROUNDS" =~ ^[1-9][0-9]*$ ]] || {
     printf 'MAX_RETRIEVAL_ROUNDS must be positive; got %s\n' \
@@ -440,7 +462,12 @@ fi
 
 step "Generating seven compact HTML reports"
 for sequence in "${sequence_array[@]}"; do
-    result="$RESULT_ROOT/$sequence/human_qa/remembr+${MODEL}__${CAPTION_FILE}__${TEXT_RETRIEVER}_${RUN_TAG}.json"
+    if [[ "$TEXT_RETRIEVER" == dense ]]; then
+        retriever_result_tag=
+    else
+        retriever_result_tag="__${TEXT_RETRIEVER}"
+    fi
+    result="$RESULT_ROOT/$sequence/human_qa/remembr+${MODEL}__${CAPTION_FILE}${retriever_result_tag}_${RUN_TAG}.json"
     "$PYTHON" "$REMEMBR_ROOT/scripts/visualize_eval_report.py" \
         --result "$result" \
         --questions "$INPUT_ROOT/questions/$sequence/human_qa.json" \
